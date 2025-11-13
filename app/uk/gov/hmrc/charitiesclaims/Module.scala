@@ -26,6 +26,6 @@ class Module extends AppModule:
   override def bindings(
     environment: Environment,
     configuration: Configuration
-  ): Seq[Binding[_]] =
+  ): Seq[Binding[?]] =
     bind[Clock].toInstance(Clock.systemDefaultZone) :: // inject if current time needs to be controlled in unit tests
       Nil

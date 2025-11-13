@@ -21,12 +21,17 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 
+import scala.concurrent.duration.Duration
+
 class AppConfigSpec extends AnyWordSpec with Matchers:
 
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
       """
           | appName = charities-claims
+          | mongodb {
+          |  ttl = 12 days
+          | }
           |
           |""".stripMargin
     )
@@ -36,3 +41,7 @@ class AppConfigSpec extends AnyWordSpec with Matchers:
     "return appName" in:
       val appConfig = new AppConfig(config)
       appConfig.appName shouldBe "charities-claims"
+
+    "return mongoDbTTL" in:
+      val appConfig = new AppConfig(config)
+      appConfig.mongoDbTTL shouldBe Duration.apply(12, "days")

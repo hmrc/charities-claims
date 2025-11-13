@@ -16,10 +16,23 @@
 
 package uk.gov.hmrc.charitiesclaims.config
 
-import javax.inject.{Inject, Singleton}
+import com.typesafe.config.ConfigFactory
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 
-@Singleton
-class AppConfig @Inject() (config: Configuration):
+class AppConfigSpec extends AnyWordSpec with Matchers:
 
-  val appName: String = config.get[String]("appName")
+  val config: Configuration = Configuration(
+    ConfigFactory.parseString(
+      """
+          | appName = charities-claims
+          |
+          |""".stripMargin
+    )
+  )
+
+  "AppConfig" should:
+    "return appName" in:
+      val appConfig = new AppConfig(config)
+      appConfig.appName shouldBe "charities-claims"

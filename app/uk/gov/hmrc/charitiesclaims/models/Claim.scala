@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.charitiesclaims.config
+package uk.gov.hmrc.charitiesclaims.models
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import scala.concurrent.duration.Duration
+import play.api.libs.json.Format
+import play.api.libs.json.Json
 
-@Singleton
-class AppConfig @Inject() (config: Configuration):
+final case class Claim(
+  claimId: String,
+  userId: String
+)
 
-  val appName: String      = config.get[String]("appName")
-  val mongoDbTTL: Duration = config.get[Duration]("mongodb.ttl")
+object Claim {
+  given format: Format[Claim] = Json.format[Claim]
+}

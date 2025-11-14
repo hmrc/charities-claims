@@ -16,12 +16,32 @@
 
 package uk.gov.hmrc.charitiesclaims.config
 
-import javax.inject.{Inject, Singleton}
+import com.typesafe.config.ConfigFactory
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
+
 import scala.concurrent.duration.Duration
 
-@Singleton
-class AppConfig @Inject() (config: Configuration):
+class AppConfigSpec extends AnyWordSpec with Matchers:
 
-  val appName: String      = config.get[String]("appName")
-  val mongoDbTTL: Duration = config.get[Duration]("mongodb.ttl")
+  val config: Configuration = Configuration(
+    ConfigFactory.parseString(
+      """
+          | appName = charities-claims
+          | mongodb {
+          |  ttl = 12 days
+          | }
+          |
+          |""".stripMargin
+    )
+  )
+
+  "AppConfig" should:
+    "return appName" in:
+      val appConfig = new AppConfig(config)
+      appConfig.appName shouldBe "charities-claims"
+
+    "return mongoDbTTL" in:
+      val appConfig = new AppConfig(config)
+      appConfig.mongoDbTTL shouldBe Duration.apply(12, "days")

@@ -25,6 +25,7 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.auth.core.retrieve.~
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -51,16 +52,19 @@ class DefaultAuthorisedAction @Inject() (
     given HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
     authorised()
-      .retrieve(Retrievals.affinityGroup) {
-        case Some(affinityGroup)
+      .retrieve(Retrievals.affinityGroup.and(Retrievals.credentials)) {
+        case Some(affinityGroup) ~ Some(credentials)
             if affinityGroup == AffinityGroup.Organisation
               || affinityGroup == AffinityGroup.Agent =>
-          block(AuthorisedRequest(request, affinityGroup))
+          block(AuthorisedRequest(request, affinityGroup, credentials.providerId))
 
-        case Some(affinityGroup) =>
+        case _ ~ None =>
+          Future.successful(Forbidden(s"No credentials providerId found for user"))
+
+        case Some(affinityGroup) ~ _ =>
           Future.successful(Forbidden(s"Unsupported affinity group: $affinityGroup"))
 
-        case None =>
+        case None ~ _ =>
           Future.successful(Forbidden(s"Unauthorized: No affinity group found"))
       }
       .recover { case e: AuthorisationException =>

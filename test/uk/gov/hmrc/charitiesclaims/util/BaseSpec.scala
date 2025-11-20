@@ -19,24 +19,21 @@ package uk.gov.hmrc.charitiesclaims.util
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.concurrent.IntegrationPatience
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
 import org.scalatest.time.Span
 import org.scalatest.time.Millis
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalamock.scalatest.MockFactory
+import play.api.mvc.BodyParsers
+import play.api.test.Helpers
 
-trait BaseSpec
-    extends AnyFreeSpec
-    with MockFactory
-    with Matchers
-    with ScalaFutures
-    with IntegrationPatience
-    with GuiceOneServerPerSuite {
+trait BaseSpec extends AnyFreeSpec with MockFactory with Matchers with ScalaFutures with IntegrationPatience {
 
   implicit val actorSystem: ActorSystem = ActorSystem("unit-tests")
   implicit val mat: Materializer        = Materializer.createMaterializer(actorSystem)
+
+  val bodyParser: BodyParsers.Default = BodyParsers.Default(Helpers.stubPlayBodyParsers)
 
   override implicit val patienceConfig: PatienceConfig =
     PatienceConfig(timeout = scaled(Span(1000, Millis)), interval = scaled(Span(50, Millis)))

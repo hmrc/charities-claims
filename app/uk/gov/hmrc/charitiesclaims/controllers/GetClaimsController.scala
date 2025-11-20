@@ -20,13 +20,16 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
+import scala.concurrent.Future
 
 @Singleton()
-class MicroserviceHelloWorldController @Inject() (
-  cc: ControllerComponents
+class GetClaimsController @Inject() (
+  cc: ControllerComponents,
+  authorisedAction: AuthorisedAction
 ) extends BackendController(cc):
 
-  val hello: Action[AnyContent] =
-    Action { _ =>
-      Ok("Hello world")
+  val getClaims: Action[AnyContent] =
+    authorisedAction.async { request =>
+      Future.successful(Ok("Hello world"))
     }

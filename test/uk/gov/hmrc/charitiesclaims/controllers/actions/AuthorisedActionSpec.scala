@@ -26,11 +26,13 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.charitiesclaims.util.BaseSpec
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.auth.core.retrieve.~
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.auth.core.MissingBearerToken
+import uk.gov.hmrc.auth.core.retrieve.Credentials
 
 class AuthorisedActionSpec extends BaseSpec {
 
@@ -40,18 +42,19 @@ class AuthorisedActionSpec extends BaseSpec {
     }
   }
 
-  val bodyParser: BodyParsers.Default = BodyParsers.Default(Helpers.stubPlayBodyParsers)
-
   "AuthorisedAction" - {
     "return 403 when user has an Individual affinity group" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
       (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup]])(using _: HeaderCarrier, _: ExecutionContext))
+        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Option[Credentials]])(using
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
         .expects(*, *, *, *)
         .returning(
           Future.successful(
-            Some(AffinityGroup.Individual)
+            `~`(Some(AffinityGroup.Individual), Some(Credentials("providerId", "providerType")))
           )
         )
 
@@ -68,11 +71,14 @@ class AuthorisedActionSpec extends BaseSpec {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
       (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup]])(using _: HeaderCarrier, _: ExecutionContext))
+        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Option[Credentials]])(using
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
         .expects(*, *, *, *)
         .returning(
           Future.successful(
-            Some(AffinityGroup.Organisation)
+            `~`(Some(AffinityGroup.Organisation), Some(Credentials("providerId", "providerType")))
           )
         )
 
@@ -89,11 +95,14 @@ class AuthorisedActionSpec extends BaseSpec {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
       (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup]])(using _: HeaderCarrier, _: ExecutionContext))
+        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Option[Credentials]])(using
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
         .expects(*, *, *, *)
         .returning(
           Future.successful(
-            Some(AffinityGroup.Agent)
+            `~`(Some(AffinityGroup.Agent), Some(Credentials("providerId", "providerType")))
           )
         )
 
@@ -110,11 +119,60 @@ class AuthorisedActionSpec extends BaseSpec {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
       (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup]])(using _: HeaderCarrier, _: ExecutionContext))
+        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Option[Credentials]])(using
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
         .expects(*, *, *, *)
         .returning(
           Future.successful(
-            None
+            `~`(None, Some(Credentials("providerId", "providerType")))
+          )
+        )
+
+      val authorisedAction =
+        new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+
+      val controller = new Harness(authorisedAction)
+      val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
+      status(result) must be(FORBIDDEN)
+    }
+
+    "return 403 when user has no credentials" in {
+      val mockAuthConnector: AuthConnector = mock[AuthConnector]
+
+      (mockAuthConnector
+        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Option[Credentials]])(using
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
+        .expects(*, *, *, *)
+        .returning(
+          Future.successful(
+            `~`(Some(AffinityGroup.Agent), None)
+          )
+        )
+
+      val authorisedAction =
+        new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+
+      val controller = new Harness(authorisedAction)
+      val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
+      status(result) must be(FORBIDDEN)
+    }
+
+    "return 403 when user has no credentials nor affinity group" in {
+      val mockAuthConnector: AuthConnector = mock[AuthConnector]
+
+      (mockAuthConnector
+        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Option[Credentials]])(using
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
+        .expects(*, *, *, *)
+        .returning(
+          Future.successful(
+            `~`(None, None)
           )
         )
 
@@ -130,7 +188,10 @@ class AuthorisedActionSpec extends BaseSpec {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
       (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup]])(using _: HeaderCarrier, _: ExecutionContext))
+        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Option[Credentials]])(using
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
         .expects(*, *, *, *)
         .returns(Future.failed(new MissingBearerToken("Missing bearer token")))
 

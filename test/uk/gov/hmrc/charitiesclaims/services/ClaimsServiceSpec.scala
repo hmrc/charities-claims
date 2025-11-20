@@ -33,7 +33,7 @@ class ClaimsServiceSpec
     with Matchers
     with ScalaFutures
     with IntegrationPatience
-    with GuiceOneServerPerSuite:
+    with GuiceOneServerPerSuite {
 
   private val claimsService = app.injector.instanceOf[ClaimsService]
 
@@ -41,7 +41,7 @@ class ClaimsServiceSpec
     GuiceApplicationBuilder()
       .build()
 
-  "ClaimsService" should:
+  "ClaimsService" should {
     "store, retrieve, list and delete a claim" in {
       val claim     = Claim(claimId = UUID.randomUUID().toString, userId = UUID.randomUUID().toString)
       val claimJson = Json.toJson(claim)(using Claim.format)
@@ -76,3 +76,5 @@ class ClaimsServiceSpec
       claimsService.deleteClaim(claim3.claimId).futureValue
       claimsService.getClaim(claim3.claimId).futureValue shouldBe None
     }
+  }
+}

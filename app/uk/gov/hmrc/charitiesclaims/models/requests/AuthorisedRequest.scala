@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.charitiesclaims.controllers
+package uk.gov.hmrc.charitiesclaims.models.requests
 
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import play.api.mvc.Request
+import uk.gov.hmrc.auth.core.AffinityGroup
+import play.api.mvc.WrappedRequest
 
-import javax.inject.{Inject, Singleton}
-
-@Singleton()
-class MicroserviceHelloWorldController @Inject() (
-  cc: ControllerComponents
-) extends BackendController(cc):
-
-  val hello: Action[AnyContent] =
-    Action { _ =>
-      Ok("Hello world")
-    }
+final case class AuthorisedRequest[A](
+  underlying: Request[A],
+  affinityGroup: AffinityGroup,
+  userId: String
+) extends WrappedRequest[A](underlying)

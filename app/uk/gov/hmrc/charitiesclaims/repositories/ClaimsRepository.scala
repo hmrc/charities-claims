@@ -44,6 +44,10 @@ class ClaimsRepository @Inject() (
         IndexModel(
           keys = BsonDocument(ClaimsRepository.userIdPath -> 1),
           indexOptions = IndexOptions().unique(false)
+        ),
+        IndexModel(
+          keys = BsonDocument(ClaimsRepository.userIdPath -> 1, ClaimsRepository.claimSubmittedPath -> 1),
+          indexOptions = IndexOptions().unique(false)
         )
       )
     )
@@ -51,4 +55,5 @@ class ClaimsRepository @Inject() (
 object ClaimsRepository {
   val claimDataKey: DataKey[Claim] = DataKey[Claim]("claim")
   val userIdPath: String           = "data.claim.userId"
+  val claimSubmittedPath: String   = "data.claim.claimSubmitted"
 }

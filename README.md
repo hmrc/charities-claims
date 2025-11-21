@@ -1,7 +1,11 @@
 
 # charities-claims
 
-This is a placeholder README.md for a new repository
+Backend for `charities-claim-frontend` supporting the following functions:
+
+- retrieving data from the existing RDS DataCache
+- storing and retrieving draft claim data from MongoDB cache
+- submissions of a new claims to ChRIS
 
 ### License
 

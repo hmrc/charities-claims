@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.charitiesclaims.models
+package uk.gov.hmrc.charitiesclaims.util
 
-import play.api.libs.json.Format
-import play.api.libs.json.Json
-
-/** @param claimSubmitted
-  *   Used to return either unsubmitted or submitted claims.
-  */
-final case class GetClaimsRequest(
-  claimSubmitted: Boolean
-)
-
-object GetClaimsRequest {
-  given format: Format[GetClaimsRequest] = Json.format[GetClaimsRequest]
+trait TestUsers {
+  val organisation1 = "organisation-1234567890"
+  val agent1        = "agent-1234567890"
 }

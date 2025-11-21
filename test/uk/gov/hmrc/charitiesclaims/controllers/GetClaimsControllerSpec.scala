@@ -23,27 +23,82 @@ import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
 import uk.gov.hmrc.charitiesclaims.models.GetClaimsRequest
 import play.api.libs.json.Json
+import uk.gov.hmrc.charitiesclaims.util.TestClaimsServiceHelper
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
+import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
 
-class GetClaimsControllerSpec extends ControllerSpec {
+class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
+  given ExecutionContext = global
 
-  val fakeRequest = FakeRequest("POST", "/get-claims")
+  val requestGetClaimsSubmitted = FakeRequest("POST", "/get-claims")
     .withJsonBody(Json.toJson(GetClaimsRequest(claimSubmitted = true)))
 
+  val requestGetClaimsUnsubmitted = FakeRequest("POST", "/get-claims")
+    .withJsonBody(Json.toJson(GetClaimsRequest(claimSubmitted = false)))
+
+  val claimsService = new TestClaimsService(initialTestClaimsSet)
+
   "POST /get-claims" - {
-    "return 200 when user is an organisation" in new AuthorisedOrganisationFixture {
+    "return 200 when requested submitted claims and user is an organisation" in new AuthorisedOrganisationFixture {
 
-      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction)
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val result = controller.getClaims()(fakeRequest)
+      val result = controller.getClaims()(requestGetClaimsSubmitted)
       status(result) shouldBe Status.OK
+      val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
+      getClaimsResponse.claimsCount                    shouldBe 1
+      getClaimsResponse.claimsList.head.userId         shouldBe organisation1
+      getClaimsResponse.claimsList.head.claimSubmitted shouldBe true
+      getClaimsResponse.claimsList.head.claimId        shouldBe "test-claim-submitted"
     }
 
-    "return 200 when user is an agent" in new AuthorisedAgentFixture {
+    "return 200 when requested submitted claims and user is an agent" in new AuthorisedAgentFixture {
 
-      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction)
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val result = controller.getClaims()(fakeRequest)
+      val result = controller.getClaims()(requestGetClaimsSubmitted)
       status(result) shouldBe Status.OK
+      val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
+      getClaimsResponse.claimsCount                    shouldBe 1
+      getClaimsResponse.claimsList.head.userId         shouldBe agent1
+      getClaimsResponse.claimsList.head.claimSubmitted shouldBe true
+      getClaimsResponse.claimsList.head.claimId        shouldBe "test-claim-submitted-2"
+    }
+
+    "return 200 when requested unsubmitted claims and user is an organisation" in new AuthorisedOrganisationFixture {
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
+
+      val result = controller.getClaims()(requestGetClaimsUnsubmitted)
+      status(result) shouldBe Status.OK
+      val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
+      getClaimsResponse.claimsCount                                        shouldBe 3
+      getClaimsResponse.claimsList
+        .map(claim => (claim.claimId, claim.userId, claim.claimSubmitted)) shouldBe
+        Seq(
+          ("test-claim-unsubmitted-1", organisation1, false),
+          ("test-claim-unsubmitted-2", organisation1, false),
+          ("test-claim-unsubmitted-3", organisation1, false)
+        )
+    }
+
+    "return 200 when requested unsubmitted claims and user is an agent" in new AuthorisedAgentFixture {
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
+
+      val result = controller.getClaims()(requestGetClaimsUnsubmitted)
+      status(result) shouldBe Status.OK
+      val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
+      getClaimsResponse.claimsCount                                        shouldBe 3
+      getClaimsResponse.claimsList
+        .map(claim => (claim.claimId, claim.userId, claim.claimSubmitted)) shouldBe
+        Seq(
+          ("test-claim-unsubmitted-1-2", agent1, false),
+          ("test-claim-unsubmitted-2-2", agent1, false),
+          ("test-claim-unsubmitted-3-2", agent1, false)
+        )
     }
   }
 

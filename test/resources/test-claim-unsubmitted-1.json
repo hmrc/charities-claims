@@ -1,0 +1,14 @@
+{
+    "claimId": "test-claim-unsubmitted-1",
+    "claimSubmitted": false,
+    "userId": "test-user-1",
+    "creationTimestamp": "2025-11-10T13:45:56.016Z",
+    "claimData": {
+        "repaymentClaimDetails": {
+            "claimingGiftAid": true,
+            "claimingTaxDeducted": false,
+            "claimingUnderGasds": false,
+            "claimReferenceNumber": "New GA Claim"
+        }
+    }
+}

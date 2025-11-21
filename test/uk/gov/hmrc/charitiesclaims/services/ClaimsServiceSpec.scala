@@ -27,6 +27,7 @@ import uk.gov.hmrc.charitiesclaims.models.Claim
 
 import java.util.UUID
 import play.api.libs.json.Json
+import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
 
 class ClaimsServiceSpec
     extends AnyWordSpec
@@ -41,9 +42,14 @@ class ClaimsServiceSpec
     GuiceApplicationBuilder()
       .build()
 
+  val claims = Json
+    .parse(this.getClass.getResourceAsStream("/get-claims-response.json"))
+    .as[GetClaimsResponse]
+    .claimsList
+
   "ClaimsService" should {
     "store, retrieve, list and delete a claim" in {
-      val claim     = Claim(claimId = UUID.randomUUID().toString, userId = UUID.randomUUID().toString)
+      val claim     = claims.head
       val claimJson = Json.toJson(claim)(using Claim.format)
 
       val result = claimsService.putClaim(claim).futureValue
@@ -64,7 +70,7 @@ class ClaimsServiceSpec
 
       claimsService.listClaims(claim2.userId).futureValue shouldBe Seq(claimJson2)
 
-      val claim3     = Claim(claimId = UUID.randomUUID().toString, userId = claim2.userId)
+      val claim3     = claim.copy(claimId = UUID.randomUUID().toString, userId = claim2.userId)
       val claimJson3 = Json.toJson(claim3)(using Claim.format)
       claimsService.putClaim(claim3).futureValue
 

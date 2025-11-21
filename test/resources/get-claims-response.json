@@ -1,0 +1,82 @@
+{
+    "claimsCount": 1,
+    "claimsList": [
+        {
+            "claimId": "7c3e59a2-52c4-4db4-9cae-651531862cd7",
+            "claimSubmitted": true,
+            "userId": "0000000290806672",
+            "creationTimestamp": "2025-11-10T13:45:56.016Z",
+            "claimData": {
+                "repaymentClaimDetails": {
+                    "claimingGiftAid": true,
+                    "claimingTaxDeducted": false,
+                    "claimingUnderGasds": false,
+                    "claimReferenceNumber": "New GA Claim"
+                },
+                "organisationDetails": {
+                    "nameOfCharityRegulator": "EnglandAndWales",
+                    "charityRegistrationNumber": "1137948",
+                    "areYouACorporateTrustee": true,
+                    "nameOfCorporateTrustee": "Joe Bloggs",
+                    "corporateTrusteePostcode": "AB12 3YZ",
+                    "corporateTrusteeDaytimeTelephoneNumber": "071234567890"
+                },
+                "giftAidScheduleData": {
+                    "earliestDonationDate": "2025-01-31",
+                    "prevOverclaimedGiftAid": 0.00,
+                    "totalDonations": 1450,
+                    "donations": [
+                        {
+                            "donationItem": 1,
+                            "donorTitle": "Mr",
+                            "donorFirstName": "Henry",
+                            "donorLastName": "House Martin",
+                            "donorHouse": "152A",
+                            "donorPostcode": "M99 2QD",
+                            "sponsoredEvent": false,
+                            "donationDate": "2025-03-24",
+                            "donationAmount": 240
+                        },
+                        {
+                            "donationItem": 2,
+                            "donorTitle": "Mr",
+                            "donorFirstName": "John",
+                            "donorLastName": "Smith",
+                            "donorHouse": "100 Champs Elysees, Paris",
+                            "donorPostcode": "X",
+                            "sponsoredEvent": false,
+                            "donationDate": "2025-06-24",
+                            "donationAmount": 250
+                        },
+                        {
+                            "donationItem": 3,
+                            "aggregatedDonations": "One off Gift Aid donations",
+                            "sponsoredEvent": false,
+                            "donationDate": "2025-03-31",
+                            "donationAmount": 880
+                        },
+                        {
+                            "donationItem": 4,
+                            "donorTitle": "Miss",
+                            "donorFirstName": "B",
+                            "donorLastName": "Chaudry",
+                            "donorHouse": "21",
+                            "donorPostcode": "L43 4FB",
+                            "sponsoredEvent": true,
+                            "donationDate": "2025-04-26",
+                            "donationAmount": 80
+                        }
+                    ]
+                },
+                "declarationDetails": {
+                    "understandFalseStatements": true,
+                    "includedAnyAdjustmentsInClaimPrompt": "More information"
+                }
+            },
+            "submissionDetails": {
+                "submissionTimestamp": "2025-11-10T13:55:31.168Z",
+                "submissionReference": "T2QY5L7G6HT6DG5UCS67V73EEGN5HT2X"
+            }
+        }
+    ]
+}

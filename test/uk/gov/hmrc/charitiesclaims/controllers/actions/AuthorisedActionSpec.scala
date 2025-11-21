@@ -63,8 +63,8 @@ class AuthorisedActionSpec extends BaseSpec {
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
-      status(result)          must be(FORBIDDEN)
-      contentAsString(result) must be("Unsupported affinity group: Individual")
+      status(result)          should be(FORBIDDEN)
+      contentAsString(result) should be("Unsupported affinity group: Individual")
     }
 
     "create AuthorisedRequest when user has an Organisation affinity group" in {
@@ -87,8 +87,8 @@ class AuthorisedActionSpec extends BaseSpec {
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
-      status(result)          must be(OK)
-      contentAsString(result) must be("Organisation")
+      status(result)          should be(OK)
+      contentAsString(result) should be("Organisation")
     }
 
     "create AuthorisedRequest when user has an Agent affinity group" in {
@@ -111,8 +111,8 @@ class AuthorisedActionSpec extends BaseSpec {
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
-      status(result)          must be(OK)
-      contentAsString(result) must be("Agent")
+      status(result)          should be(OK)
+      contentAsString(result) should be("Agent")
     }
 
     "return 403 when user has no affinity group" in {
@@ -135,7 +135,7 @@ class AuthorisedActionSpec extends BaseSpec {
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
-      status(result) must be(FORBIDDEN)
+      status(result) should be(FORBIDDEN)
     }
 
     "return 403 when user has no credentials" in {
@@ -158,7 +158,7 @@ class AuthorisedActionSpec extends BaseSpec {
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
-      status(result) must be(FORBIDDEN)
+      status(result) should be(FORBIDDEN)
     }
 
     "return 403 when user has no credentials nor affinity group" in {
@@ -181,7 +181,7 @@ class AuthorisedActionSpec extends BaseSpec {
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
-      status(result) must be(FORBIDDEN)
+      status(result) should be(FORBIDDEN)
     }
 
     "return 403 when AuthorisationException is thrown" in {
@@ -200,7 +200,7 @@ class AuthorisedActionSpec extends BaseSpec {
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
-      status(result) must be(FORBIDDEN)
+      status(result) should be(FORBIDDEN)
     }
 
   }

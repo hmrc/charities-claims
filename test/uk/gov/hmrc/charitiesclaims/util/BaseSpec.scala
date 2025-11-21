@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.charitiesclaims.util
 
-import org.scalatest.matchers.must.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.concurrent.IntegrationPatience
 import org.apache.pekko.actor.ActorSystem

@@ -35,7 +35,7 @@ class GetClaimsControllerSpec extends ControllerSpec {
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction)
 
       val result = controller.getClaims()(fakeRequest)
-      status(result) mustBe Status.OK
+      status(result) shouldBe Status.OK
     }
 
     "return 200 when user is an agent" in new AuthorisedAgentFixture {
@@ -43,7 +43,7 @@ class GetClaimsControllerSpec extends ControllerSpec {
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction)
 
       val result = controller.getClaims()(fakeRequest)
-      status(result) mustBe Status.OK
+      status(result) shouldBe Status.OK
     }
   }
 

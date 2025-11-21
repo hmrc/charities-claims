@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 final case class Claim(
   claimId: String,
   userId: String,
+  claimSubmitted: Boolean,
   creationTimestamp: String,
   claimData: ClaimData
 )

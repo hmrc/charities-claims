@@ -19,7 +19,8 @@ package uk.gov.hmrc.charitiesclaims.config
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
-import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
+import uk.gov.hmrc.charitiesclaims.models.Claim
+
 import scala.io.Source
 
 class ClaimSpec extends AnyWordSpec with Matchers {
@@ -29,28 +30,16 @@ class ClaimSpec extends AnyWordSpec with Matchers {
 
       val json =
         Source
-          .fromInputStream(this.getClass.getResourceAsStream("/get-claims-response.json"))
+          .fromInputStream(this.getClass.getResourceAsStream("/test-claim-submitted.json"))
           .getLines()
           .mkString("\n")
 
-      val claimsResponse = Json
-        .parse(json)
-        .as[GetClaimsResponse]
+      val claim = Json.parse(json).as[Claim]
 
-      val json2 = Json.prettyPrint(Json.toJson(claimsResponse))
+      Json.parse(Json.prettyPrint(Json.toJson(claim))).as[Claim] shouldBe claim
 
-      val claimsResponse2 = Json
-        .parse(json2)
-        .as[GetClaimsResponse]
-
-      claimsResponse2 shouldBe claimsResponse
-
-      claimsResponse.claimsCount shouldBe 1
-
-      val claim = claimsResponse.claimsList.head
-
-      claim.claimId                                                        shouldBe "7c3e59a2-52c4-4db4-9cae-651531862cd7"
-      claim.userId                                                         shouldBe "0000000290806672"
+      claim.claimId                                                        shouldBe "test-claim-submitted"
+      claim.userId                                                         shouldBe "test-user-1"
       claim.creationTimestamp                                              shouldBe "2025-11-10T13:45:56.016Z"
       claim.claimData.repaymentClaimDetails.claimingGiftAid                shouldBe true
       claim.claimData.repaymentClaimDetails.claimingTaxDeducted            shouldBe false

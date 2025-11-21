@@ -29,18 +29,25 @@ import play.api.libs.json.JsObject
 @ImplementedBy(classOf[ClaimsServiceImpl])
 trait ClaimsService {
 
-  def putClaim(claim: Claim): Future[CacheItem]
+  def putClaim(claim: Claim): Future[Claim]
   def getClaim(claimId: String): Future[Option[Claim]]
   def deleteClaim(claimId: String): Future[Unit]
-  def listClaims(userId: String): Future[Seq[JsObject]]
+  def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[JsObject]]
 
 }
 
 @Singleton
 class ClaimsServiceImpl @Inject() (repository: ClaimsRepository)(using ExecutionContext) extends ClaimsService {
 
-  def putClaim(claim: Claim): Future[CacheItem] =
-    repository.put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
+  def putClaim(claim: Claim): Future[Claim] =
+    repository
+      .put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
+      .map(cacheItem =>
+        cacheItem.data.value
+          .get("claim")
+          .map(_.as[Claim])
+          .getOrElse(throw new RuntimeException("Really bad thing happened: claim not found in cache item"))
+      )
 
   def getClaim(claimId: String): Future[Option[Claim]] =
     repository.get(claimId)(ClaimsRepository.claimDataKey)
@@ -48,9 +55,9 @@ class ClaimsServiceImpl @Inject() (repository: ClaimsRepository)(using Execution
   def deleteClaim(claimId: String): Future[Unit] =
     repository.delete(claimId)(ClaimsRepository.claimDataKey)
 
-  def listClaims(userId: String): Future[Seq[JsObject]] =
+  def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[JsObject]] =
     repository.collection
-      .find(BsonDocument(ClaimsRepository.userIdPath -> userId))
+      .find(BsonDocument(ClaimsRepository.userIdPath -> userId, ClaimsRepository.claimSubmittedPath -> claimSubmitted))
       .map(cacheItem => cacheItem.data.value.get("claim").get.asInstanceOf[JsObject])
       .collect()
       .head()

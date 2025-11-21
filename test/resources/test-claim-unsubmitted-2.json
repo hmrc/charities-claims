@@ -1,0 +1,22 @@
+{
+    "claimId": "test-claim-unsubmitted-2",
+    "claimSubmitted": false,
+    "userId": "test-user-1",
+    "creationTimestamp": "2025-11-10T13:45:56.016Z",
+    "claimData": {
+        "repaymentClaimDetails": {
+            "claimingGiftAid": true,
+            "claimingTaxDeducted": false,
+            "claimingUnderGasds": false,
+            "claimReferenceNumber": "New GA Claim"
+        },
+        "organisationDetails": {
+            "nameOfCharityRegulator": "EnglandAndWales",
+            "charityRegistrationNumber": "1137948",
+            "areYouACorporateTrustee": true,
+            "nameOfCorporateTrustee": "Joe Bloggs",
+            "corporateTrusteePostcode": "AB12 3YZ",
+            "corporateTrusteeDaytimeTelephoneNumber": "071234567890"
+        }
+    }
+}

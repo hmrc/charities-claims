@@ -35,6 +35,9 @@ trait BaseController {
   val authorisedAction: AuthorisedAction
   val cc: ControllerComponents
 
+  inline def currentUserId(using request: AuthorisedRequest[AnyContent]): String =
+    request.userId
+
   final def whenAuthorised(block: AuthorisedRequest[AnyContent] ?=> Future[Result]): Action[AnyContent] =
     authorisedAction.async(implicit r => block)
 
@@ -47,7 +50,6 @@ trait BaseController {
           case JsSuccess(value, path) => body(value)
 
           case JsError(errors) =>
-            println(s"Invalid json format: ${errors.mkString(", ")}")
             Future.successful(
               BadRequest(
                 Json.obj(

@@ -16,35 +16,49 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
+import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.AnyContent
 import play.api.mvc.ControllerComponents
-import play.api.mvc.Results.Ok
+import play.api.mvc.Results.{InternalServerError, Ok}
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.charitiesclaims.models.GetClaimsRequest
+import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 
 import javax.inject.Inject
 import javax.inject.Singleton
-import scala.concurrent.Future
-import uk.gov.hmrc.charitiesclaims.models.GetClaimsRequest
-import play.api.libs.json.Json
-import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
+import scala.concurrent.ExecutionContext
+import play.api.libs.json.JsArray
 
 @Singleton()
 class GetClaimsController @Inject() (
   val cc: ControllerComponents,
-  val authorisedAction: AuthorisedAction
-) extends BaseController {
+  val authorisedAction: AuthorisedAction,
+  claimsService: ClaimsService
+)(using ExecutionContext)
+    extends BaseController {
 
   val getClaims: Action[AnyContent] =
     whenAuthorised {
-      withPayload[GetClaimsRequest] { payload =>
-        Future.successful(
-          Ok(
-            Json.toJson(
-              GetClaimsResponse(claimsCount = 0, claimsList = Seq.empty)
+      withPayload[GetClaimsRequest] { getClaimRequest =>
+        claimsService
+          .listClaims(currentUserId, getClaimRequest.claimSubmitted)
+          .map(claims =>
+            Ok(
+              Json.obj(
+                "claimsCount" -> claims.size,
+                "claimsList"  -> JsArray(claims)
+              )
             )
           )
-        )
+          .recover { case e =>
+            InternalServerError(
+              Json.obj(
+                "errorMessage" -> e.getMessage,
+                "errorCode"    -> "CLAIM_SERVICE_ERROR"
+              )
+            )
+          }
       }
     }
 }

@@ -30,7 +30,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait ControllerSpec extends BaseSpec {
+trait ControllerSpec extends BaseSpec with TestUsers {
 
   trait AuthorisedOrganisationFixture {
     val mockAuthConnector: AuthConnector = mock[AuthConnector]
@@ -43,7 +43,7 @@ trait ControllerSpec extends BaseSpec {
       .expects(*, *, *, *)
       .returning(
         Future.successful(
-          `~`(Some(AffinityGroup.Organisation), Some(Credentials("organisation-1234567890", "GovernmentGateway")))
+          `~`(Some(AffinityGroup.Organisation), Some(Credentials(organisation1, "GovernmentGateway")))
         )
       )
 
@@ -62,7 +62,7 @@ trait ControllerSpec extends BaseSpec {
       .expects(*, *, *, *)
       .returning(
         Future.successful(
-          `~`(Some(AffinityGroup.Agent), Some(Credentials("agent-1234567890", "GovernmentGateway")))
+          `~`(Some(AffinityGroup.Agent), Some(Credentials(agent1, "GovernmentGateway")))
         )
       )
 

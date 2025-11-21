@@ -46,7 +46,7 @@ final case class RepaymentClaimDetails(
   claimingGiftAid: Boolean,
   claimingTaxDeducted: Boolean,
   claimingUnderGasds: Boolean,
-  claimReferenceNumber: String
+  claimReferenceNumber: Option[String] = None
 )
 
 object RepaymentClaimDetails {

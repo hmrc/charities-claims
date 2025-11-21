@@ -55,7 +55,7 @@ class ClaimSpec extends AnyWordSpec with Matchers {
       claim.claimData.repaymentClaimDetails.claimingGiftAid                shouldBe true
       claim.claimData.repaymentClaimDetails.claimingTaxDeducted            shouldBe false
       claim.claimData.repaymentClaimDetails.claimingUnderGasds             shouldBe false
-      claim.claimData.repaymentClaimDetails.claimReferenceNumber           shouldBe "New GA Claim"
+      claim.claimData.repaymentClaimDetails.claimReferenceNumber           shouldBe Some("New GA Claim")
       claim.claimData.organisationDetails.map(_.nameOfCharityRegulator)    shouldBe Some(
         "EnglandAndWales"
       )

@@ -21,10 +21,13 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers
 import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
+import uk.gov.hmrc.charitiesclaims.models.GetClaimsRequest
+import play.api.libs.json.Json
 
 class GetClaimsControllerSpec extends ControllerSpec {
 
   val fakeRequest = FakeRequest("POST", "/get-claims")
+    .withJsonBody(Json.toJson(GetClaimsRequest(claimSubmitted = true)))
 
   "POST /get-claims" - {
     "return 200 when user is an organisation" in new AuthorisedOrganisationFixture {

@@ -1,0 +1,71 @@
+/*
+ * Copyright 2025 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.charitiesclaims.controllers
+
+import play.api.libs.json.Format
+import play.api.libs.json.JsError
+import play.api.libs.json.JsSuccess
+import play.api.libs.json.Json
+import play.api.mvc.AnyContent
+import play.api.mvc.ControllerComponents
+import play.api.mvc.Request
+import play.api.mvc.Result
+import play.api.mvc.Results.BadRequest
+
+import scala.concurrent.Future
+import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
+import play.api.mvc.Action
+
+trait BaseController {
+  val authorisedAction: AuthorisedAction
+  val cc: ControllerComponents
+
+  final def whenAuthorised(block: AuthorisedRequest[AnyContent] ?=> Future[Result]): Action[AnyContent] =
+    authorisedAction.async(implicit r => block)
+
+  final def withPayload[A : Format](
+    body: Request[AnyContent] ?=> A => Future[Result]
+  )(using request: Request[AnyContent]): Future[Result] =
+    request.body.asJson match {
+      case Some(json) =>
+        json.validate[A] match {
+          case JsSuccess(value, path) => body(value)
+
+          case JsError(errors) =>
+            println(s"Invalid json format: ${errors.mkString(", ")}")
+            Future.successful(
+              BadRequest(
+                Json.obj(
+                  "errorMessage" -> s"Invalid json format: ${errors.mkString(", ")}",
+                  "errorCode"    -> "INVALID_JSON_FORMAT"
+                )
+              )
+            )
+        }
+
+      case None =>
+        Future.successful(
+          BadRequest(
+            Json.obj(
+              "errorMessage" -> request.body.asText,
+              "errorCode"    -> "MALFORMED_JSON"
+            )
+          )
+        )
+    }
+}

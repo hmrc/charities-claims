@@ -16,20 +16,35 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
-import javax.inject.{Inject, Singleton}
+import play.api.mvc.Action
+import play.api.mvc.AnyContent
+import play.api.mvc.ControllerComponents
+import play.api.mvc.Results.Ok
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
+
+import javax.inject.Inject
+import javax.inject.Singleton
 import scala.concurrent.Future
+import uk.gov.hmrc.charitiesclaims.models.GetClaimsRequest
+import play.api.libs.json.Json
+import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
 
 @Singleton()
 class GetClaimsController @Inject() (
-  cc: ControllerComponents,
-  authorisedAction: AuthorisedAction
-) extends BackendController(cc):
+  val cc: ControllerComponents,
+  val authorisedAction: AuthorisedAction
+) extends BaseController {
 
   val getClaims: Action[AnyContent] =
-    authorisedAction.async { request =>
-      Future.successful(Ok("Hello world"))
+    whenAuthorised {
+      withPayload[GetClaimsRequest] { payload =>
+        Future.successful(
+          Ok(
+            Json.toJson(
+              GetClaimsResponse(claimsCount = 0, claimsList = Seq.empty)
+            )
+          )
+        )
+      }
     }
+}

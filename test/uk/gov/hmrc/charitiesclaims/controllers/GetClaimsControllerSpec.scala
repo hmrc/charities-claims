@@ -16,18 +16,25 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
+import play.api.http.HeaderNames
+import play.api.http.MimeTypes
 import play.api.http.Status
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsString
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers
 import play.api.test.Helpers.*
-import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
 import uk.gov.hmrc.charitiesclaims.models.GetClaimsRequest
-import play.api.libs.json.Json
+import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
+import uk.gov.hmrc.charitiesclaims.services.ClaimsService
+import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
+import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
 import uk.gov.hmrc.charitiesclaims.util.TestClaimsServiceHelper
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
-import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
+import scala.concurrent.Future
 
 class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
   given ExecutionContext = global
@@ -99,6 +106,92 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
           ("test-claim-unsubmitted-2-2", agent1, false),
           ("test-claim-unsubmitted-3-2", agent1, false)
         )
+    }
+
+    "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {
+
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      (mockClaimsService
+        .listClaims(_: String, _: Boolean))
+        .expects(*, *)
+        .returning(Future.failed(new RuntimeException("Error message")))
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      val result = controller.getClaims()(requestGetClaimsSubmitted)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(JsString("Error message"))
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("CLAIM_SERVICE_ERROR"))
+    }
+
+    "return 400 when wrong entity format" in new AuthorisedOrganisationFixture {
+
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val malformedRequest = FakeRequest("POST", "/get-claims")
+        .withJsonBody(Json.obj("claimUnsubmitted" -> true))
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      val result = controller.getClaims()(malformedRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(
+        JsString("""(/claimSubmitted,List(JsonValidationError(List(error.path.missing),ArraySeq())))""")
+      )
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("INVALID_ENTITY_FORMAT"))
+    }
+
+    "return 400 when malformed JSON request" in new AuthorisedOrganisationFixture {
+
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val malformedRequest = FakeRequest("POST", "/get-claims")
+        .withBody("{\"claimSubmitted\": true")
+        .withHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      val result = controller.getClaims()(malformedRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(JsString("Error message"))
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("CLAIM_SERVICE_ERROR"))
+    }
+
+    "return 400 when wrong content type" in new AuthorisedOrganisationFixture {
+
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val wrongContentTypeRequest = FakeRequest("POST", "/get-claims")
+        .withBody("{\"claimSubmitted\": true }")
+        .withHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.TEXT)
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      val result = controller.getClaims()(wrongContentTypeRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(JsString("Invalid content type: text/plain"))
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("INVALID_CONTENT_TYPE"))
+    }
+
+    "return 400 when missing content type" in new AuthorisedOrganisationFixture {
+
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val wrongContentTypeRequest = FakeRequest("POST", "/get-claims")
+        .withBody("{\"claimSubmitted\": true }")
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      val result = controller.getClaims()(wrongContentTypeRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(JsString("Missing content type header"))
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("INVALID_CONTENT_TYPE"))
     }
   }
 

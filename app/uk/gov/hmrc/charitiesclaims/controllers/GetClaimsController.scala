@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
+import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.AnyContent
 import play.api.mvc.ControllerComponents
-import play.api.mvc.Results.{InternalServerError, Ok}
+import play.api.mvc.Results.InternalServerError
+import play.api.mvc.Results.Ok
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.charitiesclaims.models.GetClaimsRequest
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
@@ -28,7 +30,6 @@ import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 import javax.inject.Inject
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
-import play.api.libs.json.JsArray
 
 @Singleton()
 class GetClaimsController @Inject() (

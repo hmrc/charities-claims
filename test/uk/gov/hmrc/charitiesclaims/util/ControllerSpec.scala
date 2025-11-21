@@ -20,11 +20,11 @@ import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
+import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.charitiesclaims.controllers.actions.DefaultAuthorisedAction
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core.retrieve.Credentials
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,6 +41,7 @@ trait ControllerSpec extends BaseSpec with TestUsers {
         _: ExecutionContext
       ))
       .expects(*, *, *, *)
+      .anyNumberOfTimes()
       .returning(
         Future.successful(
           `~`(Some(AffinityGroup.Organisation), Some(Credentials(organisation1, "GovernmentGateway")))
@@ -60,6 +61,7 @@ trait ControllerSpec extends BaseSpec with TestUsers {
         _: ExecutionContext
       ))
       .expects(*, *, *, *)
+      .anyNumberOfTimes()
       .returning(
         Future.successful(
           `~`(Some(AffinityGroup.Agent), Some(Credentials(agent1, "GovernmentGateway")))

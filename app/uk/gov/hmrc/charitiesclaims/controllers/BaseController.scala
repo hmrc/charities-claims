@@ -20,16 +20,17 @@ import play.api.libs.json.Format
 import play.api.libs.json.JsError
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.Json
+import play.api.mvc.Action
 import play.api.mvc.AnyContent
 import play.api.mvc.ControllerComponents
 import play.api.mvc.Request
 import play.api.mvc.Result
 import play.api.mvc.Results.BadRequest
-
-import scala.concurrent.Future
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
-import play.api.mvc.Action
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 trait BaseController {
   val authorisedAction: AuthorisedAction
@@ -43,7 +44,7 @@ trait BaseController {
 
   final def withPayload[A : Format](
     body: Request[AnyContent] ?=> A => Future[Result]
-  )(using request: Request[AnyContent]): Future[Result] =
+  )(using request: Request[AnyContent], ec: ExecutionContext): Future[Result] =
     request.body.asJson match {
       case Some(json) =>
         json.validate[A] match {
@@ -53,8 +54,8 @@ trait BaseController {
             Future.successful(
               BadRequest(
                 Json.obj(
-                  "errorMessage" -> s"Invalid json format: ${errors.mkString(", ")}",
-                  "errorCode"    -> "INVALID_JSON_FORMAT"
+                  "errorMessage" -> errors.mkString("\n"),
+                  "errorCode"    -> "INVALID_ENTITY_FORMAT"
                 )
               )
             )
@@ -64,8 +65,11 @@ trait BaseController {
         Future.successful(
           BadRequest(
             Json.obj(
-              "errorMessage" -> request.body.asText,
-              "errorCode"    -> "MALFORMED_JSON"
+              "errorMessage" -> request.contentType.match {
+                case Some(contentType) => s"Invalid content type: $contentType"
+                case None              => "Missing content type header"
+              },
+              "errorCode"    -> "INVALID_CONTENT_TYPE"
             )
           )
         )

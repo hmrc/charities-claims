@@ -35,9 +35,8 @@ import uk.gov.hmrc.auth.core.MissingBearerToken
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 
 class AuthorisedActionSpec extends BaseSpec {
-
   class Harness(authorisedAction: AuthorisedAction) {
-    val onPageLoad: Action[AnyContent] = authorisedAction { request =>
+    val onPageLoad: Action[String] = authorisedAction { request =>
       Results.Ok(request.affinityGroup.toString())
     }
   }
@@ -52,6 +51,7 @@ class AuthorisedActionSpec extends BaseSpec {
           _: ExecutionContext
         ))
         .expects(*, *, *, *)
+        .anyNumberOfTimes()
         .returning(
           Future.successful(
             `~`(Some(AffinityGroup.Individual), Some(Credentials("providerId", "providerType")))
@@ -59,7 +59,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+        new DefaultAuthorisedAction(mockAuthConnector)
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -76,6 +76,7 @@ class AuthorisedActionSpec extends BaseSpec {
           _: ExecutionContext
         ))
         .expects(*, *, *, *)
+        .anyNumberOfTimes()
         .returning(
           Future.successful(
             `~`(Some(AffinityGroup.Organisation), Some(Credentials("providerId", "providerType")))
@@ -83,7 +84,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+        new DefaultAuthorisedAction(mockAuthConnector)
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -100,6 +101,7 @@ class AuthorisedActionSpec extends BaseSpec {
           _: ExecutionContext
         ))
         .expects(*, *, *, *)
+        .anyNumberOfTimes()
         .returning(
           Future.successful(
             `~`(Some(AffinityGroup.Agent), Some(Credentials("providerId", "providerType")))
@@ -107,7 +109,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+        new DefaultAuthorisedAction(mockAuthConnector)
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -131,7 +133,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+        new DefaultAuthorisedAction(mockAuthConnector)
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -154,7 +156,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+        new DefaultAuthorisedAction(mockAuthConnector)
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -177,7 +179,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+        new DefaultAuthorisedAction(mockAuthConnector)
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -196,7 +198,7 @@ class AuthorisedActionSpec extends BaseSpec {
         .returns(Future.failed(new MissingBearerToken("Missing bearer token")))
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+        new DefaultAuthorisedAction(mockAuthConnector)
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))

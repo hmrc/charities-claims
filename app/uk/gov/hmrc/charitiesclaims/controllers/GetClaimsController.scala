@@ -19,7 +19,6 @@ package uk.gov.hmrc.charitiesclaims.controllers
 import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import play.api.mvc.Action
-import play.api.mvc.AnyContent
 import play.api.mvc.ControllerComponents
 import play.api.mvc.Results.InternalServerError
 import play.api.mvc.Results.Ok
@@ -39,7 +38,7 @@ class GetClaimsController @Inject() (
 )(using ExecutionContext)
     extends BaseController {
 
-  val getClaims: Action[AnyContent] =
+  val getClaims: Action[String] =
     whenAuthorised {
       withPayload[GetClaimsRequest] { getClaimRequest =>
         claimsService

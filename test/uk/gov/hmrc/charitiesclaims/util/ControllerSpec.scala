@@ -29,8 +29,22 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import play.api.test.FakeRequest
+import play.api.mvc.Headers
+import play.api.http.HeaderNames
+import play.api.http.MimeTypes
+import play.api.libs.json.Writes
+import play.api.libs.json.Json
 
 trait ControllerSpec extends BaseSpec with TestUsers {
+
+  def testRequest[A : Writes](method: String, url: String, body: A): FakeRequest[String] =
+    FakeRequest[String](
+      method = method,
+      uri = url,
+      headers = Headers(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON),
+      body = Json.prettyPrint(Json.toJson(body))
+    )
 
   trait AuthorisedOrganisationFixture {
     val mockAuthConnector: AuthConnector = mock[AuthConnector]
@@ -49,7 +63,7 @@ trait ControllerSpec extends BaseSpec with TestUsers {
       )
 
     val authorisedAction =
-      new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+      new DefaultAuthorisedAction(mockAuthConnector)
   }
 
   trait AuthorisedAgentFixture {
@@ -69,7 +83,7 @@ trait ControllerSpec extends BaseSpec with TestUsers {
       )
 
     val authorisedAction =
-      new DefaultAuthorisedAction(mockAuthConnector, bodyParser)
+      new DefaultAuthorisedAction(mockAuthConnector)
   }
 
 }

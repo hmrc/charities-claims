@@ -31,21 +31,20 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import uk.gov.hmrc.charitiesclaims.controllers.BodyParsers
 
 @ImplementedBy(classOf[DefaultAuthorisedAction])
-trait AuthorisedAction
-    extends ActionBuilder[AuthorisedRequest, AnyContent]
-    with ActionFunction[Request, AuthorisedRequest]
+trait AuthorisedAction extends ActionBuilder[AuthorisedRequest, String] with ActionFunction[Request, AuthorisedRequest]
 
 @Singleton
 class DefaultAuthorisedAction @Inject() (
-  override val authConnector: AuthConnector,
-  val parser: BodyParsers.Default
+  override val authConnector: AuthConnector
 )(implicit val executionContext: ExecutionContext)
     extends AuthorisedAction
     with AuthorisedFunctions {
 
-  val logger: Logger = Logger(this.getClass)
+  val parser: BodyParser[String] = BodyParsers.parseTolerantTextUtf8
+  val logger: Logger             = Logger(this.getClass)
 
   override def invokeBlock[A](request: Request[A], block: AuthorisedRequest[A] => Future[Result]): Future[Result] = {
 

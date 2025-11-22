@@ -2,14 +2,14 @@
     "claimsCount": 1,
     "claimsList": [
         {
-            "claimId": "7c3e59a2-52c4-4db4-9cae-651531862cd7",
+            "claimId": "123",
             "claimSubmitted": true,
             "userId": "0000000290806672",
             "creationTimestamp": "2025-11-10T13:45:56.016Z",
             "claimData": {
                 "repaymentClaimDetails": {
                     "claimingGiftAid": true,
-                    "claimingTaxDeducted": false,
+                    "claimingTaxDeducted": true,
                     "claimingUnderGasds": false,
                     "claimReferenceNumber": "New GA Claim"
                 },
@@ -65,6 +65,59 @@
                             "sponsoredEvent": true,
                             "donationDate": "2025-04-26",
                             "donationAmount": 80
+                        }
+                    ]
+                },
+                "otherIncomeScheduleData": {
+                    "prevOverclaimedOtherIncome": 0.00,
+                    "totalGrossPayments": 100.00,
+                    "totalTaxDeducted": 10.00,
+                    "payments": [
+                        {
+                            "paymentItem": 1,
+                            "nameOfPayer": "Joe Bloggs",
+                            "dateOfPayment": "2025-10-02",
+                            "grossPayment": 100.00,
+                            "taxDeducted": 10.00
+                        }
+                    ]
+                },
+                "gasdsScheduleData": {
+                    "adjustmentForGiftAidOverClaimed": 0.00,
+                    "claims": [
+                        {
+                            "taxYear": 2025,
+                            "amountOfDonationsReceived": 120.56
+                        },
+                        {
+                            "taxYear": 2024,
+                            "amountOfDonationsReceived": 650.21
+                        }
+                    ],
+                    "connectedCharitiesScheduleData": [
+                        {
+                            "charityItem": 1,
+                            "charityName": "Charity ABC",
+                            "charityReference": "AB123"
+                        },
+                        {
+                            "charityItem": 2,
+                            "charityName": "Charity DEF",
+                            "charityReference": "DE123"
+                        }
+                    ],
+                    "communityBuildingsScheduleData": [
+                        {
+                            "buildingItem": 1,
+                            "buildingName": "Charity ABC",
+                            "firstLineOfAddress": "AB123",
+                            "postcode": "Charity ABC",
+                            "taxYearOneEnd": 2022,
+                            "taxYearOneAmount": 123.00,
+                            "taxYearTwoEnd": 2023,
+                            "taxYearTwoAmount": 456.00,
+                            "taxYearThreeEnd": 2024,
+                            "taxYearThreeAmount": 789.00
                         }
                     ]
                 },

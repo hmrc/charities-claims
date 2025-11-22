@@ -18,56 +18,63 @@ package uk.gov.hmrc.charitiesclaims.controllers
 
 import play.api.libs.json.Format
 import play.api.libs.json.JsError
+import play.api.libs.json.JsObject
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.Json
-import play.api.mvc.AnyContent
+import play.api.mvc.Action
 import play.api.mvc.ControllerComponents
 import play.api.mvc.Request
 import play.api.mvc.Result
 import play.api.mvc.Results.BadRequest
-
-import scala.concurrent.Future
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
-import play.api.mvc.Action
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 trait BaseController {
   val authorisedAction: AuthorisedAction
   val cc: ControllerComponents
 
-  inline def currentUserId(using request: AuthorisedRequest[AnyContent]): String =
+  inline def currentUserId(using request: AuthorisedRequest[?]): String =
     request.userId
 
-  final def whenAuthorised(block: AuthorisedRequest[AnyContent] ?=> Future[Result]): Action[AnyContent] =
-    authorisedAction.async(implicit r => block)
+  final def whenAuthorised(block: AuthorisedRequest[String] ?=> Future[Result]): Action[String] =
+    authorisedAction(BodyParsers.parseTolerantTextUtf8).async(implicit r => block)
 
   final def withPayload[A : Format](
-    body: Request[AnyContent] ?=> A => Future[Result]
-  )(using request: Request[AnyContent]): Future[Result] =
-    request.body.asJson match {
-      case Some(json) =>
-        json.validate[A] match {
-          case JsSuccess(value, path) => body(value)
+    body: Request[String] ?=> A => Future[Result]
+  )(using request: Request[String], ec: ExecutionContext): Future[Result] =
+    Json
+      .parse(request.body)
+      .match {
+        case obj: JsObject =>
+          obj.validate[A].match {
+            case JsSuccess(value, path) => body(value)
 
-          case JsError(errors) =>
-            Future.successful(
-              BadRequest(
-                Json.obj(
-                  "errorMessage" -> s"Invalid json format: ${errors.mkString(", ")}",
-                  "errorCode"    -> "INVALID_JSON_FORMAT"
+            case JsError(errors) =>
+              Future.successful(
+                BadRequest(
+                  Json.obj(
+                    "errorMessage" -> ("unmarshalling failed " + errors
+                      .map((path, parseErrors) =>
+                        s"at ${path.toString} because of ${parseErrors.map(_.message).mkString(", ")}"
+                      )
+                      .mkString(", ")),
+                    "errorCode"    -> "INVALID_JSON_FORMAT"
+                  )
                 )
               )
-            )
-        }
+          }
 
-      case None =>
-        Future.successful(
-          BadRequest(
-            Json.obj(
-              "errorMessage" -> request.body.asText,
-              "errorCode"    -> "MALFORMED_JSON"
+        case other =>
+          Future.successful(
+            BadRequest(
+              Json.obj(
+                "errorMessage" -> Json.prettyPrint(other),
+                "errorCode"    -> "MALFORMED_JSON"
+              )
             )
           )
-        )
-    }
+      }
 }

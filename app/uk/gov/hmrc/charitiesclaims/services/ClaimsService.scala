@@ -46,7 +46,7 @@ class ClaimsServiceImpl @Inject() (repository: ClaimsRepository)(using Execution
         cacheItem.data.value
           .get("claim")
           .map(_.as[Claim])
-          .getOrElse(throw new RuntimeException("Really bad thing happened: claim not found in cache item"))
+          .get
       )
 
   def getClaim(claimId: String): Future[Option[Claim]] =

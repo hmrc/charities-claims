@@ -17,26 +17,30 @@
 package uk.gov.hmrc.charitiesclaims.controllers
 
 import play.api.http.Status
-import play.api.test.FakeRequest
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsString
+import play.api.libs.json.Json
 import play.api.test.Helpers
 import play.api.test.Helpers.*
-import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
 import uk.gov.hmrc.charitiesclaims.models.GetClaimsRequest
-import play.api.libs.json.Json
+import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
+import uk.gov.hmrc.charitiesclaims.services.ClaimsService
+import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
+import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
 import uk.gov.hmrc.charitiesclaims.util.TestClaimsServiceHelper
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
-import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
+import scala.concurrent.Future
 
 class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
   given ExecutionContext = global
 
-  val requestGetClaimsSubmitted = FakeRequest("POST", "/get-claims")
-    .withJsonBody(Json.toJson(GetClaimsRequest(claimSubmitted = true)))
+  val requestGetClaimsSubmitted =
+    testRequest("POST", "/get-claims", GetClaimsRequest(claimSubmitted = true))
 
-  val requestGetClaimsUnsubmitted = FakeRequest("POST", "/get-claims")
-    .withJsonBody(Json.toJson(GetClaimsRequest(claimSubmitted = false)))
+  val requestGetClaimsUnsubmitted =
+    testRequest("POST", "/get-claims", GetClaimsRequest(claimSubmitted = false))
 
   val claimsService = new TestClaimsService(initialTestClaimsSet)
 
@@ -99,6 +103,56 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
           ("test-claim-unsubmitted-2-2", agent1, false),
           ("test-claim-unsubmitted-3-2", agent1, false)
         )
+    }
+
+    "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {
+
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      (mockClaimsService
+        .listClaims(_: String, _: Boolean))
+        .expects(*, *)
+        .returning(Future.failed(new RuntimeException("Error message")))
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      val result = controller.getClaims()(requestGetClaimsSubmitted)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(JsString("Error message"))
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("CLAIM_SERVICE_ERROR"))
+    }
+
+    "return 400 when wrong entity format" in new AuthorisedOrganisationFixture {
+
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val malformedRequest = testRequest("POST", "/get-claims", Json.obj("claimUnsubmitted" -> true))
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      val result = controller.getClaims()(malformedRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(
+        JsString("unmarshalling failed at /claimSubmitted because of error.path.missing")
+      )
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("INVALID_JSON_FORMAT"))
+    }
+
+    "return 400 when malformed JSON request" in new AuthorisedOrganisationFixture {
+
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val malformedRequest = testRequest("POST", "/get-claims", "{\"claimSubmitted\": true")
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      val result = controller.getClaims()(malformedRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(JsString("\"{\\\"claimSubmitted\\\": true\""))
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("MALFORMED_JSON"))
     }
   }
 

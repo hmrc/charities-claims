@@ -48,7 +48,7 @@ class DefaultAuthorisedAction @Inject() (
 
   override def invokeBlock[A](request: Request[A], block: AuthorisedRequest[A] => Future[Result]): Future[Result] = {
 
-    given HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+    given HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
     authorised()
       .retrieve(Retrievals.affinityGroup.and(Retrievals.credentials)) {

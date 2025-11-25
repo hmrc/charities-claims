@@ -49,7 +49,11 @@ final case class RepaymentClaimDetails(
   claimingGiftAid: Boolean,
   claimingTaxDeducted: Boolean,
   claimingUnderGasds: Boolean,
-  claimReferenceNumber: Option[String] = None
+  claimReferenceNumber: Option[String] = None,
+  claimingDonationsNotFromCommunityBuilding: Option[Boolean] = None,
+  claimingDonationsCollectedInCommunityBuildings: Option[Boolean] = None,
+  connectedToAnyOtherCharities: Option[Boolean] = None,
+  makingAdjustmentToPreviousClaim: Option[Boolean] = None
 )
 
 object RepaymentClaimDetails {

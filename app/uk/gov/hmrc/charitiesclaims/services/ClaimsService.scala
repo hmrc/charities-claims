@@ -40,14 +40,21 @@ trait ClaimsService {
 class ClaimsServiceImpl @Inject() (repository: ClaimsRepository)(using ExecutionContext) extends ClaimsService {
 
   def putClaim(claim: Claim): Future[Claim] =
-    repository
-      .put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
-      .map(cacheItem =>
-        cacheItem.data.value
-          .get("claim")
-          .map(_.as[Claim])
-          .get
-      )
+    repository.get(claim.claimId)(ClaimsRepository.claimDataKey).flatMap {
+      case Some(existingClaim) if claim == existingClaim =>
+        Future.successful(existingClaim)
+
+      case _ =>
+        repository
+          .put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
+          .map(cacheItem =>
+            cacheItem.data.value
+              .get("claim")
+              .map(_.as[Claim])
+              .get
+          )
+
+    }
 
   def getClaim(claimId: String): Future[Option[Claim]] =
     repository.get(claimId)(ClaimsRepository.claimDataKey)

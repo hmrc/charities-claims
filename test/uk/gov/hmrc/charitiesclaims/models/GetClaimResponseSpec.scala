@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.charitiesclaims.config
+package uk.gov.hmrc.charitiesclaims.models
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
-import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
 
 import scala.io.Source
 

@@ -65,6 +65,8 @@ class ClaimsServiceSpec
           val result = claimsService.putClaim(claim).futureValue
           result shouldBe claim
 
+          claimsService.putClaim(claim).futureValue shouldBe claim
+
           // check the claim can be retrieved and listed
           claimsService.getClaim(claim.claimId).futureValue shouldBe Some(claim)
           claimsService.getClaim(claim.claimId).futureValue shouldBe Some(claim)

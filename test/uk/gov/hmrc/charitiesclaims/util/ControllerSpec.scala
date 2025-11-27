@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.charitiesclaims.util
 
-import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -35,6 +34,7 @@ import play.api.http.HeaderNames
 import play.api.http.MimeTypes
 import play.api.libs.json.Writes
 import play.api.libs.json.Json
+import play.api.mvc.AnyContentAsEmpty
 
 trait ControllerSpec extends BaseSpec with TestUsers {
 
@@ -45,6 +45,9 @@ trait ControllerSpec extends BaseSpec with TestUsers {
       headers = Headers(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON),
       body = Json.prettyPrint(Json.toJson(body))
     )
+
+  def testRequest(method: String, url: String): FakeRequest[AnyContentAsEmpty.type] =
+    FakeRequest(method, url)
 
   trait AuthorisedOrganisationFixture {
     val mockAuthConnector: AuthConnector = mock[AuthConnector]

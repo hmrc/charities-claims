@@ -29,7 +29,6 @@ import play.api.mvc.Results.BadRequest
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 trait BaseController {
@@ -44,7 +43,7 @@ trait BaseController {
 
   final def withPayload[A : Format](
     body: Request[String] ?=> A => Future[Result]
-  )(using request: Request[String], ec: ExecutionContext): Future[Result] =
+  )(using request: Request[String]): Future[Result] =
     Json
       .parse(request.body)
       .match {

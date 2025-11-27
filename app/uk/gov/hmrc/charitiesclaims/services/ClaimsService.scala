@@ -29,7 +29,7 @@ import play.api.libs.json.JsObject
 @ImplementedBy(classOf[ClaimsServiceImpl])
 trait ClaimsService {
 
-  def putClaim(claim: Claim): Future[Claim]
+  def putClaim(claim: Claim): Future[Unit]
   def getClaim(claimId: String): Future[Option[Claim]]
   def deleteClaim(claimId: String): Future[Unit]
   def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[JsObject]]
@@ -39,20 +39,15 @@ trait ClaimsService {
 @Singleton
 class ClaimsServiceImpl @Inject() (repository: ClaimsRepository)(using ExecutionContext) extends ClaimsService {
 
-  def putClaim(claim: Claim): Future[Claim] =
+  def putClaim(claim: Claim): Future[Unit] =
     repository.get(claim.claimId)(ClaimsRepository.claimDataKey).flatMap {
       case Some(existingClaim) if claim == existingClaim =>
-        Future.successful(existingClaim)
+        Future.successful(())
 
       case _ =>
         repository
           .put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
-          .map(cacheItem =>
-            cacheItem.data.value
-              .get("claim")
-              .map(_.as[Claim])
-              .get
-          )
+          .map(_ => ())
 
     }
 

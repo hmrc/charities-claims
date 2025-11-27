@@ -20,9 +20,10 @@ import play.api.libs.json.JsObject
 import uk.gov.hmrc.charitiesclaims.models.Claim
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.collection.mutable.ListBuffer
 import play.api.libs.json.Json
+
 import scala.io.Source
 import play.api.libs.json.Reads
 
@@ -50,14 +51,15 @@ trait TestClaimsServiceHelper extends TestUsers {
 
 }
 
-class TestClaimsService(initialClaims: Seq[Claim]) extends ClaimsService {
+class TestClaimsService(initialClaims: Seq[Claim])(using ec: ExecutionContext) extends ClaimsService {
 
   private val buffer: ListBuffer[Claim] = ListBuffer.from(initialClaims)
 
-  override def putClaim(claim: Claim): Future[Claim] =
-    deleteClaim(claim.claimId)
-    buffer.append(claim)
-    Future.successful(claim)
+  override def putClaim(claim: Claim): Future[Unit] =
+    deleteClaim(claim.claimId).map { _ =>
+      buffer.append(claim)
+      ()
+    }
 
   override def getClaim(claimId: String): Future[Option[Claim]] =
     Future.successful(buffer.find(_.claimId == claimId))

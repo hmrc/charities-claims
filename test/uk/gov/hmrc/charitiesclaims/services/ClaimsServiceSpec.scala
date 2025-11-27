@@ -29,6 +29,7 @@ import java.util.UUID
 import play.api.libs.json.Json
 import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
 import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ClaimsServiceSpec
     extends AnyWordSpec
@@ -62,10 +63,7 @@ class ClaimsServiceSpec
 
           val claimJson = Json.toJson(claim)(using Claim.format)
 
-          val result = claimsService.putClaim(claim).futureValue
-          result shouldBe claim
-
-          claimsService.putClaim(claim).futureValue shouldBe claim
+          claimsService.putClaim(claim).futureValue
 
           // check the claim can be retrieved and listed
           claimsService.getClaim(claim.claimId).futureValue shouldBe Some(claim)
@@ -78,8 +76,7 @@ class ClaimsServiceSpec
           val claim2     = claim.copy(userId = UUID.randomUUID().toString)
           val claimJson2 = Json.toJson(claim2)(using Claim.format)
 
-          val result2 = claimsService.putClaim(claim2).futureValue
-          result2 shouldBe claim2
+          claimsService.putClaim(claim2).futureValue
 
           // check the second claim can be retrieved and listed
           claimsService.listClaims(claim2.userId, claimSubmitted = true).futureValue  shouldBe Seq(claimJson2)

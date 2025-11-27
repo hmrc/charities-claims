@@ -33,7 +33,6 @@ import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 import scala.concurrent.Future
 
 class DeleteClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
-  given ExecutionContext = global
 
   def requestDeleteClaim(claimId: String) =
     testRequest("DELETE", s"/claims/$claimId")

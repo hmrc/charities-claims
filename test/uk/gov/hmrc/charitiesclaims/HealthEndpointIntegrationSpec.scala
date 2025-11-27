@@ -41,7 +41,7 @@ class HealthEndpointIntegrationSpec
     GuiceApplicationBuilder()
       .build()
 
-  "service health endpoint".should {
+  "service health endpoint" should {
     "respond with 200 status" in {
       val response =
         httpClient

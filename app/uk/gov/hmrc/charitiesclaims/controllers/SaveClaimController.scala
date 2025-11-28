@@ -70,7 +70,7 @@ class SaveClaimController @Inject() (
 
         claimsService
           .putClaim(claim)
-          .map(claim => Ok(Json.toJson(SaveClaimResponse(claimId, creationTimestamp))))
+          .map(_ => Ok(Json.toJson(SaveClaimResponse(claimId, creationTimestamp))))
           .recover { case e =>
             InternalServerError(
               Json.obj(

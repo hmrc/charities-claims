@@ -32,7 +32,7 @@ class HealthEndpointIntegrationSpec
     with Matchers
     with ScalaFutures
     with IntegrationPatience
-    with GuiceOneServerPerSuite:
+    with GuiceOneServerPerSuite {
 
   private val httpClient = app.injector.instanceOf[HttpClientV2]
   private val baseUrl    = s"http://localhost:$port"
@@ -41,12 +41,15 @@ class HealthEndpointIntegrationSpec
     GuiceApplicationBuilder()
       .build()
 
-  "service health endpoint" should:
-    "respond with 200 status" in:
+  "service health endpoint" should {
+    "respond with 200 status" in {
       val response =
         httpClient
-          .get(url"$baseUrl/ping/ping")(HeaderCarrier())
-          .execute()
+          .get(url"$baseUrl/ping/ping")(using HeaderCarrier())
+          .execute
           .futureValue
 
-      response.status shouldBe 200
+      response.status `shouldBe` 200
+    }
+  }
+}

@@ -23,5 +23,6 @@ import scala.concurrent.duration.Duration
 @Singleton
 class AppConfig @Inject() (config: Configuration):
 
-  val appName: String      = config.get[String]("appName")
-  val mongoDbTTL: Duration = config.get[Duration]("mongodb.ttl")
+  val appName: String                 = config.get[String]("appName")
+  val mongoDbTTL: Duration            = config.get[Duration]("mongodb.ttl")
+  val agentUnsubmittedClaimLimit: Int = config.get[Int]("agentUnsubmittedClaimLimit")

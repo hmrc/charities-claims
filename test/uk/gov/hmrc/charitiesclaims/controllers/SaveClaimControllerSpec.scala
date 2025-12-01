@@ -35,9 +35,26 @@ import scala.concurrent.Future
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.libs.json.Json
+import uk.gov.hmrc.charitiesclaims.config.AppConfig
+import play.api.Configuration
+import com.typesafe.config.ConfigFactory
 
 class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
-  given ExecutionContext = global
+
+  val testAppConfig = new AppConfig(
+    Configuration(
+      ConfigFactory.parseString(
+        """
+          | appName = charities-claims
+          | mongodb {
+          |  ttl = 12 days
+          | }
+          | agentUnsubmittedClaimLimit = 3
+          |
+          |""".stripMargin
+      )
+    )
+  )
 
   val requestSaveClaimGiftAid =
     testRequest(
@@ -71,12 +88,11 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       )
     )
 
-  val claimsService = new TestClaimsService(initialClaims = Seq.empty)
-
   "POST /claims" - {
     "return 200 when claim is saved for a gift aid claim" in new AuthorisedOrganisationFixture {
-
-      val controller = new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
+      val claimsService = new TestClaimsService(initialClaims = Seq.empty)
+      val controller    =
+        new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, claimsService, testAppConfig)
 
       val result = controller.saveClaim()(requestSaveClaimGiftAid)
       status(result) shouldBe Status.OK
@@ -105,8 +121,9 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
     }
 
     "return 200 when claim is saved for gasds claim" in new AuthorisedOrganisationFixture {
-
-      val controller = new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
+      val claimsService = new TestClaimsService(initialClaims = Seq.empty)
+      val controller    =
+        new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, claimsService, testAppConfig)
 
       val result = controller.saveClaim()(requestSaveClaimGasds)
       status(result) shouldBe Status.OK
@@ -134,16 +151,82 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       )
     }
 
+    "return 400 when organisation already has unsubmitted claims" in new AuthorisedOrganisationFixture {
+      val claimsService = new TestClaimsService(initialClaims = Seq(testClaimUnsubmitted1.copy(userId = organisation1)))
+      val controller    =
+        new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, claimsService, testAppConfig)
+
+      val result = controller.saveClaim()(requestSaveClaimGiftAid)
+      status(result) shouldBe Status.BAD_REQUEST
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(
+        JsString("Organisation has an unsubmitted claim, no more claims can be submitted")
+      )
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("UNSUBMITTED_CLAIMS_LIMIT_EXCEEDED"))
+    }
+
+    "return 200 when claim is saved for a gift aid claim and for an agent user" in new AuthorisedAgentFixture {
+      val claimsService = new TestClaimsService(initialClaims = Seq.empty)
+      val controller    =
+        new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, claimsService, testAppConfig)
+
+      val result = controller.saveClaim()(requestSaveClaimGiftAid)
+      status(result) shouldBe Status.OK
+      val saveClaimResponse = contentAsJson(result).as[SaveClaimResponse]
+
+      await(claimsService.getClaim(saveClaimResponse.claimId)) shouldEqual Some(
+        Claim(
+          claimId = saveClaimResponse.claimId,
+          userId = agent1,
+          claimSubmitted = false,
+          creationTimestamp = saveClaimResponse.creationTimestamp,
+          claimData = ClaimData(
+            repaymentClaimDetails = RepaymentClaimDetails(
+              claimingGiftAid = true,
+              claimingTaxDeducted = false,
+              claimingUnderGasds = false,
+              claimReferenceNumber = Some("1234567890"),
+              claimingDonationsNotFromCommunityBuilding = None,
+              claimingDonationsCollectedInCommunityBuildings = None,
+              connectedToAnyOtherCharities = None,
+              makingAdjustmentToPreviousClaim = None
+            )
+          )
+        )
+      )
+    }
+
+    "return 400 when agent already reached the unsubmitted claims limit" in new AuthorisedAgentFixture {
+      val claimsService = new TestClaimsService(initialClaims =
+        Seq(
+          testClaimUnsubmitted1.copy(userId = agent1),
+          testClaimUnsubmitted2.copy(userId = agent1),
+          testClaimUnsubmitted3.copy(userId = agent1)
+        )
+      )
+      val controller    =
+        new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, claimsService, testAppConfig)
+
+      val result = controller.saveClaim()(requestSaveClaimGiftAid)
+      status(result) shouldBe Status.BAD_REQUEST
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(
+        JsString("Agent already has 3 unsubmitted claims where the limit is set to 3")
+      )
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("UNSUBMITTED_CLAIMS_LIMIT_EXCEEDED"))
+    }
+
     "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {
 
       val mockClaimsService: ClaimsService = mock[ClaimsService]
 
       (mockClaimsService
-        .putClaim(_: Claim))
-        .expects(*)
+        .listClaims(_: String, _: Boolean))
+        .expects(*, false)
         .returning(Future.failed(new RuntimeException("Error message")))
 
-      val controller = new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+      val controller =
+        new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService, testAppConfig)
 
       val result = controller.saveClaim()(requestSaveClaimGiftAid)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
@@ -158,7 +241,8 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val malformedRequest = testRequest("POST", "/claims", Json.obj("claimingGiftAid" -> true))
 
-      val controller = new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+      val controller =
+        new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService, testAppConfig)
 
       val result = controller.saveClaim()(malformedRequest)
       status(result) shouldBe Status.BAD_REQUEST
@@ -177,7 +261,12 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val malformedRequest = testRequest("POST", "/claims", "{\"claimingGiftAid\": true")
 
-      val controller = new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+      val controller = new SaveClaimController(
+        Helpers.stubControllerComponents(),
+        authorisedAction,
+        mockClaimsService,
+        testAppConfig
+      )
 
       val result = controller.saveClaim()(malformedRequest)
       status(result) shouldBe Status.BAD_REQUEST

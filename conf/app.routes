@@ -3,3 +3,4 @@
 POST        /get-claims             uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaims
 POST        /claims                 uk.gov.hmrc.charitiesclaims.controllers.SaveClaimController.saveClaim
 DELETE      /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.DeleteClaimController.deleteClaim(claimId: String)
+PUT         /claims                 uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateClaim

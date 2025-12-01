@@ -32,6 +32,7 @@ class AppConfigSpec extends AnyWordSpec with Matchers:
           | mongodb {
           |  ttl = 12 days
           | }
+          | agentUnsubmittedClaimLimit = 123
           |
           |""".stripMargin
     )
@@ -45,3 +46,7 @@ class AppConfigSpec extends AnyWordSpec with Matchers:
     "return mongoDbTTL" in:
       val appConfig = new AppConfig(config)
       appConfig.mongoDbTTL shouldBe Duration.apply(12, "days")
+
+    "return agentUnsubmittedClaimLimit" in:
+      val appConfig = new AppConfig(config)
+      appConfig.agentUnsubmittedClaimLimit shouldBe 123

@@ -21,6 +21,7 @@ import play.api.mvc.Action
 import play.api.mvc.ControllerComponents
 import play.api.mvc.Results.InternalServerError
 import play.api.mvc.Results.Ok
+import play.api.mvc.Results.BadRequest
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.charitiesclaims.models.Claim
 import uk.gov.hmrc.charitiesclaims.models.ClaimData
@@ -34,43 +35,62 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.auth.core.AffinityGroup
+import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
+import scala.concurrent.Future
+import play.api.mvc.Result
+import uk.gov.hmrc.charitiesclaims.config.AppConfig
 
 @Singleton()
 class SaveClaimController @Inject() (
   val cc: ControllerComponents,
   val authorisedAction: AuthorisedAction,
-  claimsService: ClaimsService
+  claimsService: ClaimsService,
+  appConfig: AppConfig
 )(using ExecutionContext)
     extends BaseController {
 
   val saveClaim: Action[String] =
     whenAuthorised {
       withPayload[SaveClaimRequest] { saveClaimRequest =>
-        val claimId           = UUID.randomUUID().toString
-        val creationTimestamp = LocalDateTime.now().toString
-        val claim             = Claim(
-          claimId = claimId,
-          userId = currentUserId,
-          claimSubmitted = false,
-          creationTimestamp = creationTimestamp,
-          claimData = ClaimData(
-            repaymentClaimDetails = RepaymentClaimDetails(
-              claimingGiftAid = saveClaimRequest.claimingGiftAid,
-              claimingTaxDeducted = saveClaimRequest.claimingTaxDeducted,
-              claimingUnderGasds = saveClaimRequest.claimingUnderGasds,
-              claimReferenceNumber = saveClaimRequest.claimReferenceNumber,
-              claimingDonationsNotFromCommunityBuilding = saveClaimRequest.claimingDonationsNotFromCommunityBuilding,
-              claimingDonationsCollectedInCommunityBuildings =
-                saveClaimRequest.claimingDonationsCollectedInCommunityBuildings,
-              connectedToAnyOtherCharities = saveClaimRequest.connectedToAnyOtherCharities,
-              makingAdjustmentToPreviousClaim = saveClaimRequest.makingAdjustmentToPreviousClaim
-            )
-          )
-        )
+        currentUserGroup
+          .match {
+            case AffinityGroup.Agent =>
+              claimsService
+                .listClaims(currentUserId, claimSubmitted = false)
+                .flatMap {
+                  case claims if claims.size < appConfig.agentUnsubmittedClaimLimit =>
+                    saveClaim(saveClaimRequest)
 
-        claimsService
-          .putClaim(claim)
-          .map(_ => Ok(Json.toJson(SaveClaimResponse(claimId, creationTimestamp))))
+                  case claims =>
+                    Future.successful(
+                      BadRequest(
+                        Json.obj(
+                          "errorMessage" -> s"Agent already has ${claims.size} unsubmitted claims where the limit is set to ${appConfig.agentUnsubmittedClaimLimit}",
+                          "errorCode"    -> "UNSUBMITTED_CLAIMS_LIMIT_EXCEEDED"
+                        )
+                      )
+                    )
+                }
+
+            case _ =>
+              claimsService
+                .listClaims(currentUserId, claimSubmitted = false)
+                .flatMap {
+                  case claims if claims.size == 0 =>
+                    saveClaim(saveClaimRequest)
+
+                  case _ =>
+                    Future.successful(
+                      BadRequest(
+                        Json.obj(
+                          "errorMessage" -> "Organisation has an unsubmitted claim, no more claims can be submitted",
+                          "errorCode"    -> "UNSUBMITTED_CLAIMS_LIMIT_EXCEEDED"
+                        )
+                      )
+                    )
+                }
+          }
           .recover { case e =>
             InternalServerError(
               Json.obj(
@@ -81,4 +101,32 @@ class SaveClaimController @Inject() (
           }
       }
     }
+
+  private def saveClaim(saveClaimRequest: SaveClaimRequest)(using AuthorisedRequest[?]): Future[Result] = {
+    val claimId           = UUID.randomUUID().toString
+    val creationTimestamp = LocalDateTime.now().toString
+    val claim             = Claim(
+      claimId = claimId,
+      userId = currentUserId,
+      claimSubmitted = false,
+      creationTimestamp = creationTimestamp,
+      claimData = ClaimData(
+        repaymentClaimDetails = RepaymentClaimDetails(
+          claimingGiftAid = saveClaimRequest.claimingGiftAid,
+          claimingTaxDeducted = saveClaimRequest.claimingTaxDeducted,
+          claimingUnderGasds = saveClaimRequest.claimingUnderGasds,
+          claimReferenceNumber = saveClaimRequest.claimReferenceNumber,
+          claimingDonationsNotFromCommunityBuilding = saveClaimRequest.claimingDonationsNotFromCommunityBuilding,
+          claimingDonationsCollectedInCommunityBuildings =
+            saveClaimRequest.claimingDonationsCollectedInCommunityBuildings,
+          connectedToAnyOtherCharities = saveClaimRequest.connectedToAnyOtherCharities,
+          makingAdjustmentToPreviousClaim = saveClaimRequest.makingAdjustmentToPreviousClaim
+        )
+      )
+    )
+
+    claimsService
+      .putClaim(claim)
+      .map(_ => Ok(Json.toJson(SaveClaimResponse(claimId, creationTimestamp))))
+  }
 }

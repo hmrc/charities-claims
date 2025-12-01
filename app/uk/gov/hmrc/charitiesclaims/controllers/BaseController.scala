@@ -30,6 +30,7 @@ import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
 
 import scala.concurrent.Future
+import uk.gov.hmrc.auth.core.AffinityGroup
 
 trait BaseController {
   val authorisedAction: AuthorisedAction
@@ -37,6 +38,9 @@ trait BaseController {
 
   inline def currentUserId(using request: AuthorisedRequest[?]): String =
     request.userId
+
+  inline def currentUserGroup(using request: AuthorisedRequest[?]): AffinityGroup =
+    request.affinityGroup
 
   final def whenAuthorised(block: AuthorisedRequest[String] ?=> Future[Result]): Action[String] =
     authorisedAction(BodyParsers.parseTolerantTextUtf8).async(implicit r => block)

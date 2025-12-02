@@ -20,6 +20,7 @@ import play.api.libs.json.{Format, Json}
 
 final case class UpdateClaimRequest(
   claimId: String,
+  repaymentClaimDetails: Option[RepaymentClaimDetails] = None,
   organisationDetails: Option[OrganisationDetails] = None,
   giftAidScheduleData: Option[GiftAidScheduleData] = None,
   declarationDetails: Option[DeclarationDetails] = None

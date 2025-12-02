@@ -26,8 +26,8 @@ import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
 import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimData, RepaymentClaimDetails, SaveClaimRequest, SaveClaimResponse}
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 
-import java.time.Instant
 import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneOffset}
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -93,12 +93,13 @@ class SaveClaimController @Inject() (
       }
     }
 
-  val ISODateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+  val ISODateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC)
 
   private def saveClaim(saveClaimRequest: SaveClaimRequest)(using AuthorisedRequest[?]): Future[Result] = {
     val claimId           = UUID.randomUUID().toString
     val creationTimestamp = ISODateTimeFormatter.format(Instant.now())
-    val claim             = Claim(
+
+    val claim = Claim(
       claimId = claimId,
       userId = currentUserId,
       claimSubmitted = false,

@@ -17,30 +17,20 @@
 package uk.gov.hmrc.charitiesclaims.controllers
 
 import play.api.libs.json.Json
-import play.api.mvc.Action
-import play.api.mvc.ControllerComponents
-import play.api.mvc.Results.InternalServerError
-import play.api.mvc.Results.Ok
-import play.api.mvc.Results.BadRequest
+import play.api.mvc.Results.{BadRequest, InternalServerError, Ok}
+import play.api.mvc.{Action, ControllerComponents, Result}
+import uk.gov.hmrc.auth.core.AffinityGroup
+import uk.gov.hmrc.charitiesclaims.config.AppConfig
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.charitiesclaims.models.Claim
-import uk.gov.hmrc.charitiesclaims.models.ClaimData
-import uk.gov.hmrc.charitiesclaims.models.RepaymentClaimDetails
-import uk.gov.hmrc.charitiesclaims.models.SaveClaimRequest
-import uk.gov.hmrc.charitiesclaims.models.SaveClaimResponse
+import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
+import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimData, RepaymentClaimDetails, SaveClaimRequest, SaveClaimResponse}
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 
-import java.time.LocalDateTime
-import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
-import scala.concurrent.ExecutionContext
-import uk.gov.hmrc.auth.core.AffinityGroup
-import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
-import scala.concurrent.Future
-import play.api.mvc.Result
-import uk.gov.hmrc.charitiesclaims.config.AppConfig
+import java.time.Instant
 import java.time.format.DateTimeFormatter
+import java.util.UUID
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton()
 class SaveClaimController @Inject() (
@@ -107,7 +97,7 @@ class SaveClaimController @Inject() (
 
   private def saveClaim(saveClaimRequest: SaveClaimRequest)(using AuthorisedRequest[?]): Future[Result] = {
     val claimId           = UUID.randomUUID().toString
-    val creationTimestamp = ISODateTimeFormatter.format(LocalDateTime.now())
+    val creationTimestamp = ISODateTimeFormatter.format(Instant.now())
     val claim             = Claim(
       claimId = claimId,
       userId = currentUserId,

@@ -40,6 +40,13 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     body
   )
 
+  private val repaymentClaimDetails = RepaymentClaimDetails(
+    claimingGiftAid = true,
+    claimingTaxDeducted = true,
+    claimingUnderGasds = true,
+    claimReferenceNumber = Some("123")
+  )
+
   private val orgDetails = OrganisationDetails(
     nameOfCharityRegulator = "test",
     charityRegistrationNumber = "test",
@@ -68,6 +75,14 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       )
     )
   )
+
+  private val requestRepaymentClaimDetails =
+    putClaims(
+      UpdateClaimRequest(
+        claimId,
+        repaymentClaimDetails = Some(repaymentClaimDetails)
+      )
+    )
 
   private val requestUpdateOrgDetails =
     putClaims(
@@ -108,6 +123,38 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
   )
 
   "PUT /claims" - {
+
+    "return 200 when claim is updated for repayment claim details" in new AuthorisedOrganisationFixture {
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val expectedUpdate: Claim = existingClaim.copy(
+        claimData = existingClaim.claimData.copy(
+          repaymentClaimDetails = repaymentClaimDetails
+        )
+      )
+
+      val captured = CaptureOne[Claim]()
+
+      (mockClaimsService
+        .getClaim(_: String))
+        .expects(*)
+        .returning(Future.successful(Some(existingClaim)))
+
+      (mockClaimsService
+        .putClaim(_: Claim))
+        .expects(capture(captured))
+        .returning(Future.successful(()))
+
+      val controller =
+        new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      private val result = controller.updateClaim()(requestRepaymentClaimDetails)
+      status(result)                                shouldBe Status.OK
+      contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
+
+      captured.value shouldBe expectedUpdate
+    }
+
     "return 200 when claim is updated for org details" in new AuthorisedOrganisationFixture {
       val mockClaimsService: ClaimsService = mock[ClaimsService]
 

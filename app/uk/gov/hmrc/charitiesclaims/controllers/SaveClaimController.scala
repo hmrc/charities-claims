@@ -40,6 +40,7 @@ import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
 import scala.concurrent.Future
 import play.api.mvc.Result
 import uk.gov.hmrc.charitiesclaims.config.AppConfig
+import java.time.format.DateTimeFormatter
 
 @Singleton()
 class SaveClaimController @Inject() (
@@ -102,9 +103,11 @@ class SaveClaimController @Inject() (
       }
     }
 
+  val ISODateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+
   private def saveClaim(saveClaimRequest: SaveClaimRequest)(using AuthorisedRequest[?]): Future[Result] = {
     val claimId           = UUID.randomUUID().toString
-    val creationTimestamp = LocalDateTime.now().toString
+    val creationTimestamp = ISODateTimeFormatter.format(LocalDateTime.now())
     val claim             = Claim(
       claimId = claimId,
       userId = currentUserId,

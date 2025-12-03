@@ -51,23 +51,61 @@ class DefaultAuthorisedAction @Inject() (
     given HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
     authorised()
-      .retrieve(Retrievals.affinityGroup.and(Retrievals.credentials)) {
-        case Some(affinityGroup) ~ Some(credentials)
-            if affinityGroup == AffinityGroup.Organisation
-              || affinityGroup == AffinityGroup.Agent =>
-          block(AuthorisedRequest(request, affinityGroup, credentials.providerId))
+      .retrieve(Retrievals.affinityGroup.and(Retrievals.allEnrolments).and(Retrievals.credentials)) {
+        case Some(affinityGroup @ AffinityGroup.Agent) ~ AuthorisedAction.HasActiveAgentEnrolment(
+              enrolmentIdentifier
+            ) ~ Some(
+              credentials
+            ) =>
+          block(AuthorisedRequest(request, affinityGroup, credentials.providerId, enrolmentIdentifier))
 
-        case _ ~ None =>
-          Future.successful(Forbidden(s"No credentials providerId found for user"))
+        case Some(AffinityGroup.Agent) ~ _ ~ _ =>
+          Future.failed(UnsupportedAffinityGroup("Agent enrolment missing or not activated"))
 
-        case Some(affinityGroup) ~ _ =>
-          Future.successful(Forbidden(s"Unsupported affinity group: $affinityGroup"))
+        case Some(affinityGroup @ AffinityGroup.Organisation) ~ AuthorisedAction
+              .HasActiveOrganisationEnrolment(enrolmentIdentifier) ~ Some(credentials) =>
+          block(AuthorisedRequest(request, affinityGroup, credentials.providerId, enrolmentIdentifier))
 
-        case None ~ _ =>
-          Future.successful(Forbidden(s"Unauthorized: No affinity group found"))
+        case Some(AffinityGroup.Organisation) ~ _ ~ _ =>
+          Future.failed(UnsupportedAffinityGroup("Organisation enrolment missing or not activated"))
+
+        case _ ~ _ ~ None =>
+          Future.failed(UnsupportedAuthProvider("No credentials providerId found for user"))
+
+        case _ =>
+          Future.failed(UnsupportedAffinityGroup("No affinity group found"))
       }
       .recover { case e: AuthorisationException =>
-        Forbidden(s"Unauthorized: ${e.reason}")
+        Forbidden(s"Unauthorised: ${e.reason}")
       }
+  }
+}
+
+object AuthorisedAction {
+  val organisationEnrolmentKey   = "HMRC-CHAR-ORG"
+  val organisationIdentifierName = "CHARID"
+  val agentEnrolmentKey          = "HMRC-CHAR-AGENT"
+  val agentIdentifierName        = "AGENTCHARID"
+
+  def hasActiveEnrolment(
+    enrolments: Enrolments,
+    enrolmentKey: String,
+    identifierName: String
+  ): Option[String] =
+    enrolments.getEnrolment(enrolmentKey) match {
+      case Some(enrolment) if enrolment.isActivated =>
+        enrolment.getIdentifier(identifierName).map(_.value)
+
+      case _ => None
+    }
+
+  object HasActiveAgentEnrolment {
+    def unapply(enrolments: Enrolments): Option[String] =
+      hasActiveEnrolment(enrolments, agentEnrolmentKey, agentIdentifierName)
+  }
+
+  object HasActiveOrganisationEnrolment {
+    def unapply(enrolments: Enrolments): Option[String] =
+      hasActiveEnrolment(enrolments, organisationEnrolmentKey, organisationIdentifierName)
   }
 }

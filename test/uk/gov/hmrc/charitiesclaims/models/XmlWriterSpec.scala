@@ -73,11 +73,11 @@ class XmlWriterSpec extends AnyWordSpec with Matchers {
         name = "John Doe",
         age = 30,
         email = Some("john.doe@example.com"),
-        address = Some(Address(street = "123 Main St", city = "Anytown", postcode = "12345")),
+        address = Some(Address(street = "123 <Main> St", city = "&Anytown", postcode = "12345")),
         isStudent = false,
         tags = List(
-          tag(name = "tag1", value = "value1"),
-          tag(name = "tag2", value = "value2")
+          tag(name = "tag1\"", value = "value1"),
+          tag(name = "<tag2>", value = "value2")
         ),
         citizenship = Citizenship.UK
       )
@@ -89,14 +89,14 @@ class XmlWriterSpec extends AnyWordSpec with Matchers {
           |    <age>30</age>
           |    <email>john.doe@example.com</email>
           |    <address>
-          |        <street>123 Main St</street>
-          |        <city>Anytown</city>
+          |        <street>123 &lt;Main&gt; St</street>
+          |        <city>&amp;Anytown</city>
           |        <postcode>12345</postcode>
           |    </address>
           |    <isStudent>false</isStudent>
           |    <tags>
-          |        <tag name="tag1">value1</tag>
-          |        <tag name="tag2">value2</tag>
+          |        <tag name="tag1&quot;">value1</tag>
+          |        <tag name="&lt;tag2&gt;">value2</tag>
           |    </tags>
           |    <citizenship>UK</citizenship>
           |</Person>""".stripMargin

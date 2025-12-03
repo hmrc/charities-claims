@@ -48,14 +48,14 @@ class RetriesSpec extends BaseSpec {
 
   "Retries" - {
     "retry" - {
-      "should return reponse first time" in {
+      "should return response first time" in {
         await(
           retries.retry(10.microseconds)(retries.shouldRetry, retries.retryReason)(
             Future.successful(HttpResponse(200, ""))
           )
         ).status shouldBe 200
       }
-      "should return reponse at second attempt" in {
+      "should return response at second attempt" in {
         val responses = Iterator(
           HttpResponse(500, ""),
           HttpResponse(200, "")
@@ -66,7 +66,7 @@ class RetriesSpec extends BaseSpec {
           )
         ).status shouldBe 200
       }
-      "should return reponse at second attempt if future fails" in {
+      "should return response at second attempt if future fails" in {
         val responses = Iterator(
           Future.failed(Exception("test")),
           Future.successful(HttpResponse(200, ""))
@@ -75,7 +75,7 @@ class RetriesSpec extends BaseSpec {
           retries.retry(10.microseconds)(retries.shouldRetry, retries.retryReason)(responses.next())
         ).status shouldBe 200
       }
-      "should return reponse at third attempt" in {
+      "should return response at third attempt" in {
         val responses = Iterator(
           HttpResponse(499, ""),
           HttpResponse(500, ""),
@@ -87,7 +87,7 @@ class RetriesSpec extends BaseSpec {
           )
         ).status shouldBe 200
       }
-      "should return reponse at fourth attempt" in {
+      "should return response at fourth attempt" in {
         val responses = Iterator(
           HttpResponse(499, ""),
           HttpResponse(500, ""),

@@ -25,8 +25,17 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.Millis
 import org.scalatest.time.Span
+import org.scalatest.OptionValues
+import org.scalatest.EitherValues
 
-trait BaseSpec extends AnyFreeSpec with MockFactory with Matchers with ScalaFutures with IntegrationPatience {
+trait BaseSpec
+    extends AnyFreeSpec
+    with MockFactory
+    with Matchers
+    with ScalaFutures
+    with IntegrationPatience
+    with OptionValues
+    with EitherValues {
 
   implicit val actorSystem: ActorSystem = ActorSystem("unit-tests")
   implicit val mat: Materializer        = Materializer.createMaterializer(actorSystem)

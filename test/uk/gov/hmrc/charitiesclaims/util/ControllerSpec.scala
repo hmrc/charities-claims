@@ -22,6 +22,9 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.auth.core.Enrolment
+import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.EnrolmentIdentifier
 import uk.gov.hmrc.charitiesclaims.controllers.actions.DefaultAuthorisedAction
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -52,8 +55,14 @@ trait ControllerSpec extends BaseSpec with TestUsers {
   trait AuthorisedOrganisationFixture {
     val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
+    val orgEnrolment = Enrolment(
+      key = "HMRC-CHAR-ORG",
+      identifiers = Seq(EnrolmentIdentifier("CHARID", "ORG123")),
+      state = "Activated"
+    )
+
     (mockAuthConnector
-      .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Option[Credentials]])(using
+      .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
         _: HeaderCarrier,
         _: ExecutionContext
       ))
@@ -61,7 +70,13 @@ trait ControllerSpec extends BaseSpec with TestUsers {
       .anyNumberOfTimes()
       .returning(
         Future.successful(
-          `~`(Some(AffinityGroup.Organisation), Some(Credentials(organisation1, "GovernmentGateway")))
+          new ~(
+            new ~(
+              Some(AffinityGroup.Organisation),
+              Enrolments(Set(orgEnrolment))
+            ),
+            Some(Credentials(organisation1, "GovernmentGateway"))
+          )
         )
       )
 
@@ -72,8 +87,14 @@ trait ControllerSpec extends BaseSpec with TestUsers {
   trait AuthorisedAgentFixture {
     val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
+    val agentEnrolment = Enrolment(
+      key = "HMRC-CHAR-AGENT",
+      identifiers = Seq(EnrolmentIdentifier("AGENTCHARID", "AGENT123")),
+      state = "Activated"
+    )
+
     (mockAuthConnector
-      .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Option[Credentials]])(using
+      .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
         _: HeaderCarrier,
         _: ExecutionContext
       ))
@@ -81,7 +102,13 @@ trait ControllerSpec extends BaseSpec with TestUsers {
       .anyNumberOfTimes()
       .returning(
         Future.successful(
-          `~`(Some(AffinityGroup.Agent), Some(Credentials(agent1, "GovernmentGateway")))
+          new ~(
+            new ~(
+              Some(AffinityGroup.Agent),
+              Enrolments(Set(agentEnrolment))
+            ),
+            Some(Credentials(agent1, "GovernmentGateway"))
+          )
         )
       )
 

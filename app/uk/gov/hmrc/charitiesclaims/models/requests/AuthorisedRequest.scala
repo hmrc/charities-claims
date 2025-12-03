@@ -23,5 +23,6 @@ import play.api.mvc.WrappedRequest
 final case class AuthorisedRequest[A](
   underlying: Request[A],
   affinityGroup: AffinityGroup,
-  userId: String
+  userId: String,
+  enrolmentIdentifier: String
 ) extends WrappedRequest[A](underlying)

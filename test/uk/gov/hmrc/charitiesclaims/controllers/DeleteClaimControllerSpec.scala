@@ -17,20 +17,16 @@
 package uk.gov.hmrc.charitiesclaims.controllers
 
 import play.api.http.Status
-import play.api.libs.json.JsBoolean
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsBoolean, JsObject, JsString}
 import play.api.test.Helpers
 import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.models.Claim
-import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
-import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
-import uk.gov.hmrc.charitiesclaims.util.TestClaimsServiceHelper
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.libs.json.JsString
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
-import scala.concurrent.Future
+import uk.gov.hmrc.charitiesclaims.util.{ControllerSpec, TestClaimsService, TestClaimsServiceHelper}
+import uk.gov.hmrc.http.HeaderCarrier
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 class DeleteClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
 
@@ -66,8 +62,8 @@ class DeleteClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {
       val mockClaimsService: ClaimsService = mock[ClaimsService]
       (mockClaimsService
-        .deleteClaim(_: String))
-        .expects("claim-id")
+        .deleteClaim(_: String)(using _: HeaderCarrier))
+        .expects("claim-id", *)
         .anyNumberOfTimes()
         .returning(Future.failed(new RuntimeException("Error message")))
 

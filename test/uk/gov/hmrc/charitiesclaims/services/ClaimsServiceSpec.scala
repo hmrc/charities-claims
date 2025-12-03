@@ -16,33 +16,48 @@
 
 package uk.gov.hmrc.charitiesclaims.services
 
-import org.scalatest.concurrent.IntegrationPatience
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.charitiesclaims.models.Claim
+import play.api.libs.json.Json
+import uk.gov.hmrc.charitiesclaims.models.{Claim, GetClaimsResponse}
+import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
+import uk.gov.hmrc.http.HeaderCarrier
+import play.api.inject.bind
 
 import java.util.UUID
-import play.api.libs.json.Json
-import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
-import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
 import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
+import org.scalamock.scalatest.MockFactory
+import scala.concurrent.Future
 
 class ClaimsServiceSpec
     extends AnyWordSpec
     with Matchers
     with ScalaFutures
     with IntegrationPatience
-    with GuiceOneServerPerSuite {
+    with GuiceOneServerPerSuite
+    with MockFactory {
 
-  private val realMongoDBClaimsService = app.injector.instanceOf[ClaimsService]
+  val mockClaimsValidationConnector = mock[ClaimsValidationConnector]
+
+  (mockClaimsValidationConnector
+    .deleteClaim(_: String)(using _: HeaderCarrier))
+    .expects(*, *)
+    .anyNumberOfTimes()
+    .returning(Future.successful(()))
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
+      .overrides {
+        bind[ClaimsValidationConnector].toInstance(mockClaimsValidationConnector)
+      }
       .build()
+
+  private val realMongoDBClaimsService = app.injector.instanceOf[ClaimsService]
 
   val claims = Json
     .parse(this.getClass.getResourceAsStream("/get-claims-response.json"))
@@ -56,6 +71,8 @@ class ClaimsServiceSpec
     .foreach { (claimsService, description) =>
       "ClaimsService" should {
         s"store, retrieve, list and delete claims when using $description" in {
+          given HeaderCarrier = HeaderCarrier()
+
           // create and store a submitted claim for the first user
           val claim = claims.head.copy(claimId = UUID.randomUUID().toString)
 
@@ -63,6 +80,7 @@ class ClaimsServiceSpec
 
           val claimJson = Json.toJson(claim)(using Claim.format)
 
+          claimsService.putClaim(claim).futureValue
           claimsService.putClaim(claim).futureValue
 
           // check the claim can be retrieved and listed

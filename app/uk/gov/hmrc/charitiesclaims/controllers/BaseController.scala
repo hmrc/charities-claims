@@ -31,10 +31,16 @@ import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
 
 import scala.concurrent.Future
 import uk.gov.hmrc.auth.core.AffinityGroup
+import play.api.mvc.RequestHeader
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 trait BaseController {
   val authorisedAction: AuthorisedAction
   val cc: ControllerComponents
+
+  given headerCarrier(using request: RequestHeader): HeaderCarrier =
+    HeaderCarrierConverter.fromRequest(request)
 
   inline def currentUserId(using request: AuthorisedRequest[?]): String =
     request.userId

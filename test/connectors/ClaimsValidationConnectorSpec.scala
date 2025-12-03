@@ -28,7 +28,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
-class ClaimsConnectorSpec extends BaseSpec with HttpV2Support {
+class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
 
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
@@ -64,7 +64,7 @@ class ClaimsConnectorSpec extends BaseSpec with HttpV2Support {
 
   def givenDeleteClaimEndpointReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
     givenDeleteReturns(
-      expectedUrl = "http://foo.bar.com:1234/foo-claims/claims/12345",
+      expectedUrl = "http://foo.bar.com:1234/foo-claims/12345/upload-results",
       response = response
     )
 

@@ -58,7 +58,7 @@ class ClaimsValidationConnectorImpl @Inject() (
   ): Future[Unit] =
     retry(retryIntervals*)(shouldRetry, retryReason)(
       http
-        .delete(URL(s"$baseUrl$contextPath/claims/$claimId"))
+        .delete(URL(s"$baseUrl$contextPath/$claimId/upload-results"))
         .execute[HttpResponse]
     ).flatMap(response =>
       if response.status == 200

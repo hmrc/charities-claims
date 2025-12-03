@@ -2,7 +2,7 @@ import uk.gov.hmrc.DefaultBuildSettings
 import scoverage.ScoverageKeys
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "3.3.6"
+ThisBuild / scalaVersion := "3.6.4"
 ThisBuild / scalacOptions += "-Wconf:msg=Flag.*repeatedly:s"
 
 lazy val microservice = Project("charities-claims", file("."))

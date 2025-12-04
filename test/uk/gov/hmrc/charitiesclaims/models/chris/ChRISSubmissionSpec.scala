@@ -30,6 +30,9 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
       val govTalkMessage = GovTalkMessage(
         Header = Header(
           MessageDetails = MessageDetails(
+            Class = "HMRC-CHAR-CLM",
+            Qualifier = "request",
+            Function = "submit",
             CorrelationID = "D240212BD8464107966120F5B312BA63",
             GatewayTimestamp = "2025-11-06T14:58:32.486"
           ),
@@ -61,9 +64,15 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
             ),
             R68 = R68(
               AuthOfficial = AuthOfficial(
-                Trustee = "Joe Bloggs",
+                Trustee = Some("Joe Bloggs"),
+//                OffName = OffName(
+//                  Ttl = "Mr",
+//                  Fore = Some("Joe"),
+//                  Sur = Some("Bloggs")
+//                ),
                 OffID = OffID(
-                  Postcode = "AB12 3YZ"
+                  OverSeas = Some("No"),
+                  Postcode = Some("AB12 3YZ")
                 ),
                 Phone = "07777777777"
               ),
@@ -72,24 +81,38 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                 OrgName = "CHARITY TC088",
                 HMRCref = "XR4010",
                 Regulator = Regulator(
-                  RegName = "CCEW",
-                  RegNo = "1234"
+                  RegName = Some("CCEW"),
+                  NoReg = Some("Yes"),
+                  RegNo = Some("1234")
                 ),
                 Repayment = Repayment(
                   GAD = GAD(
                     Donor = Donor(
-                      Ttl = "Mr",
-                      Fore = "John",
-                      Sur = "Smith",
-                      House = "100 Champs Elysees, Paris",
-                      Overseas = true
+                      Ttl = Some("Mr"),
+                      Fore = Some("John"),
+                      Sur = Some("Smith"),
+                      House = Some("100 Champs Elysees, Paris"),
+                      Overseas = Some(true),
+                      Postcode = Some("AB12 3YZ")
                     ),
                     Date = "2025-01-02",
-                    Total = "250.00"
+                    Total = "250.00",
+                    EarliestGAdate = "2025-01-01"
                   ),
-                  EarliestGAdate = "2025-01-01"
+                  OtherInc = OtherInc(
+                    Payer = "John Johns",
+                    OIDate = "2025-10-08",
+                    Gross = 123456.23,
+                    Tax = 123.45
+                  ),
+                  Adjustment = Some(12345.23),
+                  GASDS = GASDS (
+                    
+                  ),
                 ),
-                OtherInfo = "def"
+                
+                OtherInfo = Some("def")
+                
               )
             )
           )

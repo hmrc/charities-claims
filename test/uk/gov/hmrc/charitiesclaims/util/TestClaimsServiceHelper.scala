@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.charitiesclaims.util
 
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json, Reads}
 import uk.gov.hmrc.charitiesclaims.models.Claim
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
+import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.collection.mutable.ListBuffer
-import play.api.libs.json.Json
-
+import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
-import play.api.libs.json.Reads
 
 trait TestClaimsServiceHelper extends TestUsers {
 
@@ -56,15 +54,16 @@ class TestClaimsService(initialClaims: Seq[Claim])(using ec: ExecutionContext) e
   private val buffer: ListBuffer[Claim] = ListBuffer.from(initialClaims)
 
   override def putClaim(claim: Claim): Future[Unit] =
-    deleteClaim(claim.claimId).map { _ =>
-      buffer.append(claim)
-      ()
-    }
+    deleteClaim(claim.claimId)(using HeaderCarrier())
+      .map { _ =>
+        buffer.append(claim)
+        ()
+      }
 
   override def getClaim(claimId: String): Future[Option[Claim]] =
     Future.successful(buffer.find(_.claimId == claimId))
 
-  override def deleteClaim(claimId: String): Future[Unit] =
+  override def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit] =
     buffer
       .find(_.claimId == claimId)
       .foreach(existingClaim => buffer.remove(buffer.indexOf(existingClaim)))

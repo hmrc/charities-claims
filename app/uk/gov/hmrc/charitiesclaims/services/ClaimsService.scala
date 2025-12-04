@@ -25,19 +25,26 @@ import com.google.inject.ImplementedBy
 import uk.gov.hmrc.charitiesclaims.models.Claim
 import org.mongodb.scala.bson.BsonDocument
 import play.api.libs.json.JsObject
+import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
+import uk.gov.hmrc.http.HeaderCarrier
 
 @ImplementedBy(classOf[ClaimsServiceImpl])
 trait ClaimsService {
 
   def putClaim(claim: Claim): Future[Unit]
   def getClaim(claimId: String): Future[Option[Claim]]
-  def deleteClaim(claimId: String): Future[Unit]
+  def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit]
   def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[JsObject]]
 
 }
 
 @Singleton
-class ClaimsServiceImpl @Inject() (repository: ClaimsRepository)(using ExecutionContext) extends ClaimsService {
+class ClaimsServiceImpl @Inject() (
+  repository: ClaimsRepository,
+  claimsValidationConnector: ClaimsValidationConnector
+)(using
+  ExecutionContext
+) extends ClaimsService {
 
   def putClaim(claim: Claim): Future[Unit] =
     repository.get(claim.claimId)(ClaimsRepository.claimDataKey).flatMap {
@@ -54,8 +61,10 @@ class ClaimsServiceImpl @Inject() (repository: ClaimsRepository)(using Execution
   def getClaim(claimId: String): Future[Option[Claim]] =
     repository.get(claimId)(ClaimsRepository.claimDataKey)
 
-  def deleteClaim(claimId: String): Future[Unit] =
-    repository.delete(claimId)(ClaimsRepository.claimDataKey)
+  def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit] =
+    claimsValidationConnector
+      .deleteClaim(claimId)
+      .flatMap(_ => repository.delete(claimId)(ClaimsRepository.claimDataKey))
 
   def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[JsObject]] =
     repository.collection

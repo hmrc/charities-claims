@@ -165,7 +165,6 @@ final case class Claim(
   Regulator: Option[Regulator] = None,
   Repayment: Option[Repayment] = None,
   OtherInfo: Option[String] = None // If a "Adjustments Detail" is given, then set to this value Else omit this element.
-
 ) derives XmlWriter
 
 // to check
@@ -181,15 +180,15 @@ final case class Regulator(
 ) derives XmlWriter
 
 final case class Repayment(
-  GAD: GAD,
-  OtherInfo: OtherInc,
+  GAD: Option[GAD] = None,
+  OtherInfo: Option[OtherInfo] = None,
   Adjustment: Option[BigDecimal] =
     None, // If "Are you claiming Gift Aid" is "Yes", and the prevOverclaimedGiftAid is > 0, then set to this value
   // If "Are you claiming Other Income" is "Yes", and the "Previously Overclaimed Other Income Amount" is > 0, then set to this value
   // Else omit this element.
-  GASDS: GASDS
+  GASDS: Option[GASDS] = None,
   // If a "Adjustments Detail" is given, then set to this value   Else omit this element.
-
+  EarliestGAdate: String
 ) derives XmlWriter
 
 // to check
@@ -199,8 +198,7 @@ final case class GAD(
   Donor: Option[Donor] = None,
   Sponsored: Option[YesNo] = None, // If sponsoredEvent is "Yes", then set to value of "yes" Else omit this element.
   Date: String,
-  Total: String,
-  EarliestGAdate: String
+  Total: String
 ) derives XmlWriter
 
 final case class Donor(
@@ -219,7 +217,7 @@ final case class Donor(
 ) derives XmlWriter
 
 // to check
-final case class OtherInc(
+final case class OtherInfo(
   Payer: String,
   OIDate: String, // not sure if Date type is required
   Gross: BigDecimal,
@@ -246,7 +244,7 @@ final case class GASDSClaim(
     None, // If "Donations received by organisation" is "Yes", then set to the value of "Tax Year 1"   Else omit this element.
   // If "Donations received by organisation" is "Yes", and "Do you want to claim for a second tax year" is "Yes", then set to the value of "Tax Year 2"
   // If "Donations received by organisation" is "Yes", and "Do you want to claim for a third tax year" is "Yes", then set to the value of "Tax Year 3"
-  Amount: Option[Float] =
+  Amount: Option[BigDecimal] =
     None // If "Donations received by organisation" is "Yes", then set to the value of "Tax Year 1 Amount of Donations Received"  Else omit this element.
     // If "Donations received by organisation" is "Yes", then set to the value of "Tax Year 2 Amount of Donations Received"  Else omit this element.
     // If "Donations received by organisation" is "Yes", then set to the value of "Tax Year 2 Amount of Donations Received"  Else omit this element.
@@ -263,7 +261,7 @@ final case class Building(
 // this is option for Year 2 and Year 3 but mandatory for year 1
 final case class BldgClaim(
   Year: String,
-  Amount: Float
+  Amount: BigDecimal
 ) derives XmlWriter
 
 opaque type YesNo = Boolean

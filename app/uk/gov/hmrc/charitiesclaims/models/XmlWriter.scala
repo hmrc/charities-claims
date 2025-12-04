@@ -22,6 +22,7 @@ import scala.collection.AbstractIterable
 import scala.compiletime.constValue
 import scala.compiletime.constValueTuple
 import scala.collection.View
+import scala.annotation.nowarn
 
 trait XmlWriter[A] {
   def label: String
@@ -30,12 +31,14 @@ trait XmlWriter[A] {
   def write(name: String, value: A)(using XmlStringBuilder): Unit
 }
 
+@nowarn
 case class XmlAttribute[T : XmlWriter](attribute: T)
 
 object XmlAttribute {
   given [A : XmlWriter] => Conversion[A, XmlAttribute[A]] = XmlAttribute[A](_)
 }
 
+@nowarn
 case class XmlContent[T : XmlWriter](attribute: T)
 
 object XmlContent {
@@ -64,6 +67,7 @@ object XmlWriter {
       builder.appendText(value)
   }
 
+  @nowarn
   given [A : Numeric] => XmlWriter[A] = new XmlWriter[A] {
     def label: String                                                        = "Number"
     override def isPrimitive: Boolean                                        = true
@@ -119,8 +123,8 @@ object XmlWriter {
   inline def derived[T](using mirror: Mirror.Of[T]): XmlWriter[T] = {
     lazy val label = constValue[mirror.MirroredLabel].toString
     inline mirror match {
-      case s: Mirror.SumOf[T]     => xmlWriterSum(label)
-      case p: Mirror.ProductOf[T] =>
+      case _: Mirror.SumOf[T]     => xmlWriterSum(label)
+      case _: Mirror.ProductOf[T] =>
         lazy val elemInstances = summonInstances[T, mirror.MirroredElemTypes]
         lazy val elemNames     = constValueTuple[mirror.MirroredElemLabels].toList.map(_.toString)
         xmlWriterProduct(label, elemNames, elemInstances)

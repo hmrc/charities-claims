@@ -49,12 +49,15 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
 
   private val orgDetails = OrganisationDetails(
     nameOfCharityRegulator = "test",
-    reasonNotRegisteredWithRegulator = "test",
+    reasonNotRegisteredWithRegulator = Some("test"),
     charityRegistrationNumber = "test",
     areYouACorporateTrustee = true,
-    nameOfCorporateTrustee = "test",
-    corporateTrusteePostcode = "test",
-    corporateTrusteeDaytimeTelephoneNumber = "test"
+    nameOfCorporateTrustee = Some("test"),
+    corporateTrusteePostcode = Some("test"),
+    corporateTrusteeDaytimeTelephoneNumber = Some("test"),
+    corporateTrusteeTitle = Some("test"),
+    corporateTrusteeFirstName = Some("test"),
+    corporateTrusteeLastName = Some("test")
   )
 
   private val gasds = GiftAidScheduleData(

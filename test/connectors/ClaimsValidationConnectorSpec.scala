@@ -84,16 +84,14 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
 
       "throw an exception if the service returns 404 status" in {
         givenDeleteClaimEndpointReturns(HttpResponse(404, "Bad Request")).once()
-        a[Exception] should be thrownBy {
+        a[Exception] should be thrownBy
           await(connector.deleteClaim("12345"))
-        }
       }
 
       "throw an exception if the service returns 500 status" in {
         givenDeleteClaimEndpointReturns(HttpResponse(500, "")).once()
-        a[Exception] should be thrownBy {
+        a[Exception] should be thrownBy
           await(connector.deleteClaim("12345"))
-        }
       }
 
       "throw exception when 5xx response status in the third attempt" in {

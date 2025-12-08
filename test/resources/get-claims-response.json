@@ -15,6 +15,7 @@
                 },
                 "organisationDetails": {
                     "nameOfCharityRegulator": "EnglandAndWales",
+                    "reasonNotRegisteredWithRegulator": "lowIncome",
                     "charityRegistrationNumber": "1137948",
                     "areYouACorporateTrustee": true,
                     "nameOfCorporateTrustee": "Joe Bloggs",

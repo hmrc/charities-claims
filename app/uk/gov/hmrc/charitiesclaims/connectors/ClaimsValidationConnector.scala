@@ -66,7 +66,7 @@ class ClaimsValidationConnectorImpl @Inject() (
       else
         Future.failed(
           Exception(
-            s"Request to DELETE $baseUrl$contextPath/claims/$claimId failed because of $response ${response.body}"
+            s"Request to DELETE $baseUrl$contextPath/$claimId/upload-results failed because of $response ${response.body}"
           )
         )
     )

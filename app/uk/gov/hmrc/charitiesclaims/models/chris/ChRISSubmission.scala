@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.charitiesclaims.models.chris
 
-import uk.gov.hmrc.charitiesclaims.models.XmlAttribute
-import uk.gov.hmrc.charitiesclaims.models.XmlWriter
-import uk.gov.hmrc.charitiesclaims.models.XmlContent
-import uk.gov.hmrc.charitiesclaims.models.XmlStringBuilder
+import uk.gov.hmrc.charitiesclaims.xml.XmlAttribute
+import uk.gov.hmrc.charitiesclaims.xml.XmlWriter
+import uk.gov.hmrc.charitiesclaims.xml.XmlContent
+import uk.gov.hmrc.charitiesclaims.xml.XmlStringBuilder
 import java.util.UUID
 import java.time.format.DateTimeFormatter
 import java.time.Instant
@@ -164,6 +164,10 @@ final case class Claim(
   HMRCref: String,
   Regulator: Option[Regulator] = None,
   Repayment: Option[Repayment] = None,
+  // If "Are you claiming Gift Aid" is "Yes", and the prevOverclaimedGiftAid is > 0, then set to this value
+  // If "Are you claiming Other Income" is "Yes", and the "Previously Overclaimed Other Income Amount" is > 0, then set to this value
+  // Else omit this element.
+  GASDS: Option[GASDS] = None,
   OtherInfo: Option[String] = None // If a "Adjustments Detail" is given, then set to this value Else omit this element.
 ) derives XmlWriter
 
@@ -180,15 +184,11 @@ final case class Regulator(
 ) derives XmlWriter
 
 final case class Repayment(
-  GAD: Option[GAD] = None,
-  OtherInfo: Option[OtherInfo] = None,
-  Adjustment: Option[BigDecimal] =
-    None, // If "Are you claiming Gift Aid" is "Yes", and the prevOverclaimedGiftAid is > 0, then set to this value
-  // If "Are you claiming Other Income" is "Yes", and the "Previously Overclaimed Other Income Amount" is > 0, then set to this value
-  // Else omit this element.
-  GASDS: Option[GASDS] = None,
+  GAD: Option[List[GAD]] = None,
   // If a "Adjustments Detail" is given, then set to this value   Else omit this element.
-  EarliestGAdate: String
+  EarliestGAdate: String,
+  OtherInc: Option[List[OtherInc]] = None,
+  Adjustment: Option[BigDecimal] = None
 ) derives XmlWriter
 
 // to check
@@ -212,12 +212,12 @@ final case class Donor(
     None, // If aggregatedDonations is blank, then set to value of donorHouse  Else omit this element.
   Overseas: Option[YesNo] =
     None, // If aggregatedDonations is blank, and donorPostcode is "X", then set to "yes" Else omit this element.
-  PostCode: Option[String] =
+  Postcode: Option[String] =
     None // If aggregatedDonations is blank, and donorPostcode is not "X", then set to value of donorPostcode Else omit this element.
 ) derives XmlWriter
 
 // to check
-final case class OtherInfo(
+final case class OtherInc(
   Payer: String,
   OIDate: String, // not sure if Date type is required
   Gross: BigDecimal,
@@ -227,9 +227,10 @@ final case class OtherInfo(
 // to check
 final case class GASDS(
   ConnectedCharities: YesNo,
-  Charity: Option[Charity] = None,
+  Charity: Option[List[Charity]] = None,
   GASDSClaim: Option[List[GASDSClaim]] = None,
-  Building: Option[Building] = None,
+  CommBldgs: Option[YesNo] = None,
+  Building: Option[List[Building]] = None,
   Adj: Option[String]
 ) derives XmlWriter
 

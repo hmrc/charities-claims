@@ -49,6 +49,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
 
   private val orgDetails = OrganisationDetails(
     nameOfCharityRegulator = "test",
+    reasonNotRegisteredWithRegulator = "test",
     charityRegistrationNumber = "test",
     areYouACorporateTrustee = true,
     nameOfCorporateTrustee = "test",

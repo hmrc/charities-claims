@@ -120,13 +120,12 @@ class RetriesSpec extends BaseSpec {
           Future.failed(Exception("test 3")),
           Future.failed(Exception("test 4"))
         )
-        a[Exception] should be thrownBy {
+        a[Exception] should be thrownBy
           await(
             retries.retry(10.milliseconds, 200.milliseconds, 15.milliseconds)(retries.shouldRetry, retries.retryReason)(
               responses.next()
             )
           )
-        }
       }
     }
     "should return an empty sequence if the retry intervals are not defined" in {

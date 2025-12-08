@@ -20,7 +20,6 @@ import play.api.libs.json.Json
 import play.api.mvc.Results.{InternalServerError, Ok}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 
 import javax.inject.{Inject, Singleton}

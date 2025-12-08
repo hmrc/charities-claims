@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.charitiesclaims.models
+package uk.gov.hmrc.charitiesclaims.xml
 
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent, XmlWriter}
+import org.scalatest.freespec.AnyFreeSpec
 
-class XmlWriterSpec extends AnyWordSpec with Matchers {
+class XmlWriterSpec extends AnyFreeSpec with Matchers {
 
   case class Person(
     name: String,
@@ -47,7 +48,7 @@ class XmlWriterSpec extends AnyWordSpec with Matchers {
     postcode: String
   ) derives XmlWriter
 
-  "XmlWriter" should {
+  "XmlWriter" - {
     "serialise String to XML correctly" in {
       val entity = "Hello, world!"
       val xml    = XmlWriter.write(entity, addXmlDeclaration = false)
@@ -82,7 +83,6 @@ class XmlWriterSpec extends AnyWordSpec with Matchers {
         citizenship = Citizenship.UK
       )
       val xml    = XmlWriter.write(entity, addXmlDeclaration = false)
-      println(xml)
       xml shouldEqual
         """<Person>
           |    <name>John Doe</name>

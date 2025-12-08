@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.charitiesclaims.models
+package uk.gov.hmrc.charitiesclaims.xml
 
 import scala.deriving.Mirror
 import scala.compiletime.{erasedValue, error, summonInline}
@@ -101,9 +101,14 @@ object XmlWriter {
     def label: String                                                              = summon[XmlWriter[A]].label
     override def isPrimitive: Boolean                                              = summon[XmlWriter[A]].isPrimitive
     def write(name: String, value: List[A])(using builder: XmlStringBuilder): Unit =
-      builder.appendElementStart(name, View.empty)
-      value.map(summon[XmlWriter[A]].write(label, _))
-      builder.appendElementEnd(name)
+      val elementWriter = summon[XmlWriter[A]]
+      if (label == name && !elementWriter.isPrimitive) {
+        value.map(elementWriter.write(label, _))
+      } else {
+        builder.appendElementStart(name, View.empty)
+        value.map(elementWriter.write(label, _))
+        builder.appendElementEnd(name)
+      }
   }
 
   given [A : XmlWriter] => XmlWriter[XmlAttribute[A]] = new XmlWriter[XmlAttribute[A]] {

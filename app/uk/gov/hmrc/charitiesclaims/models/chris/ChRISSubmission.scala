@@ -34,21 +34,21 @@ final case class GovTalkMessage(
 ) derives XmlWriter {
 
   def withLiteIRmark: GovTalkMessage =
-    val irmark = IRmarkCalculator.computeLiteIRmark(this.Body)
-    this.copy(Body =
-      this.Body.copy(IRenvelope =
-        this.Body.IRenvelope.copy(IRheader =
-          this.Body.IRenvelope.IRheader.copy(IRmark = Some(IRmark(Type = "generic", Content = irmark)))
+    val irmark = IRmarkCalculator.computeLiteIRmark(Body)
+    copy(Body =
+      Body.copy(IRenvelope =
+        Body.IRenvelope.copy(IRheader =
+          Body.IRenvelope.IRheader.copy(IRmark = Some(IRmark(Type = "generic", Content = irmark)))
         )
       )
     )
 
   def withFullIRmark: GovTalkMessage =
-    val irmark = IRmarkCalculator.computeFullIRmark(this.Body)
-    this.copy(Body =
-      this.Body.copy(IRenvelope =
-        this.Body.IRenvelope.copy(IRheader =
-          this.Body.IRenvelope.IRheader.copy(IRmark = Some(IRmark(Type = "generic", Content = irmark)))
+    val irmark = IRmarkCalculator.computeFullIRmark(Body)
+    copy(Body =
+      Body.copy(IRenvelope =
+        Body.IRenvelope.copy(IRheader =
+          Body.IRenvelope.IRheader.copy(IRmark = Some(IRmark(Type = "generic", Content = irmark)))
         )
       )
     )

@@ -25,7 +25,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
 
     "compute hash SHA1 Base64 for a given XML example 1" in {
       val xml = scala.io.Source
-        .fromInputStream(this.getClass.getResourceAsStream("/test-irmark-1.xml"))
+        .fromInputStream(getClass.getResourceAsStream("/test-irmark-1.xml"))
         .getLines()
         .mkString("\n")
       IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "AemngKi/VIqsnS+K8VsXE/Y7SgA="
@@ -34,7 +34,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
 
     "compute hash SHA1 Base64 for a given XML example 2" in {
       val xml = scala.io.Source
-        .fromInputStream(this.getClass.getResourceAsStream("/test-irmark-2.xml"))
+        .fromInputStream(getClass.getResourceAsStream("/test-irmark-2.xml"))
         .getLines()
         .mkString("\n")
       IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "4YeSgqkJKGEgmCEhasYuwsxqfnM="
@@ -43,7 +43,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
 
     "compute hash SHA1 Base64 for a given XML example 3" in {
       val xml = scala.io.Source
-        .fromInputStream(this.getClass.getResourceAsStream("/test-irmark-3.xml"))
+        .fromInputStream(getClass.getResourceAsStream("/test-irmark-3.xml"))
         .getLines()
         .mkString("\n")
       IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "RXvO9aWqS4RSVmxzx9uvPe2FmtI="

@@ -76,7 +76,7 @@ object XmlUtils {
     override def error(e: SAXParseException): Unit =
       log += ("ERROR: " + e.getMessage())
 
-    def hasError: Boolean = !log.isEmpty
+    def hasError: Boolean = log.nonEmpty
     def getLog: String    = log.mkString(" ")
   }
 
@@ -114,10 +114,10 @@ object XmlUtils {
 
   private class NodeSetDataImpl(node: Node, nodeFilter: NodeFilter) extends NodeSetData[Node] {
 
-    val document: Document =
-      if node.isInstanceOf[Document]
-      then node.asInstanceOf[Document]
-      else node.getOwnerDocument()
+    val document: Document = node match {
+      case doc: Document => doc
+      case _             => node.getOwnerDocument()
+    }
 
     val documentTraversal: DocumentTraversal = document.asInstanceOf[DocumentTraversal]
 

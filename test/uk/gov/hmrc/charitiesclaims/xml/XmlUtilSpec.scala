@@ -78,6 +78,13 @@ class XmlUtilSpec extends AnyFreeSpec with Matchers {
       XmlUtils.parseDocument(xml).isSuccess           shouldBe true
       XmlUtils.validateChRISSubmission(xml).isFailure shouldBe true
     }
+
+    "should canonicalize an XML document" in {
+      val xml              =
+        "<ns1:hello xmlns:ns1=\"http://www.example.com\"><the value=\"Foo\" name=\"Bar\" >world</the><org>ORG</org></ns1:hello >"
+      val canonicalizedXml = XmlUtils.canonicalizeXml(xml)
+      canonicalizedXml shouldBe "<ns1:hello xmlns:ns1=\"http://www.example.com\"><the name=\"Bar\" value=\"Foo\">world</the><org>ORG</org></ns1:hello>"
+    }
   }
 
 }

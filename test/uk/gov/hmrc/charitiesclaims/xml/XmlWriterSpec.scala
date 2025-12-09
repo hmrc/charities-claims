@@ -51,25 +51,25 @@ class XmlWriterSpec extends AnyFreeSpec with Matchers {
   "XmlWriter" - {
     "serialise String to XML correctly" in {
       val entity = "Hello, world!"
-      val xml    = XmlWriter.write(entity, addXmlDeclaration = false)
+      val xml    = XmlWriter.writeIndented(entity, addXmlDeclaration = false)
       xml shouldEqual entity
     }
     "serialise Int to XML correctly" in {
       val entity = 5
-      val xml    = XmlWriter.write(entity, addXmlDeclaration = false)
+      val xml    = XmlWriter.writeIndented(entity, addXmlDeclaration = false)
       xml shouldEqual "5"
     }
     "serialise Double to XML correctly" in {
       val entity = 5.15
-      val xml    = XmlWriter.write(entity, addXmlDeclaration = false)
+      val xml    = XmlWriter.writeIndented(entity, addXmlDeclaration = false)
       xml shouldEqual "5.15"
     }
     "serialise Boolean true to XML correctly" in {
       val entity = true
-      val xml    = XmlWriter.write(entity, addXmlDeclaration = false)
+      val xml    = XmlWriter.writeIndented(entity, addXmlDeclaration = false)
       xml shouldEqual "true"
     }
-    "serialise object to XML correctly" in {
+    "serialise object to XML correctly using indented format" in {
       val entity = Person(
         name = "John Doe",
         age = 30,
@@ -82,7 +82,7 @@ class XmlWriterSpec extends AnyFreeSpec with Matchers {
         ),
         citizenship = Citizenship.UK
       )
-      val xml    = XmlWriter.write(entity, addXmlDeclaration = false)
+      val xml    = XmlWriter.writeIndented(entity, addXmlDeclaration = false)
       xml shouldEqual
         """<Person>
           |    <name>John Doe</name>
@@ -100,6 +100,48 @@ class XmlWriterSpec extends AnyFreeSpec with Matchers {
           |    </tags>
           |    <citizenship>UK</citizenship>
           |</Person>""".stripMargin
+
+      val xml2 = XmlWriter.writeIndented(entity, addXmlDeclaration = true)
+      xml2 shouldEqual
+        """<?xml version='1.0' encoding='UTF-8'?>
+          |<Person>
+          |    <name>John Doe</name>
+          |    <age>30</age>
+          |    <email>john.doe@example.com</email>
+          |    <address>
+          |        <street>123 &lt;Main&gt; St</street>
+          |        <city>&amp;Anytown</city>
+          |        <postcode>12345</postcode>
+          |    </address>
+          |    <isStudent>false</isStudent>
+          |    <tags>
+          |        <tag name="tag1&quot;">value1</tag>
+          |        <tag name="&lt;tag2&gt;">value2</tag>
+          |    </tags>
+          |    <citizenship>UK</citizenship>
+          |</Person>""".stripMargin
+    }
+
+    "serialise object to XML correctly using compact format" in {
+      val entity = Person(
+        name = "John Doe",
+        age = 30,
+        email = Some("john.doe@example.com"),
+        address = Some(Address(street = "123 <Main> St", city = "&Anytown", postcode = "12345")),
+        isStudent = false,
+        tags = List(
+          tag(name = "tag1\"", value = "value1"),
+          tag(name = "<tag2>", value = "value2")
+        ),
+        citizenship = Citizenship.UK
+      )
+      val xml    = XmlWriter.writeCompact(entity, addXmlDeclaration = false)
+      xml shouldEqual
+        """<Person><name>John Doe</name><age>30</age><email>john.doe@example.com</email><address><street>123 &lt;Main&gt; St</street><city>&amp;Anytown</city><postcode>12345</postcode></address><isStudent>false</isStudent><tags><tag name="tag1&quot;">value1</tag><tag name="&lt;tag2&gt;">value2</tag></tags><citizenship>UK</citizenship></Person>""".stripMargin
+
+      val xml2 = XmlWriter.writeCompact(entity)
+      xml2 shouldEqual
+        """<?xml version='1.0' encoding='UTF-8'?><Person><name>John Doe</name><age>30</age><email>john.doe@example.com</email><address><street>123 &lt;Main&gt; St</street><city>&amp;Anytown</city><postcode>12345</postcode></address><isStudent>false</isStudent><tags><tag name="tag1&quot;">value1</tag><tag name="&lt;tag2&gt;">value2</tag></tags><citizenship>UK</citizenship></Person>""".stripMargin
     }
   }
 }

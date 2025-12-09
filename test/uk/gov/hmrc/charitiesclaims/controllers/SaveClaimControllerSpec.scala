@@ -50,6 +50,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
           |  ttl = 12 days
           | }
           | agentUnsubmittedClaimLimit = 3
+          | computeLiteIRMark = true
           |
           |""".stripMargin
       )

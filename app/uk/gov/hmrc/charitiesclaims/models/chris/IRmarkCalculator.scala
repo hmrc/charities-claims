@@ -16,31 +16,36 @@
 
 package uk.gov.hmrc.charitiesclaims.models.chris
 
-import uk.gov.hmrc.charitiesclaims.xml.XmlStringBuilder
-import uk.gov.hmrc.charitiesclaims.xml.XmlWriter
-import scala.collection.View
+import uk.gov.hmrc.charitiesclaims.xml.{XmlStringBuilder, XmlUtils, XmlWriter}
+
 import java.security.MessageDigest
 import java.util.Base64
+import scala.collection.View
 
 object IRmarkCalculator {
 
   def computeLiteIRmark(body: Body): String = {
-    val builder   = new LiteIRmarkCalculator()
+    val builder   = new LiteIRmarkBuilder()
     val xmlWriter = summon[XmlWriter[Body]]
     xmlWriter.write(xmlWriter.label, body)(using builder)
     hashSHA1Base64(builder.xmlStringResult)
   }
 
-  def computeFullIRmark(body: Body): String = ??? // TODO
+  def computeFullIRmark(body: Body): String = {
+    val builder   = new LiteIRmarkBuilder()
+    val xmlWriter = summon[XmlWriter[Body]]
+    xmlWriter.write(xmlWriter.label, body)(using builder)
+    hashSHA1Base64(XmlUtils.canonicalizeXml(builder.xmlStringResult))
+  }
 
-  private def hashSHA1Base64(xml: String): String = {
+  def hashSHA1Base64(xml: String): String = {
     val hash   = MessageDigest.getInstance("SHA-1")
     hash.update(xml.getBytes("UTF-8"))
     val digest = hash.digest()
     Base64.getEncoder.encodeToString(digest)
   }
 
-  private class LiteIRmarkCalculator extends XmlStringBuilder {
+  private class LiteIRmarkBuilder extends XmlStringBuilder {
 
     private val sb = new StringBuilder()
 

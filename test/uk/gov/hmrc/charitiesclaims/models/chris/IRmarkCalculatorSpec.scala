@@ -17,11 +17,40 @@
 package uk.gov.hmrc.charitiesclaims.models.chris
 
 import uk.gov.hmrc.charitiesclaims.util.BaseSpec
+import uk.gov.hmrc.charitiesclaims.xml.XmlUtils
 
 class IRmarkCalculatorSpec extends BaseSpec {
 
   "IRmarkCalculator" - {
-    "compute the lite IR mark for a given body example 1" in {
+
+    "compute hash SHA1 Base64 for a given XML example 1" in {
+      val xml = scala.io.Source
+        .fromInputStream(this.getClass.getResourceAsStream("/test-irmark-1.xml"))
+        .getLines()
+        .mkString("\n")
+      IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "AemngKi/VIqsnS+K8VsXE/Y7SgA="
+      IRmarkCalculator.hashSHA1Base64(XmlUtils.canonicalizeXml(xml)) shouldBe "KIYpXR8h95dWC6kB6HDq2c0d5TY="
+    }
+
+    "compute hash SHA1 Base64 for a given XML example 2" in {
+      val xml = scala.io.Source
+        .fromInputStream(this.getClass.getResourceAsStream("/test-irmark-2.xml"))
+        .getLines()
+        .mkString("\n")
+      IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "4YeSgqkJKGEgmCEhasYuwsxqfnM="
+      IRmarkCalculator.hashSHA1Base64(XmlUtils.canonicalizeXml(xml)) shouldBe "4YeSgqkJKGEgmCEhasYuwsxqfnM="
+    }
+
+    "compute hash SHA1 Base64 for a given XML example 3" in {
+      val xml = scala.io.Source
+        .fromInputStream(this.getClass.getResourceAsStream("/test-irmark-3.xml"))
+        .getLines()
+        .mkString("\n")
+      IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "RXvO9aWqS4RSVmxzx9uvPe2FmtI="
+      IRmarkCalculator.hashSHA1Base64(XmlUtils.canonicalizeXml(xml)) shouldBe "RXvO9aWqS4RSVmxzx9uvPe2FmtI="
+    }
+
+    "compute the IRmark for a given body example 1" in {
       val body = Body(
         IRenvelope = IRenvelope(
           IRheader = IRheader(
@@ -29,7 +58,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
               Key(Type = "CHARID", Value = "XR4010")
             ),
             PeriodEnd = "2012-01-01",
-            IRmark = IRmark(Type = "generic", Content = "oCHbGp+XAIi/AYdxWxLNLMmbEno="),
+            IRmark = Some(IRmark(Type = "generic", Content = "oCHbGp+XAIi/AYdxWxLNLMmbEno=")),
             Sender = "Other"
           ),
           R68 = R68(
@@ -83,9 +112,10 @@ class IRmarkCalculatorSpec extends BaseSpec {
       )
 
       IRmarkCalculator.computeLiteIRmark(body) should be("oCHbGp+XAIi/AYdxWxLNLMmbEno=")
+      IRmarkCalculator.computeFullIRmark(body) should be("oCHbGp+XAIi/AYdxWxLNLMmbEno=")
     }
 
-    "compute the lite IR mark for a given body example 2" in {
+    "compute the IRmark for a given body example 2" in {
       val body = Body(
         IRenvelope = IRenvelope(
           IRheader = IRheader(
@@ -93,7 +123,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
               Key(Type = "CHARID", Value = "XR4010")
             ),
             PeriodEnd = "2012-01-01",
-            IRmark = IRmark(Type = "generic", Content = "HgZyqg72ReQKRBo4sTvTn5HZD5w="),
+            IRmark = Some(IRmark(Type = "generic", Content = "HgZyqg72ReQKRBo4sTvTn5HZD5w=")),
             Sender = "Other"
           ),
           R68 = R68(
@@ -255,9 +285,10 @@ class IRmarkCalculatorSpec extends BaseSpec {
       )
 
       IRmarkCalculator.computeLiteIRmark(body) should be("HgZyqg72ReQKRBo4sTvTn5HZD5w=")
+      IRmarkCalculator.computeFullIRmark(body) should be("HgZyqg72ReQKRBo4sTvTn5HZD5w=")
     }
 
-    "compute the lite IR mark for a given body example 3" in {
+    "compute the IRmark for a given body example 3" in {
       val body = Body(
         IRenvelope = IRenvelope(
           IRheader = IRheader(
@@ -265,7 +296,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
               Key(Type = "CHARID", Value = "XR4010")
             ),
             PeriodEnd = "2012-01-01",
-            IRmark = IRmark(Type = "generic", Content = "zU5YSp/yiJMhQUQ0BHF8Qnsw5jo="),
+            IRmark = Some(IRmark(Type = "generic", Content = "zU5YSp/yiJMhQUQ0BHF8Qnsw5jo=")),
             Sender = "Other"
           ),
           R68 = R68(
@@ -380,6 +411,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
       )
 
       IRmarkCalculator.computeLiteIRmark(body) should be("zU5YSp/yiJMhQUQ0BHF8Qnsw5jo=")
+      IRmarkCalculator.computeFullIRmark(body) should be("zU5YSp/yiJMhQUQ0BHF8Qnsw5jo=")
     }
   }
 }

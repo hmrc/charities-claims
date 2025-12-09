@@ -79,7 +79,7 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
       "should return a list of unsubmitted claims" in {
         givenDeleteClaimEndpointReturns(HttpResponse(200)).once()
 
-        await(connector.deleteClaim("12345")) shouldEqual ()
+        await(connector.deleteClaim("12345")) shouldBe ()
       }
 
       "throw an exception if the service returns 404 status" in {
@@ -107,14 +107,14 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
       "accept valid response in a second attempt" in {
         givenDeleteClaimEndpointReturns(HttpResponse(500, "")).once()
         givenDeleteClaimEndpointReturns(HttpResponse(200)).once()
-        await(connector.deleteClaim("12345")) shouldEqual ()
+        await(connector.deleteClaim("12345")) shouldBe ()
       }
 
       "accept valid response in a third attempt" in {
         givenDeleteClaimEndpointReturns(HttpResponse(499, "")).once()
         givenDeleteClaimEndpointReturns(HttpResponse(500, "")).once()
         givenDeleteClaimEndpointReturns(HttpResponse(200)).once()
-        await(connector.deleteClaim("12345")) shouldEqual ()
+        await(connector.deleteClaim("12345")) shouldBe ()
       }
     }
   }

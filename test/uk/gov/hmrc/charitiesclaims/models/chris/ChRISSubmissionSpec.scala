@@ -108,12 +108,12 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
-      xml shouldEqual scala.io.Source
+      xml shouldBe scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-1.xml"))
         .getLines()
         .mkString("\n")
 
-      govTalkMessage.withLiteIRmark shouldEqual govTalkMessage
+      govTalkMessage.withLiteIRmark shouldBe govTalkMessage
     }
 
     "be serialised to XML correctly and equals an example 2 validChRIS submission XML" in {
@@ -316,12 +316,12 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
-      xml shouldEqual scala.io.Source
+      xml shouldBe scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-2.xml"))
         .getLines()
         .mkString("\n")
 
-      govTalkMessage.withFullIRmark shouldEqual govTalkMessage
+      govTalkMessage.withFullIRmark shouldBe govTalkMessage
     }
 
     "be serialised to XML correctly and equals an example 3 validChRIS submission XML" in {
@@ -476,12 +476,12 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
-      xml shouldEqual scala.io.Source
+      xml shouldBe scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-3.xml"))
         .getLines()
         .mkString("\n")
 
-      govTalkMessage.withLiteIRmark shouldEqual govTalkMessage
+      govTalkMessage.withLiteIRmark shouldBe govTalkMessage
     }
 
     "be serialised to XML correctly and equals an example 4 validChRIS submission XML" in {
@@ -609,7 +609,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
-      xml shouldEqual scala.io.Source
+      xml shouldBe scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-4.xml"))
         .getLines()
         .mkString("\n")

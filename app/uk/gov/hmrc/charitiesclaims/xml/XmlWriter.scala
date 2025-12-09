@@ -186,11 +186,24 @@ object XmlWriter {
 }
 
 trait XmlStringBuilder {
+
   def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit
   def appendElementEnd(name: String): Unit
   def appendText(text: String): Unit
 
   def xmlStringResult: String
+
+  def escapeForAttribute(text: String): String = text
+    .replace("&", "&amp;")
+    .replace("<", "&lt;")
+    .replace(">", "&gt;")
+    .replace("\"", "&quot;")
+    .replace("'", "&apos;")
+
+  def escapeForElement(text: String): String = text
+    .replace("&", "&amp;")
+    .replace("<", "&lt;")
+    .replace(">", "&gt;")
 }
 
 object XmlStringBuilder {
@@ -203,13 +216,13 @@ object XmlStringBuilder {
     private var previous          = '-'
     private var context           = 'e'
 
-    def indent(): Unit =
+    private def indent(): Unit =
       sb.append(indentationString * indentationLevel)
 
-    def newline(): Unit =
+    private def newline(): Unit =
       sb.append("\n")
 
-    def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit = {
+    final def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit = {
       if !sb.isEmpty then {
         newline()
         indent()
@@ -228,7 +241,7 @@ object XmlStringBuilder {
       previous = 's'
     }
 
-    def appendElementEnd(name: String): Unit = {
+    final def appendElementEnd(name: String): Unit = {
       indentationLevel = indentationLevel - 1
       if (previous == 'e') {
         newline()
@@ -238,7 +251,7 @@ object XmlStringBuilder {
       previous = 'e'
     }
 
-    def appendText(text: String): Unit = {
+    final def appendText(text: String): Unit = {
       sb.append(
         context match {
           case 'a' => escapeForAttribute(text)
@@ -248,18 +261,6 @@ object XmlStringBuilder {
       previous = 't'
     }
 
-    def escapeForAttribute(text: String): String = text
-      .replace("&", "&amp;")
-      .replace("<", "&lt;")
-      .replace(">", "&gt;")
-      .replace("\"", "&quot;")
-      .replace("'", "&apos;")
-
-    def escapeForElement(text: String): String = text
-      .replace("&", "&amp;")
-      .replace("<", "&lt;")
-      .replace(">", "&gt;")
-
-    def xmlStringResult: String = sb.toString()
+    final def xmlStringResult: String = sb.toString()
   }
 }

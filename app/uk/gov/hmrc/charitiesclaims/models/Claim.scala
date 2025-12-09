@@ -63,7 +63,7 @@ object RepaymentClaimDetails {
 final case class OrganisationDetails(
   nameOfCharityRegulator: String,
   reasonNotRegisteredWithRegulator: Option[String] = None,
-  charityRegistrationNumber: String,
+  charityRegistrationNumber: Option[String] = None,
   areYouACorporateTrustee: Boolean,
   nameOfCorporateTrustee: Option[String] = None,
   corporateTrusteePostcode: Option[String] = None,

@@ -38,7 +38,9 @@ import uk.gov.hmrc.auth.core.MissingBearerToken
 class AuthorisedActionSpec extends BaseSpec {
   class Harness(authorisedAction: AuthorisedAction) {
     val onPageLoad: Action[String] = authorisedAction { request =>
-      Results.Ok(s"${request.affinityGroup},${request.userId},${request.enrolmentIdentifier}")
+      Results.Ok(
+        s"${request.affinityGroup},${request.userId},${request.enrolmentIdentifierKey},${request.enrolmentIdentifierValue}"
+      )
     }
   }
 

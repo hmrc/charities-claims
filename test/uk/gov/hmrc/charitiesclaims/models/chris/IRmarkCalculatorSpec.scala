@@ -70,7 +70,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
                     Postcode = Some("AB12 3YZ")
                   )
                 ),
-                Phone = "07777777777"
+                Phone = Some("07777777777")
               )
             ),
             Declaration = true,
@@ -136,7 +136,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
                     Postcode = Some("AB12 3YZ")
                   )
                 ),
-                Phone = "07777777777"
+                Phone = Some("07777777777")
               )
             ),
             Declaration = true,
@@ -315,7 +315,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
                     Overseas = Some(true)
                   )
                 ),
-                Phone = "01234 567890"
+                Phone = Some("01234 567890")
               )
             ),
             Declaration = true,

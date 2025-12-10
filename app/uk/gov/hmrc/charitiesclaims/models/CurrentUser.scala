@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.charitiesclaims.models.requests
+package uk.gov.hmrc.charitiesclaims.models
 
-import play.api.mvc.Request
 import uk.gov.hmrc.auth.core.AffinityGroup
-import play.api.mvc.WrappedRequest
-import uk.gov.hmrc.charitiesclaims.models.CurrentUser
 
-final case class AuthorisedRequest[A](
-  underlying: Request[A],
-  affinityGroup: AffinityGroup,
-  userId: String,
-  enrolmentIdentifierKey: String,
-  enrolmentIdentifierValue: String
-) extends WrappedRequest[A](underlying)
-    with CurrentUser
+trait CurrentUser {
+  def affinityGroup: AffinityGroup
+  def userId: String
+  def enrolmentIdentifierValue: String
+  def enrolmentIdentifierKey: String
+
+  final def isAgent: Boolean = affinityGroup == AffinityGroup.Agent
+}

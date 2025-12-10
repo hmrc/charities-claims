@@ -58,7 +58,9 @@ class ChRISSubmissionServiceImpl @Inject() (
     GovTalkDetails(
       Keys = List(
         Key(Type = "CredentialID", Value = currentUser.userId),
-        Key(Type = currentUser.enrolmentIdentifierKey, Value = currentUser.enrolmentIdentifierValue),
+        if (currentUser.isAgent )
+        then ???
+        else Key(Type = currentUser.enrolmentIdentifierKey, Value = currentUser.enrolmentIdentifierValue),
         Key(Type = "SessionID", Value = hc.sessionId.map(_.value).getOrElse("unknown"))
       )
     )
@@ -66,9 +68,11 @@ class ChRISSubmissionServiceImpl @Inject() (
   def buildIRheader(currentUser: models.CurrentUser): IRheader =
     IRheader(
       Keys = List(
-        Key(Type = currentUser.enrolmentIdentifierKey, Value = currentUser.enrolmentIdentifierValue)
+        if (currentUser.isAgent)
+        then ???
+        else Key(Type = currentUser.enrolmentIdentifierKey, Value = currentUser.enrolmentIdentifierValue)
       ),
-      PeriodEnd = ???,
+      PeriodEnd = "2012-01-01",
       Sender = "Other" // constant value
     )
 

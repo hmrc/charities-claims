@@ -23,4 +23,5 @@ trait CurrentUser {
   def userId: String
   def enrolmentIdentifierValue: String
   def enrolmentIdentifierKey: String
+  final def isAgent: Boolean = affinityGroup == AffinityGroup.Agent
 }

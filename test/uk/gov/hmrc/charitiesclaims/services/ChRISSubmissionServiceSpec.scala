@@ -80,6 +80,8 @@ class ChRISSubmissionServiceSpec
           Key(Type = "SessionID", Value = "test-session-id")
         )
       )
+
+      // TODO Add more assertions for the rest of the submission
     }
   }
 

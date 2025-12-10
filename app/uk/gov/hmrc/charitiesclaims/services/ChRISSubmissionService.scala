@@ -58,8 +58,8 @@ class ChRISSubmissionServiceImpl @Inject() (
     GovTalkDetails(
       Keys = List(
         Key(Type = "CredentialID", Value = currentUser.userId),
-        if (currentUser.isAgent )
-        then ???
+        if currentUser.isAgent
+        then ??? // TODO
         else Key(Type = currentUser.enrolmentIdentifierKey, Value = currentUser.enrolmentIdentifierValue),
         Key(Type = "SessionID", Value = hc.sessionId.map(_.value).getOrElse("unknown"))
       )
@@ -68,8 +68,8 @@ class ChRISSubmissionServiceImpl @Inject() (
   def buildIRheader(currentUser: models.CurrentUser): IRheader =
     IRheader(
       Keys = List(
-        if (currentUser.isAgent)
-        then ???
+        if currentUser.isAgent
+        then ??? // TODO
         else Key(Type = currentUser.enrolmentIdentifierKey, Value = currentUser.enrolmentIdentifierValue)
       ),
       PeriodEnd = "2012-01-01",
@@ -90,10 +90,16 @@ class ChRISSubmissionServiceImpl @Inject() (
     Claim(
       // If user has an affinity group of "Agent", then set to the value of "Name of Charity or CASC"
       // Else set to the Organisation name returned from I3 - RDS DataCache Proxy Microservice - GetOrganisationNamebyCharityReference
-      OrgName = ???,
+      OrgName =
+        if currentUser.isAgent
+        then "" // TODO
+        else "", // TODO
       // If user has an affinity group of "Agent", then set to the value of "HMRC Charities Reference"
       // Else set to the Charities Reference (derived from their HMRC-CHAR-ORG enrolment and CHARID identifier)
-      HMRCref = ???,
+      HMRCref =
+        if currentUser.isAgent
+        then "" // TODO
+        else currentUser.enrolmentIdentifierValue,
       Regulator = buildRegulator(claim)
     )
 

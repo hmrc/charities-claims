@@ -1,0 +1,52 @@
+<Body xmlns="http://www.govtalk.gov.uk/CM/envelope" >
+<IRenvelope xmlns="http://www.govtalk.gov.uk/taxation/charities/r68/2" >
+<IRheader >
+<Keys >
+<Key  Type="CHARID" >XR4010</Key >
+</Keys >
+<PeriodEnd >2012-01-01</PeriodEnd >
+<Sender >Other</Sender >
+</IRheader >
+<R68 >
+<AuthOfficial >
+<Trustee >Joe Bloggs</Trustee >
+<ClaimNo >CHR-DS-029</ClaimNo >
+<OffID >
+<Postcode >AB12 3YZ</Postcode >
+</OffID >
+<Phone >07777777777</Phone >
+</AuthOfficial >
+<Declaration >yes</Declaration >
+<Claim >
+<OrgName >CHARITY TC088</OrgName >
+<HMRCref >XR4010</HMRCref >
+<Regulator >
+<RegName >CCNI</RegName >
+<RegNo >1137948</RegNo >
+</Regulator >
+<Repayment >
+<OtherInc >
+<Payer >Joe Bloggs</Payer >
+<OIDate >2025-01-01</OIDate >
+<Gross >100.00</Gross >
+<Tax >20.00</Tax >
+</OtherInc >
+<OtherInc >
+<Payer >Imogen Smith</Payer >
+<OIDate >2025-02-02</OIDate >
+<Gross >157.66</Gross >
+<Tax >31.53</Tax >
+</OtherInc >
+<OtherInc >
+<Payer >Paul Robinson</Payer >
+<OIDate >2025-03-03</OIDate >
+<Gross >45222.78</Gross >
+<Tax >9044.56</Tax >
+</OtherInc >
+<Adjustment >123.45</Adjustment >
+</Repayment >
+<OtherInfo >Blah Blah</OtherInfo >
+</Claim >
+</R68 >
+</IRenvelope >
+</Body >

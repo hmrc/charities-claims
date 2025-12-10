@@ -50,7 +50,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                 Key(Type = "CHARID", Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
-              IRmark = IRmark(Type = "generic", Content = "oCHbGp+XAIi/AYdxWxLNLMmbEno="),
+              IRmark = Some(IRmark(Type = "generic", Content = "oCHbGp+XAIi/AYdxWxLNLMmbEno=")),
               Sender = "Other"
             ),
             R68 = R68(
@@ -104,15 +104,16 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.write(govTalkMessage)
+      val xml = XmlWriter.writeIndented(govTalkMessage)
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
-      xml shouldEqual scala.io.Source
+      xml shouldBe scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-1.xml"))
         .getLines()
         .mkString("\n")
 
+      govTalkMessage.withLiteIRmark shouldBe govTalkMessage
     }
 
     "be serialised to XML correctly and equals an example 2 validChRIS submission XML" in {
@@ -149,7 +150,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                 Key(Type = "CHARID", Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
-              IRmark = IRmark(Type = "generic", Content = "HgZyqg72ReQKRBo4sTvTn5HZD5w="),
+              IRmark = Some(IRmark(Type = "generic", Content = "HgZyqg72ReQKRBo4sTvTn5HZD5w=")),
               Sender = "Other"
             ),
             R68 = R68(
@@ -311,15 +312,16 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.write(govTalkMessage)
+      val xml = XmlWriter.writeIndented(govTalkMessage)
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
-      xml shouldEqual scala.io.Source
+      xml shouldBe scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-2.xml"))
         .getLines()
         .mkString("\n")
 
+      govTalkMessage.withFullIRmark shouldBe govTalkMessage
     }
 
     "be serialised to XML correctly and equals an example 3 validChRIS submission XML" in {
@@ -355,7 +357,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                 Key(Type = "CHARID", Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
-              IRmark = IRmark(Type = "generic", Content = "zU5YSp/yiJMhQUQ0BHF8Qnsw5jo="),
+              IRmark = Some(IRmark(Type = "generic", Content = "zU5YSp/yiJMhQUQ0BHF8Qnsw5jo=")),
               Sender = "Other"
             ),
             R68 = R68(
@@ -470,14 +472,16 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.write(govTalkMessage)
+      val xml = XmlWriter.writeIndented(govTalkMessage)
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
-      xml shouldEqual scala.io.Source
+      xml shouldBe scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-3.xml"))
         .getLines()
         .mkString("\n")
+
+      govTalkMessage.withLiteIRmark shouldBe govTalkMessage
     }
 
     "be serialised to XML correctly and equals an example 4 validChRIS submission XML" in {
@@ -513,7 +517,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                 Key(Type = "CHARID", Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
-              IRmark = IRmark(Type = "generic", Content = "cKLS4eJ4/2jwRaKDI+cIDxBprIs="),
+              IRmark = Some(IRmark(Type = "generic", Content = "cKLS4eJ4/2jwRaKDI+cIDxBprIs=")),
               Sender = "Other"
             ),
             R68 = R68(
@@ -601,11 +605,11 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.write(govTalkMessage)
+      val xml = XmlWriter.writeIndented(govTalkMessage)
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
-      xml shouldEqual scala.io.Source
+      xml shouldBe scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-4.xml"))
         .getLines()
         .mkString("\n")

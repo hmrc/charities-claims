@@ -16,16 +16,22 @@
 
 package uk.gov.hmrc.charitiesclaims.xml
 
-import scala.util.Try
-import org.w3c.dom.Document
-import javax.xml.parsers.DocumentBuilderFactory
+import org.w3c.dom.traversal.{DocumentTraversal, NodeFilter, NodeIterator}
+import org.w3c.dom.{Document, Node}
+
 import java.io.ByteArrayInputStream
-import javax.xml.validation.Validator
-import javax.xml.transform.dom.DOMSource
-import javax.xml.validation.Schema
-import javax.xml.transform.stream.StreamSource
-import javax.xml.transform.Source
 import java.net.URL
+import java.util.Iterator
+import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec
+import javax.xml.crypto.dsig.{CanonicalizationMethod, XMLSignatureFactory}
+import javax.xml.crypto.{Data, NodeSetData, OctetStreamData}
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.transform.Source
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.{Schema, Validator}
+import scala.io.Codec
+import scala.util.Try
 
 object XmlUtils {
 
@@ -70,13 +76,7 @@ object XmlUtils {
     override def error(e: SAXParseException): Unit =
       log += ("ERROR: " + e.getMessage())
 
-    override def fatalError(e: SAXParseException): Unit =
-      log += ("FATAL: " + e.getMessage())
-
-    override def warning(e: SAXParseException) =
-      log += ("WARNING: " + e.getMessage())
-
-    def hasError: Boolean = !log.isEmpty
+    def hasError: Boolean = log.nonEmpty
     def getLog: String    = log.mkString(" ")
   }
 
@@ -88,5 +88,71 @@ object XmlUtils {
         .map((filename, url) => new StreamSource(this.getClass.getResourceAsStream(filename), url.toExternalForm))
         .toArray[Source]
     )
+  }
+
+  def canonicalizeXml(xml: String) = {
+    val dbf: DocumentBuilderFactory = DocumentBuilderFactory.newInstance()
+    dbf.setNamespaceAware(true)
+
+    val doc: Document = dbf.newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("utf-8")))
+
+    val data: Data = new NodeSetDataImpl(doc, getRootNodeFilter())
+
+    val fac: XMLSignatureFactory = XMLSignatureFactory.getInstance("DOM")
+
+    val canonicalizationMethod: CanonicalizationMethod =
+      fac.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE, null.asInstanceOf[C14NMethodParameterSpec])
+
+    val transformedData: OctetStreamData = canonicalizationMethod.transform(data, null).asInstanceOf[OctetStreamData]
+    scala.io.Source.fromInputStream(transformedData.getOctetStream())(using Codec.UTF8).mkString
+  }
+
+  private def getRootNodeFilter(): NodeFilter =
+    new NodeFilter() {
+      def acceptNode(pNode: Node): Short = NodeFilter.FILTER_ACCEPT
+    }
+
+  private class NodeSetDataImpl(node: Node, nodeFilter: NodeFilter) extends NodeSetData[Node] {
+
+    val document: Document = node match {
+      case doc: Document => doc
+      case _             => node.getOwnerDocument()
+    }
+
+    val documentTraversal: DocumentTraversal = document.asInstanceOf[DocumentTraversal]
+
+    def iterator(): Iterator[Node] = {
+      val nodeIterator = documentTraversal.createNodeIterator(node, NodeFilter.SHOW_ALL, nodeFilter, false)
+      new NodeSetDataIterator(nodeIterator)
+    }
+
+  }
+
+  private class NodeSetDataIterator(var nodeIterator: NodeIterator) extends java.util.Iterator[Node] {
+
+    var nextNode: Node = null
+
+    def checkNextNode(): Node = {
+      if (nextNode == null && nodeIterator != null) {
+        nextNode = nodeIterator.nextNode()
+        if (nextNode == null) {
+          nodeIterator.detach()
+          nodeIterator = null
+        }
+      }
+      nextNode
+    }
+
+    def consumeNextNode(): Node = {
+      val nextNode2: Node = checkNextNode()
+      nextNode = null
+      nextNode2
+    }
+
+    override def hasNext(): Boolean =
+      checkNextNode() != null
+
+    override def next(): Node =
+      consumeNextNode()
   }
 }

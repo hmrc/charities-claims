@@ -50,6 +50,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
           |  ttl = 12 days
           | }
           | agentUnsubmittedClaimLimit = 3
+          | computeLiteIRMark = true
           |
           |""".stripMargin
       )
@@ -98,7 +99,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       status(result) shouldBe Status.OK
       val saveClaimResponse = contentAsJson(result).as[SaveClaimResponse]
 
-      await(claimsService.getClaim(saveClaimResponse.claimId)) shouldEqual Some(
+      await(claimsService.getClaim(saveClaimResponse.claimId)) shouldBe Some(
         Claim(
           claimId = saveClaimResponse.claimId,
           userId = organisation1,
@@ -129,7 +130,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       status(result) shouldBe Status.OK
       val saveClaimResponse = contentAsJson(result).as[SaveClaimResponse]
 
-      await(claimsService.getClaim(saveClaimResponse.claimId)) shouldEqual Some(
+      await(claimsService.getClaim(saveClaimResponse.claimId)) shouldBe Some(
         Claim(
           claimId = saveClaimResponse.claimId,
           userId = organisation1,
@@ -174,7 +175,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       status(result) shouldBe Status.OK
       val saveClaimResponse = contentAsJson(result).as[SaveClaimResponse]
 
-      await(claimsService.getClaim(saveClaimResponse.claimId)) shouldEqual Some(
+      await(claimsService.getClaim(saveClaimResponse.claimId)) shouldBe Some(
         Claim(
           claimId = saveClaimResponse.claimId,
           userId = agent1,

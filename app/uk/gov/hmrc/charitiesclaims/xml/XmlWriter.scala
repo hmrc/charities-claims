@@ -47,9 +47,21 @@ object XmlContent {
 
 object XmlWriter {
 
-  def write[T : XmlWriter](value: T, addXmlDeclaration: Boolean = true): String = {
-    val builder: XmlStringBuilder = XmlStringBuilder(
+  def writeIndented[T : XmlWriter](value: T, addXmlDeclaration: Boolean = true): String = {
+    val builder: XmlStringBuilder = XmlStringBuilder.indented(
       indentation = 4,
+      initialString =
+        if addXmlDeclaration
+        then "<?xml version='1.0' encoding='UTF-8'?>"
+        else "" // No XML declaration if not requested
+    )
+    val xmlWriter                 = summon[XmlWriter[T]]
+    xmlWriter.write(xmlWriter.label, value)(using builder)
+    builder.xmlStringResult
+  }
+
+  def writeCompact[T : XmlWriter](value: T, addXmlDeclaration: Boolean = true): String = {
+    val builder: XmlStringBuilder = XmlStringBuilder.compact(
       initialString =
         if addXmlDeclaration
         then "<?xml version='1.0' encoding='UTF-8'?>"
@@ -207,7 +219,14 @@ trait XmlStringBuilder {
 }
 
 object XmlStringBuilder {
-  def apply(indentation: Int, initialString: String = ""): XmlStringBuilder = new XmlStringBuilder {
+
+  def indented(indentation: Int, initialString: String): XmlStringBuilder =
+    new IndentedXmlStringBuilder(indentation, initialString)
+
+  def compact(initialString: String): XmlStringBuilder =
+    new CompactXmlStringBuilder(initialString)
+
+  class IndentedXmlStringBuilder(indentation: Int, initialString: String) extends XmlStringBuilder {
 
     private val sb = new StringBuilder(initialString)
 
@@ -260,6 +279,39 @@ object XmlStringBuilder {
       )
       previous = 't'
     }
+
+    final def xmlStringResult: String = sb.toString()
+  }
+
+  class CompactXmlStringBuilder(initialString: String) extends XmlStringBuilder {
+
+    private val sb = new StringBuilder(initialString)
+
+    private var context = 'e'
+
+    final def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit = {
+      sb.append(s"<$name")
+      attributes.foreach { case (k, w, v) =>
+        sb.append(s" $k=")
+        context = 'a'
+        sb.append(s"\"")
+        w.asInstanceOf[XmlWriter[Any]].write(k, v)(using this)
+        sb.append(s"\"")
+        context = 'e'
+      }
+      sb.append(">")
+    }
+
+    final def appendElementEnd(name: String): Unit =
+      sb.append(s"</$name>")
+
+    final def appendText(text: String): Unit =
+      sb.append(
+        context match {
+          case 'a' => escapeForAttribute(text)
+          case 'e' => escapeForElement(text)
+        }
+      )
 
     final def xmlStringResult: String = sb.toString()
   }

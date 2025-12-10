@@ -33,6 +33,7 @@ class AppConfigSpec extends AnyWordSpec with Matchers:
           |  ttl = 12 days
           | }
           | agentUnsubmittedClaimLimit = 123
+          | computeLiteIRMark = false
           |
           |""".stripMargin
     )
@@ -50,3 +51,7 @@ class AppConfigSpec extends AnyWordSpec with Matchers:
     "return agentUnsubmittedClaimLimit" in:
       val appConfig = new AppConfig(config)
       appConfig.agentUnsubmittedClaimLimit shouldBe 123
+
+    "return computeLiteIRMark" in:
+      val appConfig = new AppConfig(config)
+      appConfig.computeLiteIRMark shouldBe false

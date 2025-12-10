@@ -52,19 +52,34 @@ class DefaultAuthorisedAction @Inject() (
 
     authorised()
       .retrieve(Retrievals.affinityGroup.and(Retrievals.allEnrolments).and(Retrievals.credentials)) {
-        case Some(affinityGroup @ AffinityGroup.Agent) ~ AuthorisedAction.HasActiveAgentEnrolment(
-              enrolmentIdentifier
-            ) ~ Some(
-              credentials
-            ) =>
-          block(AuthorisedRequest(request, affinityGroup, credentials.providerId, enrolmentIdentifier))
+        case Some(affinityGroup @ AffinityGroup.Agent)
+            ~ AuthorisedAction.HasActiveAgentEnrolment(enrolmentIdentifierKey, enrolmentIdentifierValue)
+            ~ Some(credentials) =>
+          block(
+            AuthorisedRequest(
+              request,
+              affinityGroup,
+              credentials.providerId,
+              enrolmentIdentifierKey,
+              enrolmentIdentifierValue
+            )
+          )
 
         case Some(AffinityGroup.Agent) ~ _ ~ _ =>
           Future.failed(UnsupportedAffinityGroup("Agent enrolment missing or not activated"))
 
-        case Some(affinityGroup @ AffinityGroup.Organisation) ~ AuthorisedAction
-              .HasActiveOrganisationEnrolment(enrolmentIdentifier) ~ Some(credentials) =>
-          block(AuthorisedRequest(request, affinityGroup, credentials.providerId, enrolmentIdentifier))
+        case Some(affinityGroup @ AffinityGroup.Organisation)
+            ~ AuthorisedAction.HasActiveOrganisationEnrolment(enrolmentIdentifierKey, enrolmentIdentifierValue)
+            ~ Some(credentials) =>
+          block(
+            AuthorisedRequest(
+              request,
+              affinityGroup,
+              credentials.providerId,
+              enrolmentIdentifierKey,
+              enrolmentIdentifierValue
+            )
+          )
 
         case Some(AffinityGroup.Organisation) ~ _ ~ _ =>
           Future.failed(UnsupportedAffinityGroup("Organisation enrolment missing or not activated"))
@@ -82,30 +97,30 @@ class DefaultAuthorisedAction @Inject() (
 }
 
 object AuthorisedAction {
-  val organisationEnrolmentKey   = "HMRC-CHAR-ORG"
-  val organisationIdentifierName = "CHARID"
-  val agentEnrolmentKey          = "HMRC-CHAR-AGENT"
-  val agentIdentifierName        = "AGENTCHARID"
+  val organisationEnrolmentKey  = "HMRC-CHAR-ORG"
+  val organisationIdentifierKey = "CHARID"
+  val agentEnrolmentKey         = "HMRC-CHAR-AGENT"
+  val agentIdentifierKey        = "AGENTCHARID"
 
   def hasActiveEnrolment(
     enrolments: Enrolments,
     enrolmentKey: String,
-    identifierName: String
-  ): Option[String] =
+    IdentifierKey: String
+  ): Option[(String, String)] =
     enrolments.getEnrolment(enrolmentKey) match {
       case Some(enrolment) if enrolment.isActivated =>
-        enrolment.getIdentifier(identifierName).map(_.value)
+        enrolment.getIdentifier(IdentifierKey).map(e => (e.key, e.value))
 
       case _ => None
     }
 
   object HasActiveAgentEnrolment {
-    def unapply(enrolments: Enrolments): Option[String] =
-      hasActiveEnrolment(enrolments, agentEnrolmentKey, agentIdentifierName)
+    def unapply(enrolments: Enrolments): Option[(String, String)] =
+      hasActiveEnrolment(enrolments, agentEnrolmentKey, agentIdentifierKey)
   }
 
   object HasActiveOrganisationEnrolment {
-    def unapply(enrolments: Enrolments): Option[String] =
-      hasActiveEnrolment(enrolments, organisationEnrolmentKey, organisationIdentifierName)
+    def unapply(enrolments: Enrolments): Option[(String, String)] =
+      hasActiveEnrolment(enrolments, organisationEnrolmentKey, organisationIdentifierKey)
   }
 }

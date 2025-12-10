@@ -28,7 +28,7 @@ import java.time.ZoneId
 final case class GovTalkMessage(
   xmlns: XmlAttribute[String] = XmlAttribute("http://www.govtalk.gov.uk/CM/envelope"),
   EnvelopeVersion: String = "2.0",
-  Header: Header,
+  Header: Header = Header(),
   GovTalkDetails: GovTalkDetails,
   Body: Body
 ) derives XmlWriter {
@@ -55,8 +55,9 @@ final case class GovTalkMessage(
 }
 
 final case class Header(
-  MessageDetails: MessageDetails,
-  SenderDetails: SenderDetails // This is intentionally set to be empty (<SenderDetails></SenderDetails>)
+  MessageDetails: MessageDetails = MessageDetails(),
+  SenderDetails: SenderDetails =
+    SenderDetails() // This is intentionally set to be empty (<SenderDetails></SenderDetails>)
 ) derives XmlWriter
 
 val gatewayTimestampFormat: DateTimeFormatter =
@@ -78,7 +79,7 @@ final case class SenderDetails() derives XmlWriter
 
 final case class GovTalkDetails(
   Keys: List[Key],
-  ChannelRouting: ChannelRouting
+  ChannelRouting: ChannelRouting = ChannelRouting()
 ) derives XmlWriter
 
 // need to check
@@ -88,7 +89,7 @@ final case class Key(
 ) derives XmlWriter
 
 final case class ChannelRouting(
-  Channel: Channel
+  Channel: Channel = Channel()
 ) derives XmlWriter
 
 final case class Channel(
@@ -136,7 +137,7 @@ final case class AuthOfficial(
   OffName: Option[OffName] = None,
   ClaimNo: Option[String] = None,
   OffID: Option[OffID] = None, // If a "Claim Reference Number" is given, then set to this value Else omit this element.
-  Phone: String
+  Phone: Option[String] = None
 ) derives XmlWriter
 
 final case class OffName(

@@ -52,6 +52,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     reasonNotRegisteredWithRegulator = Some("test"),
     charityRegistrationNumber = Some("test"),
     areYouACorporateTrustee = true,
+    doYouHaveUKAddress = Some(true),
     nameOfCorporateTrustee = Some("test"),
     corporateTrusteePostcode = Some("test"),
     corporateTrusteeDaytimeTelephoneNumber = Some("test"),

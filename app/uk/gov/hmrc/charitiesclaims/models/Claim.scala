@@ -65,6 +65,7 @@ final case class OrganisationDetails(
   reasonNotRegisteredWithRegulator: Option[String] = None,
   charityRegistrationNumber: Option[String] = None,
   areYouACorporateTrustee: Boolean,
+  doYouHaveUKAddress: Option[Boolean] = None,
   nameOfCorporateTrustee: Option[String] = None,
   corporateTrusteePostcode: Option[String] = None,
   corporateTrusteeDaytimeTelephoneNumber: Option[String] = None,

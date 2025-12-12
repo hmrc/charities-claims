@@ -125,7 +125,7 @@ object Donation {
 }
 
 final case class OtherIncomeScheduleData(
-  prevOverclaimedOtherIncome: BigDecimal,
+  previouslyOverclaimedOtherIncome: BigDecimal,
   totalGrossPayments: BigDecimal,
   totalTaxDeducted: BigDecimal,
   payments: Seq[Payment]

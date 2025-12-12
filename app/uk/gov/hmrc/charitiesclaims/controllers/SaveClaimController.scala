@@ -108,7 +108,7 @@ class SaveClaimController @Inject() (
         repaymentClaimDetails = RepaymentClaimDetails(
           claimingGiftAid = saveClaimRequest.claimingGiftAid,
           claimingTaxDeducted = saveClaimRequest.claimingTaxDeducted,
-          claimingUnderGasds = saveClaimRequest.claimingUnderGasds,
+          claimingUnderGiftAidSmallDonationsScheme = saveClaimRequest.claimingUnderGiftAidSmallDonationsScheme,
           claimReferenceNumber = saveClaimRequest.claimReferenceNumber,
           claimingDonationsNotFromCommunityBuilding = saveClaimRequest.claimingDonationsNotFromCommunityBuilding,
           claimingDonationsCollectedInCommunityBuildings =

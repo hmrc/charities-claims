@@ -37,33 +37,33 @@ class ClaimSpec extends AnyWordSpec with Matchers {
 
       Json.parse(Json.prettyPrint(Json.toJson(claim))).as[Claim] shouldBe claim
 
-      claim.claimId                                                            shouldBe "test-claim-submitted"
-      claim.userId                                                             shouldBe "test-user-1"
-      claim.creationTimestamp                                                  shouldBe "2025-11-10T13:45:56.016Z"
-      claim.claimData.repaymentClaimDetails.claimingGiftAid                    shouldBe true
-      claim.claimData.repaymentClaimDetails.claimingTaxDeducted                shouldBe false
-      claim.claimData.repaymentClaimDetails.claimingUnderGasds                 shouldBe false
-      claim.claimData.repaymentClaimDetails.claimReferenceNumber               shouldBe Some("New GA Claim")
-      claim.claimData.organisationDetails.map(_.nameOfCharityRegulator)        shouldBe Some(
+      claim.claimId                                                                  shouldBe "test-claim-submitted"
+      claim.userId                                                                   shouldBe "test-user-1"
+      claim.creationTimestamp                                                        shouldBe "2025-11-10T13:45:56.016Z"
+      claim.claimData.repaymentClaimDetails.claimingGiftAid                          shouldBe true
+      claim.claimData.repaymentClaimDetails.claimingTaxDeducted                      shouldBe false
+      claim.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme shouldBe false
+      claim.claimData.repaymentClaimDetails.claimReferenceNumber                     shouldBe Some("New GA Claim")
+      claim.claimData.organisationDetails.map(_.nameOfCharityRegulator)              shouldBe Some(
         "EnglandAndWales"
       )
-      claim.claimData.organisationDetails.flatMap(_.charityRegistrationNumber) shouldBe Some(
+      claim.claimData.organisationDetails.flatMap(_.charityRegistrationNumber)       shouldBe Some(
         "1137948"
       )
-      claim.claimData.organisationDetails.map(_.areYouACorporateTrustee)       shouldBe Some(true)
-      claim.claimData.organisationDetails.flatMap(_.nameOfCorporateTrustee)    shouldBe Some(
+      claim.claimData.organisationDetails.map(_.areYouACorporateTrustee)             shouldBe Some(true)
+      claim.claimData.organisationDetails.flatMap(_.nameOfCorporateTrustee)          shouldBe Some(
         "Joe Bloggs"
       )
-      claim.claimData.organisationDetails.flatMap(_.corporateTrusteePostcode)  shouldBe Some(
+      claim.claimData.organisationDetails.flatMap(_.corporateTrusteePostcode)        shouldBe Some(
         "AB12 3YZ"
       )
       claim.claimData.organisationDetails
-        .flatMap(_.corporateTrusteeDaytimeTelephoneNumber)                     shouldBe Some("071234567890")
-      claim.claimData.giftAidScheduleData.map(_.earliestDonationDate)          shouldBe Some(
+        .flatMap(_.corporateTrusteeDaytimeTelephoneNumber)                           shouldBe Some("071234567890")
+      claim.claimData.giftAidScheduleData.map(_.earliestDonationDate)                shouldBe Some(
         "2025-01-31"
       )
-      claim.claimData.giftAidScheduleData.map(_.prevOverclaimedGiftAid)        shouldBe Some(0.00)
-      claim.claimData.giftAidScheduleData.map(_.totalDonations)                shouldBe Some(1450)
+      claim.claimData.giftAidScheduleData.map(_.prevOverclaimedGiftAid)              shouldBe Some(0.00)
+      claim.claimData.giftAidScheduleData.map(_.totalDonations)                      shouldBe Some(1450)
 
       claim.claimData.giftAidScheduleData.map(_.donations.size) shouldBe Some(4)
 

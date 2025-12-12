@@ -585,7 +585,7 @@ Tue Sep 25 10:47:30 BST 2012
                     </xsd:sequence>
                   </xsd:complexType>
                 </xsd:element>
-                <xsd:element minOccurs="0" maxOccurs="1" name="GASDS">
+                <xsd:element minOccurs="0" maxOccurs="1" name="GiftAidSmallDonationsScheme">
                   <xsd:complexType>
                     <xsd:sequence>
                       <xsd:element minOccurs="1" maxOccurs="1" name="ConnectedCharities" type="r68:r68_YesNoType"/>
@@ -610,7 +610,7 @@ Tue Sep 25 10:47:30 BST 2012
                           </xsd:sequence>
                         </xsd:complexType>
                       </xsd:element>
-                      <xsd:element minOccurs="0" maxOccurs="2" name="GASDSClaim">
+                      <xsd:element minOccurs="0" maxOccurs="2" name="GiftAidSmallDonationsSchemeClaim">
                         <xsd:complexType>
                           <xsd:sequence>
                             <xsd:element minOccurs="1" maxOccurs="1" name="Year">

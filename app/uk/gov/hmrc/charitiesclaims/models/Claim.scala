@@ -48,7 +48,7 @@ object ClaimData {
 final case class RepaymentClaimDetails(
   claimingGiftAid: Boolean,
   claimingTaxDeducted: Boolean,
-  claimingUnderGasds: Boolean,
+  claimingUnderGiftAidSmallDonationsScheme: Boolean,
   claimReferenceNumber: Option[String] = None,
   claimingDonationsNotFromCommunityBuilding: Option[Boolean] = None,
   claimingDonationsCollectedInCommunityBuildings: Option[Boolean] = None,
@@ -149,7 +149,7 @@ object Payment {
 
 final case class GiftAidSmallDonationsSchemeScheduleData(
   adjustmentForGiftAidOverClaimed: BigDecimal,
-  claims: Seq[GasdsClaim],
+  claims: Seq[GiftAidSmallDonationsSchemeClaim],
   connectedCharitiesScheduleData: Seq[ConnectedCharity],
   communityBuildingsScheduleData: Seq[CommunityBuilding]
 )
@@ -158,13 +158,13 @@ object GiftAidSmallDonationsSchemeScheduleData {
   given format: Format[GiftAidSmallDonationsSchemeScheduleData] = Json.format[GiftAidSmallDonationsSchemeScheduleData]
 }
 
-final case class GasdsClaim(
+final case class GiftAidSmallDonationsSchemeClaim(
   taxYear: Int,
   amountOfDonationsReceived: BigDecimal
 )
 
-object GasdsClaim {
-  given format: Format[GasdsClaim] = Json.format[GasdsClaim]
+object GiftAidSmallDonationsSchemeClaim {
+  given format: Format[GiftAidSmallDonationsSchemeClaim] = Json.format[GiftAidSmallDonationsSchemeClaim]
 }
 
 final case class ConnectedCharity(

@@ -10,7 +10,7 @@
                 "repaymentClaimDetails": {
                     "claimingGiftAid": true,
                     "claimingTaxDeducted": true,
-                    "claimingUnderGasds": false,
+                    "claimingUnderGiftAidSmallDonationsScheme": false,
                     "claimReferenceNumber": "New GA Claim"
                 },
                 "organisationDetails": {

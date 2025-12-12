@@ -150,7 +150,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                 Key(Type = "CHARID", Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
-              IRmark = Some(IRmark(Type = "generic", Content = "HgZyqg72ReQKRBo4sTvTn5HZD5w=")),
+              IRmark = Some(IRmark(Type = "generic", Content = "ecYRGN8K5yfiZSK5RDXoskrwbJE=")),
               Sender = "Other"
             ),
             R68 = R68(
@@ -253,8 +253,8 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                     EarliestGAdate = "2025-01-01"
                   )
                 ),
-                GASDS = Some(
-                  GASDS(
+                GiftAidSmallDonationsScheme = Some(
+                  GiftAidSmallDonationsScheme(
                     ConnectedCharities = true,
                     Charity = Some(
                       List(
@@ -265,10 +265,10 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                         Charity(Name = "Charity Five", HMRCref = "X95446")
                       )
                     ),
-                    GASDSClaim = Some(
+                    GiftAidSmallDonationsSchemeClaim = Some(
                       List(
-                        GASDSClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
-                        GASDSClaim(Year = Some("2023"), Amount = Some(BigDecimal("460.34")))
+                        GiftAidSmallDonationsSchemeClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
+                        GiftAidSmallDonationsSchemeClaim(Year = Some("2023"), Amount = Some(BigDecimal("460.34")))
                       )
                     ),
                     CommBldgs = Some(true),

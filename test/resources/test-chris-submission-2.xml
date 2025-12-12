@@ -32,7 +32,7 @@
                     <Key Type="CHARID">XR4010</Key>
                 </Keys>
                 <PeriodEnd>2012-01-01</PeriodEnd>
-                <IRmark Type="generic">HgZyqg72ReQKRBo4sTvTn5HZD5w=</IRmark>
+                <IRmark Type="generic">ecYRGN8K5yfiZSK5RDXoskrwbJE=</IRmark>
                 <Sender>Other</Sender>
             </IRheader>
             <R68>
@@ -113,7 +113,7 @@
                         </OtherInc>
                         <Adjustment>123.45</Adjustment>
                     </Repayment>
-                    <GASDS>
+                    <GiftAidSmallDonationsScheme>
                         <ConnectedCharities>yes</ConnectedCharities>
                         <Charity>
                             <Name>Charity One</Name>
@@ -135,14 +135,14 @@
                             <Name>Charity Five</Name>
                             <HMRCref>X95446</HMRCref>
                         </Charity>
-                        <GASDSClaim>
+                        <GiftAidSmallDonationsSchemeClaim>
                             <Year>2024</Year>
                             <Amount>67.09</Amount>
-                        </GASDSClaim>
-                        <GASDSClaim>
+                        </GiftAidSmallDonationsSchemeClaim>
+                        <GiftAidSmallDonationsSchemeClaim>
                             <Year>2023</Year>
                             <Amount>460.34</Amount>
-                        </GASDSClaim>
+                        </GiftAidSmallDonationsSchemeClaim>
                         <CommBldgs>yes</CommBldgs>
                         <Building>
                             <BldgName>YMCA</BldgName>
@@ -180,7 +180,7 @@
                             </BldgClaim>
                         </Building>
                         <Adj>56.89</Adj>
-                    </GASDS>
+                    </GiftAidSmallDonationsScheme>
                     <OtherInfo>This is my other info about my adjustments</OtherInfo>
                 </Claim>
             </R68>

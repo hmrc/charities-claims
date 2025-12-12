@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 final case class SaveClaimRequest(
   claimingGiftAid: Boolean,
   claimingTaxDeducted: Boolean,
-  claimingUnderGasds: Boolean,
+  claimingUnderGiftAidSmallDonationsScheme: Boolean,
   claimReferenceNumber: Option[String] = None,
   claimingDonationsNotFromCommunityBuilding: Option[Boolean] = None,
   claimingDonationsCollectedInCommunityBuildings: Option[Boolean] = None,

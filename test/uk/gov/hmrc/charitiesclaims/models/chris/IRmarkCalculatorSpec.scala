@@ -226,8 +226,8 @@ class IRmarkCalculatorSpec extends BaseSpec {
                   EarliestGAdate = "2025-01-01"
                 )
               ),
-              GASDS = Some(
-                GASDS(
+              GiftAidSmallDonationsScheme = Some(
+                GiftAidSmallDonationsScheme(
                   ConnectedCharities = true,
                   Charity = Some(
                     List(
@@ -238,10 +238,10 @@ class IRmarkCalculatorSpec extends BaseSpec {
                       Charity(Name = "Charity Five", HMRCref = "X95446")
                     )
                   ),
-                  GASDSClaim = Some(
+                  GiftAidSmallDonationsSchemeClaim = Some(
                     List(
-                      GASDSClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
-                      GASDSClaim(Year = Some("2023"), Amount = Some(BigDecimal("460.34")))
+                      GiftAidSmallDonationsSchemeClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
+                      GiftAidSmallDonationsSchemeClaim(Year = Some("2023"), Amount = Some(BigDecimal("460.34")))
                     )
                   ),
                   CommBldgs = Some(true),
@@ -284,8 +284,8 @@ class IRmarkCalculatorSpec extends BaseSpec {
         )
       )
 
-      IRmarkCalculator.computeLiteIRmark(body) should be("HgZyqg72ReQKRBo4sTvTn5HZD5w=")
-      IRmarkCalculator.computeFullIRmark(body) should be("HgZyqg72ReQKRBo4sTvTn5HZD5w=")
+      IRmarkCalculator.computeLiteIRmark(body) should be("ecYRGN8K5yfiZSK5RDXoskrwbJE=")
+      IRmarkCalculator.computeFullIRmark(body) should be("ecYRGN8K5yfiZSK5RDXoskrwbJE=")
     }
 
     "compute the IRmark for a given body example 3" in {

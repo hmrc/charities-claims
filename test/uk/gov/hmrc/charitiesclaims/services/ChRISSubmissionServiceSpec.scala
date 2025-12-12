@@ -58,7 +58,7 @@ class ChRISSubmissionServiceSpec
           repaymentClaimDetails = models.RepaymentClaimDetails(
             claimingGiftAid = true,
             claimingTaxDeducted = false,
-            claimingUnderGasds = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
           )
         )

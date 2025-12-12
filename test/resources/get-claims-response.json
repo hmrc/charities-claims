@@ -70,7 +70,7 @@
                     ]
                 },
                 "otherIncomeScheduleData": {
-                    "prevOverclaimedOtherIncome": 0.00,
+                    "previouslyOverclaimedOtherIncome": 0.00,
                     "totalGrossPayments": 100.00,
                     "totalTaxDeducted": 10.00,
                     "payments": [
@@ -83,7 +83,7 @@
                         }
                     ]
                 },
-                "gasdsScheduleData": {
+                "giftAidSmallDonationsSchemeScheduleData": {
                     "adjustmentForGiftAidOverClaimed": 0.00,
                     "claims": [
                         {

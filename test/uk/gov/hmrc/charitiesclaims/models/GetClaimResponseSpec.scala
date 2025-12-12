@@ -46,12 +46,12 @@ class GetClaimResponseSpec extends AnyWordSpec with Matchers {
       getClaimsResponse.claimsList.head.claimData.repaymentClaimDetails.claimingTaxDeducted shouldBe true
       getClaimsResponse.claimsList.head.claimData.repaymentClaimDetails.claimingUnderGasds  shouldBe false
 
-      getClaimsResponse.claimsList.head.claimData.organisationDetails.isDefined     shouldBe true
-      getClaimsResponse.claimsList.head.claimData.declarationDetails.isDefined      shouldBe true
-      getClaimsResponse.claimsList.head.claimData.gasdsScheduleData.isDefined       shouldBe true
-      getClaimsResponse.claimsList.head.claimData.otherIncomeScheduleData.isDefined shouldBe true
-      getClaimsResponse.claimsList.head.claimData.giftAidScheduleData.isDefined     shouldBe true
-      getClaimsResponse.claimsList.head.submissionDetails.isDefined                 shouldBe true
+      getClaimsResponse.claimsList.head.claimData.organisationDetails.isDefined                     shouldBe true
+      getClaimsResponse.claimsList.head.claimData.declarationDetails.isDefined                      shouldBe true
+      getClaimsResponse.claimsList.head.claimData.giftAidSmallDonationsSchemeScheduleData.isDefined shouldBe true
+      getClaimsResponse.claimsList.head.claimData.otherIncomeScheduleData.isDefined                 shouldBe true
+      getClaimsResponse.claimsList.head.claimData.giftAidScheduleData.isDefined                     shouldBe true
+      getClaimsResponse.claimsList.head.submissionDetails.isDefined                                 shouldBe true
     }
   }
 }

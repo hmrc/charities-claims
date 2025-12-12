@@ -38,7 +38,7 @@ final case class ClaimData(
   giftAidScheduleData: Option[GiftAidScheduleData] = None,
   declarationDetails: Option[DeclarationDetails] = None,
   otherIncomeScheduleData: Option[OtherIncomeScheduleData] = None,
-  gasdsScheduleData: Option[GasdsScheduleData] = None
+  giftAidSmallDonationsSchemeScheduleData: Option[GiftAidSmallDonationsSchemeScheduleData] = None
 )
 
 object ClaimData {
@@ -147,15 +147,15 @@ object Payment {
   given format: Format[Payment] = Json.format[Payment]
 }
 
-final case class GasdsScheduleData(
+final case class GiftAidSmallDonationsSchemeScheduleData(
   adjustmentForGiftAidOverClaimed: BigDecimal,
   claims: Seq[GasdsClaim],
   connectedCharitiesScheduleData: Seq[ConnectedCharity],
   communityBuildingsScheduleData: Seq[CommunityBuilding]
 )
 
-object GasdsScheduleData {
-  given format: Format[GasdsScheduleData] = Json.format[GasdsScheduleData]
+object GiftAidSmallDonationsSchemeScheduleData {
+  given format: Format[GiftAidSmallDonationsSchemeScheduleData] = Json.format[GiftAidSmallDonationsSchemeScheduleData]
 }
 
 final case class GasdsClaim(

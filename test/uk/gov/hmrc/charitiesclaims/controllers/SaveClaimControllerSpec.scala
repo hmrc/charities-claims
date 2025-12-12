@@ -64,7 +64,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       SaveClaimRequest(
         claimingGiftAid = true,
         claimingTaxDeducted = false,
-        claimingUnderGasds = false,
+        claimingUnderGiftAidSmallDonationsScheme = false,
         claimReferenceNumber = Some("1234567890"),
         claimingDonationsNotFromCommunityBuilding = None,
         claimingDonationsCollectedInCommunityBuildings = None,
@@ -73,14 +73,14 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       )
     )
 
-  val requestSaveClaimGasds =
+  val requestSaveClaimGiftAidSmallDonationsScheme =
     testRequest(
       "POST",
       "/claims",
       SaveClaimRequest(
         claimingGiftAid = false,
         claimingTaxDeducted = false,
-        claimingUnderGasds = true,
+        claimingUnderGiftAidSmallDonationsScheme = true,
         claimReferenceNumber = None,
         claimingDonationsNotFromCommunityBuilding = Some(true),
         claimingDonationsCollectedInCommunityBuildings = None,
@@ -109,7 +109,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
             repaymentClaimDetails = RepaymentClaimDetails(
               claimingGiftAid = true,
               claimingTaxDeducted = false,
-              claimingUnderGasds = false,
+              claimingUnderGiftAidSmallDonationsScheme = false,
               claimReferenceNumber = Some("1234567890"),
               claimingDonationsNotFromCommunityBuilding = None,
               claimingDonationsCollectedInCommunityBuildings = None,
@@ -126,7 +126,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       val controller    =
         new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, claimsService, testAppConfig)
 
-      val result = controller.saveClaim()(requestSaveClaimGasds)
+      val result = controller.saveClaim()(requestSaveClaimGiftAidSmallDonationsScheme)
       status(result) shouldBe Status.OK
       val saveClaimResponse = contentAsJson(result).as[SaveClaimResponse]
 
@@ -140,7 +140,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
             repaymentClaimDetails = RepaymentClaimDetails(
               claimingGiftAid = false,
               claimingTaxDeducted = false,
-              claimingUnderGasds = true,
+              claimingUnderGiftAidSmallDonationsScheme = true,
               claimReferenceNumber = None,
               claimingDonationsNotFromCommunityBuilding = Some(true),
               claimingDonationsCollectedInCommunityBuildings = None,
@@ -185,7 +185,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
             repaymentClaimDetails = RepaymentClaimDetails(
               claimingGiftAid = true,
               claimingTaxDeducted = false,
-              claimingUnderGasds = false,
+              claimingUnderGiftAidSmallDonationsScheme = false,
               claimReferenceNumber = Some("1234567890"),
               claimingDonationsNotFromCommunityBuilding = None,
               claimingDonationsCollectedInCommunityBuildings = None,
@@ -250,7 +250,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       val errorResponse = contentAsJson(result).as[JsObject]
       errorResponse.value.get("errorMessage") shouldBe Some(
         JsString(
-          "unmarshalling failed at /claimingUnderGasds because of error.path.missing, at /claimingTaxDeducted because of error.path.missing"
+          "unmarshalling failed at /claimingUnderGiftAidSmallDonationsScheme because of error.path.missing, at /claimingTaxDeducted because of error.path.missing"
         )
       )
       errorResponse.value.get("errorCode")    shouldBe Some(JsString("INVALID_JSON_FORMAT"))

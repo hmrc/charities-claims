@@ -43,7 +43,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
   private val repaymentClaimDetails = RepaymentClaimDetails(
     claimingGiftAid = true,
     claimingTaxDeducted = true,
-    claimingUnderGasds = true,
+    claimingUnderGiftAidSmallDonationsScheme = true,
     claimReferenceNumber = Some("123")
   )
 
@@ -97,7 +97,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       )
     )
 
-  val requestUpdateClaimGasds =
+  val requestUpdateClaimGiftAidSmallDonationsScheme =
     putClaims(
       UpdateClaimRequest(
         claimId,
@@ -117,7 +117,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       repaymentClaimDetails = RepaymentClaimDetails(
         claimingGiftAid = true,
         claimingTaxDeducted = false,
-        claimingUnderGasds = false,
+        claimingUnderGiftAidSmallDonationsScheme = false,
         claimReferenceNumber = Some("1234567890"),
         claimingDonationsNotFromCommunityBuilding = None,
         claimingDonationsCollectedInCommunityBuildings = None,
@@ -215,7 +215,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
-      private val result = controller.updateClaim()(requestUpdateClaimGasds)
+      private val result = controller.updateClaim()(requestUpdateClaimGiftAidSmallDonationsScheme)
       status(result)                                shouldBe Status.OK
       contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
 

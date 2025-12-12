@@ -189,7 +189,7 @@ final case class Claim(
   // If "Are you claiming Gift Aid" is "Yes", and the prevOverclaimedGiftAid is > 0, then set to this value
   // If "Are you claiming Other Income" is "Yes", and the "Previously Overclaimed Other Income Amount" is > 0, then set to this value
   // Else omit this element.
-  GASDS: Option[GASDS] = None,
+  GiftAidSmallDonationsScheme: Option[GiftAidSmallDonationsScheme] = None,
   OtherInfo: Option[String] = None // If a "Adjustments Detail" is given, then set to this value Else omit this element.
 ) derives XmlWriter
 
@@ -247,10 +247,10 @@ final case class OtherInc(
 ) derives XmlWriter
 
 // to check
-final case class GASDS(
+final case class GiftAidSmallDonationsScheme(
   ConnectedCharities: YesNo,
   Charity: Option[List[Charity]] = None,
-  GASDSClaim: Option[List[GASDSClaim]] = None,
+  GiftAidSmallDonationsSchemeClaim: Option[List[GiftAidSmallDonationsSchemeClaim]] = None,
   CommBldgs: Option[YesNo] = None,
   Building: Option[List[Building]] = None,
   Adj: Option[String]
@@ -262,7 +262,7 @@ final case class Charity(
 ) derives XmlWriter
 
 // to check
-final case class GASDSClaim(
+final case class GiftAidSmallDonationsSchemeClaim(
   Year: Option[String] =
     None, // If "Donations received by organisation" is "Yes", then set to the value of "Tax Year 1"   Else omit this element.
   // If "Donations received by organisation" is "Yes", and "Do you want to claim for a second tax year" is "Yes", then set to the value of "Tax Year 2"

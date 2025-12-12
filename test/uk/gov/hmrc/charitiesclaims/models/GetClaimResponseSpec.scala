@@ -37,14 +37,14 @@ class GetClaimResponseSpec extends AnyWordSpec with Matchers {
 
       Json.parse(Json.prettyPrint(Json.toJson(getClaimsResponse))).as[GetClaimsResponse] shouldBe getClaimsResponse
 
-      getClaimsResponse.claimsCount                                                         shouldBe 1
-      getClaimsResponse.claimsList.head.claimId                                             shouldBe "123"
-      getClaimsResponse.claimsList.head.userId                                              shouldBe "0000000290806672"
-      getClaimsResponse.claimsList.head.claimSubmitted                                      shouldBe true
-      getClaimsResponse.claimsList.head.creationTimestamp                                   shouldBe "2025-11-10T13:45:56.016Z"
-      getClaimsResponse.claimsList.head.claimData.repaymentClaimDetails.claimingGiftAid     shouldBe true
-      getClaimsResponse.claimsList.head.claimData.repaymentClaimDetails.claimingTaxDeducted shouldBe true
-      getClaimsResponse.claimsList.head.claimData.repaymentClaimDetails.claimingUnderGasds  shouldBe false
+      getClaimsResponse.claimsCount                                                                              shouldBe 1
+      getClaimsResponse.claimsList.head.claimId                                                                  shouldBe "123"
+      getClaimsResponse.claimsList.head.userId                                                                   shouldBe "0000000290806672"
+      getClaimsResponse.claimsList.head.claimSubmitted                                                           shouldBe true
+      getClaimsResponse.claimsList.head.creationTimestamp                                                        shouldBe "2025-11-10T13:45:56.016Z"
+      getClaimsResponse.claimsList.head.claimData.repaymentClaimDetails.claimingGiftAid                          shouldBe true
+      getClaimsResponse.claimsList.head.claimData.repaymentClaimDetails.claimingTaxDeducted                      shouldBe true
+      getClaimsResponse.claimsList.head.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme shouldBe false
 
       getClaimsResponse.claimsList.head.claimData.organisationDetails.isDefined                     shouldBe true
       getClaimsResponse.claimsList.head.claimData.declarationDetails.isDefined                      shouldBe true

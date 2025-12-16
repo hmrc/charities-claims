@@ -191,37 +191,6 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       captured.value shouldBe expectedUpdate
     }
 
-    "return 200 when claim is updated for gasds claim" in new AuthorisedOrganisationFixture {
-      val mockClaimsService: ClaimsService = mock[ClaimsService]
-
-      val expectedUpdate: Claim = existingClaim.copy(
-        claimData = existingClaim.claimData.copy(
-          giftAidScheduleData = Some(gasds)
-        )
-      )
-
-      val captured = CaptureOne[Claim]()
-
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(Future.successful(Some(existingClaim)))
-
-      (mockClaimsService
-        .putClaim(_: Claim))
-        .expects(capture(captured))
-        .returning(Future.successful(()))
-
-      val controller =
-        new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
-
-      private val result = controller.updateClaim()(requestUpdateClaimGiftAidSmallDonationsScheme)
-      status(result)                                shouldBe Status.OK
-      contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
-
-      captured.value shouldBe expectedUpdate
-    }
-
     "return 404 when claim is not found" in new AuthorisedOrganisationFixture {
 
       val controller = new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, claimsService)

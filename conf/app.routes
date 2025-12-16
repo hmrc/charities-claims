@@ -4,3 +4,5 @@ POST        /get-claims             uk.gov.hmrc.charitiesclaims.controllers.GetC
 POST        /claims                 uk.gov.hmrc.charitiesclaims.controllers.SaveClaimController.saveClaim
 DELETE      /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.DeleteClaimController.deleteClaim(claimId: String)
 PUT         /claims                 uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateClaim
+
+GET         /charities/:charityReference/unregulated-donations uk.gov.hmrc.charitiesclaims.controllers.UnregulatedDonationsController.getTotalUnregulatedDonations(charityReference: String)

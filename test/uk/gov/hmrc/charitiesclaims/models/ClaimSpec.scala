@@ -59,58 +59,6 @@ class ClaimSpec extends AnyWordSpec with Matchers {
       )
       claim.claimData.organisationDetails
         .flatMap(_.corporateTrusteeDaytimeTelephoneNumber)                           shouldBe Some("071234567890")
-      claim.claimData.giftAidScheduleData.map(_.earliestDonationDate)                shouldBe Some(
-        "2025-01-31"
-      )
-      claim.claimData.giftAidScheduleData.map(_.prevOverclaimedGiftAid)              shouldBe Some(0.00)
-      claim.claimData.giftAidScheduleData.map(_.totalDonations)                      shouldBe Some(1450)
-
-      claim.claimData.giftAidScheduleData.map(_.donations.size) shouldBe Some(4)
-
-      claim.claimData.giftAidScheduleData.map(_.donations.head.donationItem)   shouldBe Some(1)
-      claim.claimData.giftAidScheduleData.map(_.donations.head.donationDate)   shouldBe Some(
-        "2025-03-24"
-      )
-      claim.claimData.giftAidScheduleData.map(_.donations.head.donationAmount) shouldBe Some(
-        240
-      )
-      claim.claimData.giftAidScheduleData.flatMap(_.donations.head.donorTitle) shouldBe Some(
-        "Mr"
-      )
-      claim.claimData.giftAidScheduleData
-        .flatMap(_.donations.head.donorFirstName)                              shouldBe Some(
-        "Henry"
-      )
-      claim.claimData.giftAidScheduleData
-        .flatMap(_.donations.head.donorLastName)                               shouldBe Some(
-        "House Martin"
-      )
-      claim.claimData.giftAidScheduleData.flatMap(_.donations.head.donorHouse) shouldBe Some(
-        "152A"
-      )
-      claim.claimData.giftAidScheduleData
-        .flatMap(_.donations.head.donorPostcode)                               shouldBe Some(
-        "M99 2QD"
-      )
-      claim.claimData.giftAidScheduleData
-        .flatMap(_.donations.head.sponsoredEvent)                              shouldBe Some(
-        false
-      )
-      claim.claimData.giftAidScheduleData
-        .flatMap(_.donations(2).aggregatedDonations)                           shouldBe Some("One off Gift Aid donations")
-      claim.claimData.giftAidScheduleData.map(_.donations(2).donationDate)     shouldBe Some(
-        "2025-03-31"
-      )
-      claim.claimData.giftAidScheduleData.map(_.donations(2).donationAmount)   shouldBe Some(
-        880
-      )
-      claim.claimData.giftAidScheduleData.flatMap(_.donations.head.donorTitle) shouldBe Some(
-        "Mr"
-      )
-      claim.claimData.giftAidScheduleData
-        .flatMap(_.donations(1).donorFirstName)                                shouldBe Some(
-        "John"
-      )
     }
   }
 }

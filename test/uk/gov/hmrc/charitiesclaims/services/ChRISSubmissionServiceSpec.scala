@@ -60,6 +60,22 @@ class ChRISSubmissionServiceSpec
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          // Organisation details
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = "EnglandAndWales",
+              reasonNotRegisteredWithRegulator = Some("Excepted"),
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = true,
+              doYouHaveUKAddress = Some(true),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              corporateTrusteeTitle = None,
+              corporateTrusteeFirstName = None,
+              corporateTrusteeLastName = None
+            )
           )
         )
       )
@@ -81,6 +97,102 @@ class ChRISSubmissionServiceSpec
         )
       )
 
+      val submissionR68     = service.buildR68(claim, currentUser)
+      val submissionOffId   = service.buildOffId(claim)
+      val submissionOffName = service.buildOffName(claim)
+
+      submissionR68.AuthOfficial shouldBe Some(
+        AuthOfficial(
+          Trustee = Some("Test-Corporate-Trustee"),
+          OffName = Some(
+            OffName(
+              Ttl = None,
+              Fore = None,
+              Sur = None
+            )
+          ),
+          ClaimNo = Some(""),
+          OffID = Some(
+            OffID(
+              Postcode = Some(""),
+              Overseas = Some(false)
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+
+      submissionOffName shouldBe Some(
+        OffName(
+          Ttl = None,
+          Fore = None,
+          Sur = None
+        )
+      )
+
+      submissionOffId shouldBe Some(
+        OffID(
+          Postcode = Some(""),
+          Overseas = Some(false)
+        )
+      )
+
+//      submision.Body shouldBe Body(
+//        IRenvelope = IRenvelope(
+//          IRheader = IRheader(
+//            Keys = List(
+//              Key(Type = "CHARID", Value = "FOO"),
+//              Key(Type = "test-enrolment-identifier-key", Value = "test-enrolment-identifier-value")
+//            ),
+//            PeriodEnd = "2012-01-01",
+//            Sender = "Other"
+//          ),
+//          R68 = R68(
+//            WelshSubmission = Some(false),
+//            AuthOfficial = Some(
+//              AuthOfficial(
+//                Trustee = Some("Test-Corporate-Trustee"),
+//                OffName = Some(
+//                  OffName(
+//                    Ttl = None,
+//                    Fore = None,
+//                    Sur = None
+//                  )
+//                ),
+//                ClaimNo = Some(""),
+//                OffID = Some(
+//                  OffID(
+//                    Postcode = Some(""),
+//                    Overseas = Some(false)
+//                  )
+//                ),
+//                Phone = Some("1234567890")
+//              )
+//            ),
+//            AgtOrNom = None,
+//            Declaration = true,
+//            Claim = Claim(
+//              OrgName = "CASC",
+//              HMRCref = "FOO",
+//              Regulator = Some(
+//                Regulator(
+//                  RegName = Some("EnglandAndWales"),
+//                  NoReg = Some(false),
+//                  RegNo = Some("123456")
+//                )
+//              ),
+//              Repayment = Some(
+//                Repayment(
+//                  GAD = None,
+//                  EarliestGAdate = ???,
+//                  OtherInc = ???,
+//                  Adjustment = ???
+//                )
+//              )
+//            )
+//          )
+//        )
+//      )
       // TODO Add more assertions for the rest of the submission
     }
   }

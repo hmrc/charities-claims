@@ -50,8 +50,20 @@ class UpdateClaimController @Inject() (
                 )
               )
             case Some(claim) =>
-              val updatedClaim = update(claim, updateClaimsRequest)
-              claimsService.putClaim(updatedClaim).map(_ => Ok(Json.toJson(UpdateClaimResponse(success = true))))
+              if claim.submissionDetails.isEmpty && !claim.claimSubmitted
+              then {
+                val updatedClaim = update(claim, updateClaimsRequest)
+                claimsService.putClaim(updatedClaim).map(_ => Ok(Json.toJson(UpdateClaimResponse(success = true))))
+              } else {
+                Future.successful(
+                  BadRequest(
+                    Json.obj(
+                      "errorMessage" -> s"Claim with claimId ${updateClaimsRequest.claimId} has already been submitted and cannot be updated",
+                      "errorCode"    -> "CLAIM_ALREADY_SUBMITTED_ERROR"
+                    )
+                  )
+                )
+              }
           }
           .recover { case e =>
             InternalServerError(

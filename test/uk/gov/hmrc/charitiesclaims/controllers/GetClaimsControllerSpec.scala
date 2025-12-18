@@ -19,10 +19,8 @@ package uk.gov.hmrc.charitiesclaims.controllers
 import play.api.http.Status
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
-import play.api.libs.json.Json
 import play.api.test.Helpers
 import play.api.test.Helpers.*
-import uk.gov.hmrc.charitiesclaims.models.GetClaimsRequest
 import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
@@ -36,20 +34,16 @@ import scala.concurrent.Future
 class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
   given ExecutionContext = global
 
-  val requestGetClaimsSubmitted =
-    testRequest("POST", "/get-claims", GetClaimsRequest(claimSubmitted = true))
-
-  val requestGetClaimsUnsubmitted =
-    testRequest("POST", "/get-claims", GetClaimsRequest(claimSubmitted = false))
-
   val claimsService = new TestClaimsService(initialTestClaimsSet)
 
-  "POST /get-claims" - {
+  "GET /claims" - {
     "return 200 when requested submitted claims and user is an organisation" in new AuthorisedOrganisationFixture {
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val result = controller.getClaims()(requestGetClaimsSubmitted)
+      val request = testRequest("GET", "/claims?claimSubmitted=true")
+
+      val result = controller.getClaims(claimSubmitted = true)(request)
       status(result) shouldBe Status.OK
       val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
       getClaimsResponse.claimsCount                    shouldBe 1
@@ -62,7 +56,9 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val result = controller.getClaims()(requestGetClaimsSubmitted)
+      val request = testRequest("GET", "/claims?claimSubmitted=true")
+
+      val result = controller.getClaims(claimSubmitted = true)(request)
       status(result) shouldBe Status.OK
       val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
       getClaimsResponse.claimsCount                    shouldBe 1
@@ -75,7 +71,9 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val result = controller.getClaims()(requestGetClaimsUnsubmitted)
+      val request = testRequest("GET", "/claims?claimSubmitted=false")
+
+      val result = controller.getClaims(claimSubmitted = false)(request)
       status(result) shouldBe Status.OK
       val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
       getClaimsResponse.claimsCount                                        shouldBe 3
@@ -92,7 +90,9 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val result = controller.getClaims()(requestGetClaimsUnsubmitted)
+      val request = testRequest("GET", "/claims?claimSubmitted=false")
+
+      val result = controller.getClaims(claimSubmitted = false)(request)
       status(result) shouldBe Status.OK
       val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
       getClaimsResponse.claimsCount                                        shouldBe 3
@@ -112,48 +112,18 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       (mockClaimsService
         .listClaims(_: String, _: Boolean))
         .expects(*, *)
+        .anyNumberOfTimes()
         .returning(Future.failed(new RuntimeException("Error message")))
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
-      val result = controller.getClaims()(requestGetClaimsSubmitted)
+      val request = testRequest("GET", "/claims?claimSubmitted=true")
+
+      val result = controller.getClaims(claimSubmitted = true)(request)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       val errorResponse = contentAsJson(result).as[JsObject]
       errorResponse.value.get("errorMessage") shouldBe Some(JsString("Error message"))
       errorResponse.value.get("errorCode")    shouldBe Some(JsString("CLAIM_SERVICE_ERROR"))
     }
-
-    "return 400 when wrong entity format" in new AuthorisedOrganisationFixture {
-
-      val mockClaimsService: ClaimsService = mock[ClaimsService]
-
-      val malformedRequest = testRequest("POST", "/get-claims", Json.obj("claimUnsubmitted" -> true))
-
-      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
-
-      val result = controller.getClaims()(malformedRequest)
-      status(result) shouldBe Status.BAD_REQUEST
-      val errorResponse = contentAsJson(result).as[JsObject]
-      errorResponse.value.get("errorMessage") shouldBe Some(
-        JsString("unmarshalling failed at /claimSubmitted because of error.path.missing")
-      )
-      errorResponse.value.get("errorCode")    shouldBe Some(JsString("INVALID_JSON_FORMAT"))
-    }
-
-    "return 400 when malformed JSON request" in new AuthorisedOrganisationFixture {
-
-      val mockClaimsService: ClaimsService = mock[ClaimsService]
-
-      val malformedRequest = testRequest("POST", "/get-claims", "{\"claimSubmitted\": true")
-
-      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
-
-      val result = controller.getClaims()(malformedRequest)
-      status(result) shouldBe Status.BAD_REQUEST
-      val errorResponse = contentAsJson(result).as[JsObject]
-      errorResponse.value.get("errorMessage") shouldBe Some(JsString("\"{\\\"claimSubmitted\\\": true\""))
-      errorResponse.value.get("errorCode")    shouldBe Some(JsString("MALFORMED_JSON"))
-    }
   }
-
 }

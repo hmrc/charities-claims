@@ -18,12 +18,10 @@ package uk.gov.hmrc.charitiesclaims.controllers
 
 import play.api.libs.json.JsArray
 import play.api.libs.json.Json
-import play.api.mvc.Action
-import play.api.mvc.ControllerComponents
+import play.api.mvc.{Action, ControllerComponents}
 import play.api.mvc.Results.InternalServerError
 import play.api.mvc.Results.Ok
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.charitiesclaims.models.GetClaimsRequest
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 
 import javax.inject.Inject
@@ -38,27 +36,25 @@ class GetClaimsController @Inject() (
 )(using ExecutionContext)
     extends BaseController {
 
-  val getClaims: Action[String] =
+  def getClaims(claimSubmitted: Boolean): Action[String] =
     whenAuthorised {
-      withPayload[GetClaimsRequest] { getClaimRequest =>
-        claimsService
-          .listClaims(currentUserId, getClaimRequest.claimSubmitted)
-          .map(claims =>
-            Ok(
-              Json.obj(
-                "claimsCount" -> claims.size,
-                "claimsList"  -> JsArray(claims)
-              )
+      claimsService
+        .listClaims(currentUserId, claimSubmitted)
+        .map(claims =>
+          Ok(
+            Json.obj(
+              "claimsCount" -> claims.size,
+              "claimsList"  -> JsArray(claims)
             )
           )
-          .recover { case e =>
-            InternalServerError(
-              Json.obj(
-                "errorMessage" -> e.getMessage,
-                "errorCode"    -> "CLAIM_SERVICE_ERROR"
-              )
+        )
+        .recover { case e =>
+          InternalServerError(
+            Json.obj(
+              "errorMessage" -> e.getMessage,
+              "errorCode"    -> "CLAIM_SERVICE_ERROR"
             )
-          }
-      }
+          )
+        }
     }
 }

@@ -1,6 +1,6 @@
 # microservice specific routes
 
-POST        /get-claims             uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaims
+GET         /claims                 uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaims(claimSubmitted: Boolean)
 POST        /claims                 uk.gov.hmrc.charitiesclaims.controllers.SaveClaimController.saveClaim
 DELETE      /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.DeleteClaimController.deleteClaim(claimId: String)
 PUT         /claims                 uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateClaim

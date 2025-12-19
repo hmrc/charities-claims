@@ -6,3 +6,5 @@ DELETE      /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.Dele
 PUT         /claims                 uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateClaim
 
 GET         /charities/:charityReference/unregulated-donations uk.gov.hmrc.charitiesclaims.controllers.UnregulatedDonationsController.getTotalUnregulatedDonations(charityReference: String)
+
+POST        /chris                   uk.gov.hmrc.charitiesclaims.controllers.ChRISSubmissionController.submitClaim

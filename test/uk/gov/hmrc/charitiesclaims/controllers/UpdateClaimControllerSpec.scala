@@ -30,7 +30,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
-  given ExecutionContext = global
 
   private val claimId = "12345"
 
@@ -209,6 +208,24 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
 
       val result = controller.updateClaim()(requestUpdateOrgDetails)
       status(result) shouldBe Status.NOT_FOUND
+    }
+
+    "return 400 when claim is already submitted" in new AuthorisedOrganisationFixture {
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      (mockClaimsService
+        .getClaim(_: String))
+        .expects(*)
+        .returning(Future.successful(Some(existingClaim.copy(claimSubmitted = true))))
+
+      val controller =
+        new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      private val result = controller.updateClaim()(requestRepaymentClaimDetails)
+      status(result)                                               shouldBe Status.BAD_REQUEST
+      contentAsJson(result).as[JsObject].value.get("errorMessage") shouldBe Some(
+        JsString("Claim with claimId 12345 has already been submitted and cannot be updated")
+      )
     }
 
     "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {

@@ -195,7 +195,7 @@ final case class Claim(
 
 // to check
 final case class Regulator(
-  RegName: Option[String] = None,
+  RegName: Option[RegulatorName] = None,
   // If "Name Of Charity Regulator" is "EnglandAndWales", then set to "CCEW"
   // If "Name Of Charity Regulator" is "NorthernIreland", then set to "CCNI"
   // If "Name Of Charity Regulator" is "Scottish", then set to "OSCR"
@@ -307,4 +307,11 @@ object YesNo {
         case false => "no"
       })
   }
+}
+
+enum RegulatorName derives XmlWriter {
+  case CCEW
+  case CCNI
+  case OSCR
+  case None
 }

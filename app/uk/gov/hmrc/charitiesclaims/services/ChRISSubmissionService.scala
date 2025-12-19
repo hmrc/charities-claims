@@ -59,7 +59,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       Keys = List(
         Key(Type = "CredentialID", Value = currentUser.userId),
         if currentUser.isAgent
-        then ??? // TODO
+        then Key(Type = "CHARID", Value = "FOO") // TODO
         else Key(Type = currentUser.enrolmentIdentifierKey, Value = currentUser.enrolmentIdentifierValue),
         Key(Type = "SessionID", Value = hc.sessionId.map(_.value).getOrElse("unknown"))
       )
@@ -69,7 +69,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     IRheader(
       Keys = List(
         if currentUser.isAgent
-        then ??? // TODO
+        then Key(Type = "CHARID", Value = "FOO") // TODO
         else Key(Type = currentUser.enrolmentIdentifierKey, Value = currentUser.enrolmentIdentifierValue)
       ),
       PeriodEnd = "2012-01-01",
@@ -78,32 +78,103 @@ class ChRISSubmissionServiceImpl @Inject() (
 
   def buildR68(claim: models.Claim, currentUser: models.CurrentUser): R68 =
     R68(
+      AgtOrNom = buildAgtOrNom(claim), // TODO
       AuthOfficial = buildAuthOfficial(claim),
       Declaration = true,
       Claim = buildClaim(claim, currentUser)
     )
 
   def buildAuthOfficial(claim: models.Claim): Option[AuthOfficial] =
+    claim.claimData.organisationDetails.map(organisationDetails =>
+      AuthOfficial(
+        Trustee =
+          if organisationDetails.areYouACorporateTrustee then organisationDetails.nameOfCorporateTrustee else None,
+        OffName = buildOffName(claim),
+        ClaimNo = None, // TODO
+        OffID = buildOffId(claim),
+        Phone = organisationDetails.corporateTrusteeDaytimeTelephoneNumber
+      )
+    )
+
+  def buildAgtOrNom(claim: models.Claim): Option[AgtOrNom] =
     None
+
+  def buildOffName(claim: models.Claim): Option[OffName] =
+    claim.claimData.organisationDetails.flatMap(organisationDetails =>
+      if !organisationDetails.areYouACorporateTrustee
+      then
+        Some(
+          OffName(
+            Ttl = organisationDetails.corporateTrusteeTitle,
+            Fore = organisationDetails.corporateTrusteeFirstName,
+            Sur = organisationDetails.corporateTrusteeLastName
+          )
+        )
+      else None
+    )
+
+  def buildOffId(claim: models.Claim): Option[OffID] =
+    claim.claimData.organisationDetails.map(organisationDetails =>
+      // areYouACorporateTrustee == true and doYouHaveUKAddress == false then Overseas = "yes"
+      // areYouACorporateTrustee == false and doYouHaveUKAddress == false then Overseas = "yes"
+      // postcode
+      // areYouACorporateTrustee == true and doYouHaveUKAddress == true then set the value of Postcode
+      // areYouACorporateTrustee == false and doYouHaveUKAddress == true then set the value of Postcode
+      OffID(
+        Overseas =
+          if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(false)
+          then Some(true)
+          else if !organisationDetails.areYouACorporateTrustee &&  organisationDetails.doYouHaveUKAddress.contains(false)
+          then Some(true)
+          else None,
+        Postcode =
+          if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(true)
+          then organisationDetails.corporateTrusteePostcode
+          else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(true)
+          then organisationDetails.corporateTrusteePostcode
+          else None
+
+      )
+    )
 
   def buildClaim(claim: models.Claim, currentUser: models.CurrentUser): Claim =
     Claim(
       // If user has an affinity group of "Agent", then set to the value of "Name of Charity or CASC"
       // Else set to the Organisation name returned from I3 - RDS DataCache Proxy Microservice - GetOrganisationNamebyCharityReference
+
       OrgName =
         if currentUser.isAgent
-        then "" // TODO
+        then "CASC" // TODO
         else "", // TODO
       // If user has an affinity group of "Agent", then set to the value of "HMRC Charities Reference"
       // Else set to the Charities Reference (derived from their HMRC-CHAR-ORG enrolment and CHARID identifier)
       HMRCref =
         if currentUser.isAgent
-        then "" // TODO
+        then "FOO" // TODO
         else currentUser.enrolmentIdentifierValue,
-      Regulator = buildRegulator(claim)
+      Regulator = buildRegulator(claim),
+      Repayment = buildRepayment(claim),
+      OtherInfo = None // ToDo
     )
 
   def buildRegulator(claim: models.Claim): Option[Regulator] =
+    claim.claimData.organisationDetails.map(organisationDetails =>
+      Regulator(
+        RegName = organisationDetails.nameOfCharityRegulator match {
+          case "EnglandAndWales" => Some(RegulatorName.CCEW)
+          case "NorthernIreland" => Some(RegulatorName.CCNI)
+          case "Scottish"        => Some(RegulatorName.OSCR)
+          case _                 => None
+        },
+        NoReg = organisationDetails.nameOfCharityRegulator match {
+          case "None" => Some(true)
+          case _      => None
+        },
+        RegNo = organisationDetails.charityRegistrationNumber
+      )
+    )
+
+  def buildRepayment(claim: models.Claim): Option[Repayment] =
     None
 
 }

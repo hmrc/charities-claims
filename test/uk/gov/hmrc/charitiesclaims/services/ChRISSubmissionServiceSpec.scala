@@ -21,7 +21,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import uk.gov.hmrc.charitiesclaims.models as models
+import uk.gov.hmrc.charitiesclaims.models
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.SessionId
@@ -80,9 +80,523 @@ class ChRISSubmissionServiceSpec
           Key(Type = "SessionID", Value = "test-session-id")
         )
       )
-
-      // TODO Add more assertions for the rest of the submission
     }
-  }
 
+    // test for regulator (EnglandAndWales, NorthernIreland,Scottish), Corporate Trustee =Y, then test Corporate Trustee Address (in UK , and overseas)
+    // test for regulator (EnglandAndWales, NorthernIreland,Scottish), Corporate Trustee =N, then test Authorised Official Trustee Address (in UK , and overseas)
+    // test for regulator (None), reason charity not registered not (LowIncome,Excepted, Exempt, Waiting), Corporate Trustee =Y, then test Corporate Trustee Address (in UK , and overseas)
+    // test for regulator (None), reason charity not registered not (LowIncome, Excepted, Exempt,Waiting), Corporate Trustee =N, then test Authorised Official Trustee Address (in UK , and overseas)
+
+    "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = true and address in UK " in {
+      val service = new ChRISSubmissionServiceImpl()
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        creationTimestamp = "2025-01-01",
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          // Organisation details
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = "EnglandAndWales",
+              reasonNotRegisteredWithRegulator = None,
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = true,
+              doYouHaveUKAddress = Some(true),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              corporateTrusteeTitle = Some("Mr"),
+              corporateTrusteeFirstName = Some("John"),
+              corporateTrusteeLastName = Some("Jones")
+            )
+          )
+        )
+      )
+
+      val currentUser = TestCurrentUser(
+        affinityGroup = AffinityGroup.Organisation,
+        userId = "test-user-id",
+        enrolmentIdentifierValue = "test-enrolment-identifier-value",
+        enrolmentIdentifierKey = "test-enrolment-identifier-key"
+      )
+
+      val submissionR68       = service.buildR68(claim, currentUser)
+      val submissionOffId     = service.buildOffId(claim)
+      val submissionOffName   = service.buildOffName(claim)
+      val submissionRegulator = service.buildRegulator(claim)
+
+      submissionR68.AuthOfficial shouldBe Some(
+        AuthOfficial(
+          Trustee = Some("Test-Corporate-Trustee"),
+          OffName = None,
+          ClaimNo = None,
+          OffID = Some(
+            OffID(
+              Postcode = Some("post-code"),
+              Overseas = None
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+
+      submissionRegulator shouldBe Some(
+        Regulator(
+          RegName = Some(RegulatorName.CCEW),
+          NoReg = None,
+          RegNo = Some("123456")
+        )
+      )
+
+      submissionOffName shouldBe None
+
+      submissionOffId shouldBe Some(
+        OffID(
+          Postcode = Some("post-code"),
+          Overseas = None
+        )
+      )
+
+    }
+    "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = true and address NOT in UK " in {
+      val service = new ChRISSubmissionServiceImpl()
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        creationTimestamp = "2025-01-01",
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          // Organisation details
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = "EnglandAndWales",
+              reasonNotRegisteredWithRegulator = None,
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = true,
+              doYouHaveUKAddress = Some(false),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              corporateTrusteeTitle = Some("Mr"),
+              corporateTrusteeFirstName = Some("John"),
+              corporateTrusteeLastName = Some("Jones")
+            )
+          )
+        )
+      )
+
+      val currentUser = TestCurrentUser(
+        affinityGroup = AffinityGroup.Organisation,
+        userId = "test-user-id",
+        enrolmentIdentifierValue = "test-enrolment-identifier-value",
+        enrolmentIdentifierKey = "test-enrolment-identifier-key"
+      )
+
+      val submissionR68       = service.buildR68(claim, currentUser)
+      val submissionRegulator = service.buildRegulator(claim)
+
+      submissionR68.AuthOfficial shouldBe Some(
+        AuthOfficial(
+          Trustee = Some("Test-Corporate-Trustee"),
+          OffName = None,
+          ClaimNo = None,
+          OffID = Some(
+            OffID(
+              Postcode = None,
+              Overseas = Some(true)
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+
+      submissionRegulator shouldBe Some(
+        Regulator(
+          RegName = Some(RegulatorName.CCEW),
+          NoReg = None,
+          RegNo = Some("123456")
+        )
+      )
+
+    }
+
+    "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = false and address in UK " in {
+      val service = new ChRISSubmissionServiceImpl()
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        creationTimestamp = "2025-01-01",
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          // Organisation details
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = "EnglandAndWales",
+              reasonNotRegisteredWithRegulator = None,
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = false,
+              doYouHaveUKAddress = Some(true),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              corporateTrusteeTitle = Some("Mr"),
+              corporateTrusteeFirstName = Some("John"),
+              corporateTrusteeLastName = Some("Jones")
+            )
+          )
+        )
+      )
+
+      val currentUser = TestCurrentUser(
+        affinityGroup = AffinityGroup.Organisation,
+        userId = "test-user-id",
+        enrolmentIdentifierValue = "test-enrolment-identifier-value",
+        enrolmentIdentifierKey = "test-enrolment-identifier-key"
+      )
+
+      val submissionR68       = service.buildR68(claim, currentUser)
+      val submissionRegulator = service.buildRegulator(claim)
+
+      submissionR68.AuthOfficial shouldBe Some(
+        AuthOfficial(
+          Trustee = None,
+          OffName = Some(
+            OffName(
+              Ttl = Some("Mr"),
+              Fore = Some("John"),
+              Sur = Some("Jones")
+            )
+          ),
+          ClaimNo = None,
+          OffID = Some(
+            OffID(
+              Postcode = Some("post-code"),
+              Overseas = None
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+
+      submissionRegulator shouldBe Some(
+        Regulator(
+          RegName = Some(RegulatorName.CCEW),
+          NoReg = None,
+          RegNo = Some("123456")
+        )
+      )
+
+    }
+    "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = false and address NOT in UK " in {
+      val service = new ChRISSubmissionServiceImpl()
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        creationTimestamp = "2025-01-01",
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          // Organisation details
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = "EnglandAndWales",
+              reasonNotRegisteredWithRegulator = None,
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = false,
+              doYouHaveUKAddress = Some(false),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              corporateTrusteeTitle = Some("Mr"),
+              corporateTrusteeFirstName = Some("John"),
+              corporateTrusteeLastName = Some("Jones")
+            )
+          )
+        )
+      )
+
+      val currentUser = TestCurrentUser(
+        affinityGroup = AffinityGroup.Organisation,
+        userId = "test-user-id",
+        enrolmentIdentifierValue = "test-enrolment-identifier-value",
+        enrolmentIdentifierKey = "test-enrolment-identifier-key"
+      )
+
+      val submissionR68 = service.buildR68(claim, currentUser)
+
+      submissionR68.AuthOfficial shouldBe Some(
+        AuthOfficial(
+          Trustee = None,
+          OffName = Some(
+            OffName(
+              Ttl = Some("Mr"),
+              Fore = Some("John"),
+              Sur = Some("Jones")
+            )
+          ),
+          ClaimNo = None,
+          OffID = Some(
+            OffID(
+              Postcode = None,
+              Overseas = Some(true)
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+    }
+
+    "build a ChRISSubmission correctly for an organisation - Regulator = NorthernIreland, Corporate Trustee = false and address in UK " in {
+      val service = new ChRISSubmissionServiceImpl()
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        creationTimestamp = "2025-01-01",
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          // Organisation details
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = "NorthernIreland",
+              reasonNotRegisteredWithRegulator = None,
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = false,
+              doYouHaveUKAddress = Some(true),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              corporateTrusteeTitle = Some("Mr"),
+              corporateTrusteeFirstName = Some("John"),
+              corporateTrusteeLastName = Some("Jones")
+            )
+          )
+        )
+      )
+
+      val currentUser = TestCurrentUser(
+        affinityGroup = AffinityGroup.Organisation,
+        userId = "test-user-id",
+        enrolmentIdentifierValue = "test-enrolment-identifier-value",
+        enrolmentIdentifierKey = "test-enrolment-identifier-key"
+      )
+
+      val submissionR68       = service.buildR68(claim, currentUser)
+      val submissionRegulator = service.buildRegulator(claim)
+
+      submissionR68.AuthOfficial shouldBe Some(
+        AuthOfficial(
+          Trustee = None,
+          OffName = Some(
+            OffName(
+              Ttl = Some("Mr"),
+              Fore = Some("John"),
+              Sur = Some("Jones")
+            )
+          ),
+          ClaimNo = None,
+          OffID = Some(
+            OffID(
+              Postcode = Some("post-code"),
+              Overseas = None
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+
+      submissionRegulator shouldBe Some(
+        Regulator(
+          RegName = Some(RegulatorName.CCNI),
+          NoReg = None,
+          RegNo = Some("123456")
+        )
+      )
+    }
+
+    "build a ChRISSubmission correctly for an organisation - Regulator = Scottish, Corporate Trustee = false and address in UK " in {
+      val service = new ChRISSubmissionServiceImpl()
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        creationTimestamp = "2025-01-01",
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          // Organisation details
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = "Scottish",
+              reasonNotRegisteredWithRegulator = None,
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = false,
+              doYouHaveUKAddress = Some(true),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              corporateTrusteeTitle = Some("Mr"),
+              corporateTrusteeFirstName = Some("John"),
+              corporateTrusteeLastName = Some("Jones")
+            )
+          )
+        )
+      )
+
+      val currentUser = TestCurrentUser(
+        affinityGroup = AffinityGroup.Organisation,
+        userId = "test-user-id",
+        enrolmentIdentifierValue = "test-enrolment-identifier-value",
+        enrolmentIdentifierKey = "test-enrolment-identifier-key"
+      )
+
+      val submissionR68 = service.buildR68(claim, currentUser)
+      val submissionRegulator = service.buildRegulator(claim)
+
+      submissionR68.AuthOfficial shouldBe Some(
+        AuthOfficial(
+          Trustee = None,
+          OffName = Some(
+            OffName(
+              Ttl = Some("Mr"),
+              Fore = Some("John"),
+              Sur = Some("Jones")
+            )
+          ),
+          ClaimNo = None,
+          OffID = Some(
+            OffID(
+              Postcode = Some("post-code"),
+              Overseas = None
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+
+      submissionRegulator shouldBe Some(
+        Regulator(
+          RegName = Some(RegulatorName.OSCR),
+          NoReg = None,
+          RegNo = Some("123456")
+        )
+      )
+    }
+
+    "build a ChRISSubmission correctly for an organisation - Regulator = None, Corporate Trustee = false and address in UK " in {
+      val service = new ChRISSubmissionServiceImpl()
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        creationTimestamp = "2025-01-01",
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          // Organisation details
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = "None",
+              reasonNotRegisteredWithRegulator = None,
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = false,
+              doYouHaveUKAddress = Some(true),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              corporateTrusteeTitle = Some("Mr"),
+              corporateTrusteeFirstName = Some("John"),
+              corporateTrusteeLastName = Some("Jones")
+            )
+          )
+        )
+      )
+
+      val currentUser = TestCurrentUser(
+        affinityGroup = AffinityGroup.Organisation,
+        userId = "test-user-id",
+        enrolmentIdentifierValue = "test-enrolment-identifier-value",
+        enrolmentIdentifierKey = "test-enrolment-identifier-key"
+      )
+
+      val submissionR68 = service.buildR68(claim, currentUser)
+      val submissionRegulator = service.buildRegulator(claim)
+
+      submissionR68.AuthOfficial shouldBe Some(
+        AuthOfficial(
+          Trustee = None,
+          OffName = Some(
+            OffName(
+              Ttl = Some("Mr"),
+              Fore = Some("John"),
+              Sur = Some("Jones")
+            )
+          ),
+          ClaimNo = None,
+          OffID = Some(
+            OffID(
+              Postcode = Some("post-code"),
+              Overseas = None
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+
+      submissionRegulator shouldBe Some(
+        Regulator(
+          RegName = None,
+          NoReg = Some(true),
+          RegNo = Some("123456")
+        )
+      )
+    }
+
+    // TODO Add more assertions for the rest of the submission
+
+  }
 }

@@ -46,10 +46,10 @@ class GetClaimResponseSpec extends AnyWordSpec with Matchers {
       getClaimsResponse.claimsList.head.claimData.repaymentClaimDetails.claimingTaxDeducted                      shouldBe true
       getClaimsResponse.claimsList.head.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme shouldBe false
 
-      getClaimsResponse.claimsList.head.claimData.organisationDetails.isDefined                     shouldBe true
-      getClaimsResponse.claimsList.head.claimData.declarationDetails.isDefined                      shouldBe true
-      getClaimsResponse.claimsList.head.claimData.giftAidSmallDonationsSchemeScheduleData.isDefined shouldBe true
-      getClaimsResponse.claimsList.head.submissionDetails.isDefined                                 shouldBe true
+      getClaimsResponse.claimsList.head.claimData.organisationDetails.isDefined                        shouldBe true
+      getClaimsResponse.claimsList.head.claimData.declarationDetails.isDefined                         shouldBe true
+      getClaimsResponse.claimsList.head.claimData.giftAidSmallDonationsSchemeDonationDetails.isDefined shouldBe true
+      getClaimsResponse.claimsList.head.submissionDetails.isDefined                                    shouldBe true
     }
   }
 }

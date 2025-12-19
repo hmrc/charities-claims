@@ -489,7 +489,7 @@ class ChRISSubmissionServiceSpec
         enrolmentIdentifierKey = "test-enrolment-identifier-key"
       )
 
-      val submissionR68 = service.buildR68(claim, currentUser)
+      val submissionR68       = service.buildR68(claim, currentUser)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -563,7 +563,7 @@ class ChRISSubmissionServiceSpec
         enrolmentIdentifierKey = "test-enrolment-identifier-key"
       )
 
-      val submissionR68 = service.buildR68(claim, currentUser)
+      val submissionR68       = service.buildR68(claim, currentUser)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(

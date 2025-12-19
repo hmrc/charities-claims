@@ -116,8 +116,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       )
     )
 
-  val claimsService               = new TestClaimsService(initialClaims = Seq.empty)
-  val claimsServiceExistingClaims = new TestClaimsService(initialClaims = Seq.empty)
+  val claimsService = new TestClaimsService(initialClaims = Seq.empty)
 
   val existingClaim = Claim(
     claimId = claimId,
@@ -196,6 +195,37 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
       private val result = controller.updateClaim()(requestUpdateOrgDetails)
+      status(result)                                shouldBe Status.OK
+      contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
+
+      captured.value shouldBe expectedUpdate
+    }
+
+    "return 200 if claim updated for giftAidSmallDonationsSchemeDonationDetails" in new AuthorisedOrganisationFixture {
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val expectedUpdate: Claim = existingClaim.copy(
+        claimData = existingClaim.claimData.copy(
+          giftAidSmallDonationsSchemeDonationDetails = Some(giftAidSmallDonationsSchemeDonationDetails)
+        )
+      )
+
+      val captured = CaptureOne[Claim]()
+
+      (mockClaimsService
+        .getClaim(_: String))
+        .expects(*)
+        .returning(Future.successful(Some(existingClaim)))
+
+      (mockClaimsService
+        .putClaim(_: Claim))
+        .expects(capture(captured))
+        .returning(Future.successful(()))
+
+      val controller =
+        new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      private val result = controller.updateClaim()(requestUpdateClaimGiftAidSmallDonationsSchemeDonationDetails)
       status(result)                                shouldBe Status.OK
       contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
 

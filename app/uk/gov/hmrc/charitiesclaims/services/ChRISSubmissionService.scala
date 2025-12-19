@@ -124,7 +124,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         Overseas =
           if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(false)
           then Some(true)
-          else if !organisationDetails.areYouACorporateTrustee &&  organisationDetails.doYouHaveUKAddress.contains(false)
+          else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(false)
           then Some(true)
           else None,
         Postcode =
@@ -133,7 +133,6 @@ class ChRISSubmissionServiceImpl @Inject() (
           else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(true)
           then organisationDetails.corporateTrusteePostcode
           else None
-
       )
     )
 

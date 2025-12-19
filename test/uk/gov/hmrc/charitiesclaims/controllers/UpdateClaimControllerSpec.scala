@@ -61,25 +61,37 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     corporateTrusteeLastName = Some("test")
   )
 
-  private val gasds = GiftAidScheduleData(
-    earliestDonationDate = "test",
-    prevOverclaimedGiftAid = 1.0,
-    totalDonations = 2.0,
-    donations = List(
-      Donation(
-        donationItem = 1,
-        donationDate = "test donation",
-        donationAmount = 3.0,
-        donorTitle = Some("test-title"),
-        donorFirstName = Some("test-firstname"),
-        donorLastName = Some("test-lastname"),
-        donorHouse = Some("test house"),
-        donorPostcode = Some("test postcode"),
-        sponsoredEvent = Some(true),
-        aggregatedDonations = Some("test agg")
+  private val giftAidSmallDonationsSchemeDonationDetails =
+    GiftAidSmallDonationsSchemeDonationDetails(
+      adjustmentForGiftAidOverClaimed = 1.0,
+      claims = List(
+        GiftAidSmallDonationsSchemeClaim(
+          taxYear = 2024,
+          amountOfDonationsReceived = 1.0
+        )
+      ),
+      connectedCharitiesScheduleData = List(
+        ConnectedCharity(
+          charityItem = 1,
+          charityName = "test charity",
+          charityReference = "test reference"
+        )
+      ),
+      communityBuildingsScheduleData = List(
+        CommunityBuilding(
+          buildingItem = 1,
+          buildingName = "test building",
+          firstLineOfAddress = "test address",
+          postcode = "test postcode",
+          taxYearOneEnd = 2024,
+          taxYearOneAmount = 1.0,
+          taxYearTwoEnd = 2025,
+          taxYearTwoAmount = 1.0,
+          taxYearThreeEnd = 2026,
+          taxYearThreeAmount = 1.0
+        )
       )
     )
-  )
 
   private val requestRepaymentClaimDetails =
     putClaims(
@@ -97,11 +109,11 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       )
     )
 
-  val requestUpdateClaimGiftAidSmallDonationsScheme =
+  val requestUpdateClaimGiftAidSmallDonationsSchemeDonationDetails =
     putClaims(
       UpdateClaimRequest(
         claimId,
-        giftAidScheduleData = Some(gasds)
+        giftAidSmallDonationsSchemeDonationDetails = Some(giftAidSmallDonationsSchemeDonationDetails)
       )
     )
 

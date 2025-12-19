@@ -71,7 +71,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                 HMRCref = "XR4010",
                 Regulator = Some(
                   Regulator(
-                    RegName = Some("CCEW"),
+                    RegName = Some(RegulatorName.CCEW),
                     RegNo = Some("1234")
                   )
                 ),
@@ -172,7 +172,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                 HMRCref = "XR4010",
                 Regulator = Some(
                   Regulator(
-                    RegName = Some("CCEW"),
+                    RegName = Some(RegulatorName.CCEW),
                     RegNo = Some("1137948")
                   )
                 ),
@@ -540,7 +540,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                 HMRCref = "XR4010",
                 Regulator = Some(
                   Regulator(
-                    RegName = Some("CCNI"),
+                    RegName = Some(RegulatorName.CCNI),
                     RegNo = Some("1137948")
                   )
                 ),

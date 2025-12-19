@@ -79,7 +79,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
               HMRCref = "XR4010",
               Regulator = Some(
                 Regulator(
-                  RegName = Some("CCEW"),
+                  RegName = Some(RegulatorName.CCEW),
                   RegNo = Some("1234")
                 )
               ),
@@ -145,7 +145,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
               HMRCref = "XR4010",
               Regulator = Some(
                 Regulator(
-                  RegName = Some("CCEW"),
+                  RegName = Some(RegulatorName.CCEW),
                   RegNo = Some("1137948")
                 )
               ),

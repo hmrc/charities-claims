@@ -117,12 +117,23 @@ class ChRISSubmissionServiceImpl @Inject() (
     claim.claimData.organisationDetails.map(organisationDetails =>
       // areYouACorporateTrustee == true and doYouHaveUKAddress == false then Overseas = "yes"
       // areYouACorporateTrustee == false and doYouHaveUKAddress == false then Overseas = "yes"
+      // postcode
       // areYouACorporateTrustee == true and doYouHaveUKAddress == true then set the value of Postcode
       // areYouACorporateTrustee == false and doYouHaveUKAddress == true then set the value of Postcode
       OffID(
+        Overseas =
+          if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(false)
+          then Some(true)
+          else if !organisationDetails.areYouACorporateTrustee &&  organisationDetails.doYouHaveUKAddress.contains(false)
+          then Some(true)
+          else None,
         Postcode =
-          if organisationDetails.areYouACorporateTrustee then organisationDetails.corporateTrusteePostcode else None,
-        Overseas = if organisationDetails.areYouACorporateTrustee.eq(false) then Some(true) else None
+          if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(true)
+          then organisationDetails.corporateTrusteePostcode
+          else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(true)
+          then organisationDetails.corporateTrusteePostcode
+          else None
+
       )
     )
 
@@ -149,14 +160,16 @@ class ChRISSubmissionServiceImpl @Inject() (
   def buildRegulator(claim: models.Claim): Option[Regulator] =
     claim.claimData.organisationDetails.map(organisationDetails =>
       Regulator(
-        RegName = Some(organisationDetails.nameOfCharityRegulator match {
-          case "EnglandAndWales" => "CCEW"
-          case "NorthernIreland" => "CCNI"
-          case "Scottish"        => "OSCR"
-        }),
-        NoReg = Some(organisationDetails.nameOfCharityRegulator match {
-          case "None" => true
-        }),
+        RegName = organisationDetails.nameOfCharityRegulator match {
+          case "EnglandAndWales" => Some(RegulatorName.CCEW)
+          case "NorthernIreland" => Some(RegulatorName.CCNI)
+          case "Scottish"        => Some(RegulatorName.OSCR)
+          case _                 => None
+        },
+        NoReg = organisationDetails.nameOfCharityRegulator match {
+          case "None" => Some(true)
+          case _      => None
+        },
         RegNo = organisationDetails.charityRegistrationNumber
       )
     )

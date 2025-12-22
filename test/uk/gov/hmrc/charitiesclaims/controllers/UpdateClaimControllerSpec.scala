@@ -96,7 +96,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     putClaims(
       UpdateClaimRequest(
         claimId,
-        repaymentClaimDetails = Some(repaymentClaimDetails)
+        repaymentClaimDetails = repaymentClaimDetails
       )
     )
 
@@ -104,6 +104,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     putClaims(
       UpdateClaimRequest(
         claimId,
+        repaymentClaimDetails = repaymentClaimDetails,
         organisationDetails = Some(orgDetails)
       )
     )
@@ -112,6 +113,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     putClaims(
       UpdateClaimRequest(
         claimId,
+        repaymentClaimDetails = repaymentClaimDetails,
         giftAidSmallDonationsSchemeDonationDetails = Some(giftAidSmallDonationsSchemeDonationDetails)
       )
     )
@@ -175,6 +177,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
 
       val expectedUpdate: Claim = existingClaim.copy(
         claimData = existingClaim.claimData.copy(
+          repaymentClaimDetails = repaymentClaimDetails,
           organisationDetails = Some(orgDetails)
         )
       )
@@ -206,6 +209,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
 
       val expectedUpdate: Claim = existingClaim.copy(
         claimData = existingClaim.claimData.copy(
+          repaymentClaimDetails = repaymentClaimDetails,
           giftAidSmallDonationsSchemeDonationDetails = Some(giftAidSmallDonationsSchemeDonationDetails)
         )
       )

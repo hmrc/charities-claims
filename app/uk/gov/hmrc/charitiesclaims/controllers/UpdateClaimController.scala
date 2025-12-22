@@ -80,8 +80,7 @@ class UpdateClaimController @Inject() (
     val existing = claim.claimData
 
     val newClaimData = existing.copy(
-      repaymentClaimDetails = update.repaymentClaimDetails
-        .getOrElse(existing.repaymentClaimDetails),
+      repaymentClaimDetails = update.repaymentClaimDetails,
       organisationDetails = update.organisationDetails
         .orElse(existing.organisationDetails),
       giftAidSmallDonationsSchemeDonationDetails = update.giftAidSmallDonationsSchemeDonationDetails

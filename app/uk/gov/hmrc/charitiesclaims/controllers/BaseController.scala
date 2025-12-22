@@ -34,6 +34,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.charitiesclaims.models.CurrentUser
 
 trait BaseController {
   val authorisedAction: AuthorisedAction
@@ -47,6 +48,9 @@ trait BaseController {
 
   inline def currentUserGroup(using request: AuthorisedRequest[?]): AffinityGroup =
     request.affinityGroup
+
+  inline def currentUser(using request: AuthorisedRequest[?]): CurrentUser =
+    request
 
   final def whenAuthorised(block: AuthorisedRequest[String] ?=> Future[Result]): Action[String] =
     authorisedAction(BodyParsers.parseTolerantTextUtf8).async(implicit r => block)

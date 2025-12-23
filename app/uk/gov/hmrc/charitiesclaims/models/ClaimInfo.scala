@@ -19,11 +19,16 @@ package uk.gov.hmrc.charitiesclaims.models
 import play.api.libs.json.Format
 import play.api.libs.json.Json
 
-final case class GetClaimsResponse(
-  claimsCount: Int, // number of claims returned
-  claimsList: Seq[ClaimInfo] // list of claims returned
+final case class ClaimInfo(
+  claimId: String,
+  userId: String,
+  claimSubmitted: Boolean,
+  lastUpdatedReference: String,
+  creationTimestamp: String,
+  hmrcCharitiesReference: Option[String] = None,
+  nameOfCharity: Option[String] = None
 )
 
-object GetClaimsResponse {
-  given format: Format[GetClaimsResponse] = Json.format[GetClaimsResponse]
+object ClaimInfo {
+  given format: Format[ClaimInfo] = Json.format[ClaimInfo]
 }

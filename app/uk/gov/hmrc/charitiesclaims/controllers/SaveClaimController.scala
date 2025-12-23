@@ -92,13 +92,15 @@ class SaveClaimController @Inject() (
     }
 
   private def saveClaim(saveClaimRequest: SaveClaimRequest)(using AuthorisedRequest[?]): Future[Result] = {
-    val claimId           = UUID.randomUUID().toString
-    val creationTimestamp = ISODateTime.timestampNow()
+    val claimId              = UUID.randomUUID().toString
+    val creationTimestamp    = ISODateTime.timestampNow()
+    val lastUpdatedReference = UUID.randomUUID().toString
 
     val claim = Claim(
       claimId = claimId,
       userId = currentUserId,
       claimSubmitted = false,
+      lastUpdatedReference = lastUpdatedReference,
       creationTimestamp = creationTimestamp,
       claimData = ClaimData(
         repaymentClaimDetails = RepaymentClaimDetails(
@@ -117,6 +119,12 @@ class SaveClaimController @Inject() (
 
     claimsService
       .putClaim(claim)
-      .map(_ => Ok(Json.toJson(SaveClaimResponse(claimId, creationTimestamp))))
+      .map(_ =>
+        Ok(
+          Json.toJson(
+            SaveClaimResponse(claimId, creationTimestamp, lastUpdatedReference)
+          )
+        )
+      )
   }
 }

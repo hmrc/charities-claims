@@ -34,17 +34,17 @@ class UpdateClaimController @Inject() (
 )(using ExecutionContext)
     extends BaseController {
 
-  val updateClaim: Action[String] =
+  def updateClaim(claimId: String): Action[String] =
     whenAuthorised {
       withPayload[UpdateClaimRequest] { updateClaimsRequest =>
         claimsService
-          .getClaim(updateClaimsRequest.claimId)
+          .getClaim(claimId)
           .flatMap {
             case None        =>
               Future.successful(
                 NotFound(
                   Json.obj(
-                    "errorMessage" -> s"Claim with claimId ${updateClaimsRequest.claimId} not found",
+                    "errorMessage" -> s"Claim with claimId $claimId not found",
                     "errorCode"    -> "CLAIM_NOT_FOUND_ERROR"
                   )
                 )
@@ -58,7 +58,7 @@ class UpdateClaimController @Inject() (
                 Future.successful(
                   BadRequest(
                     Json.obj(
-                      "errorMessage" -> s"Claim with claimId ${updateClaimsRequest.claimId} has already been submitted and cannot be updated",
+                      "errorMessage" -> s"Claim with claimId $claimId has already been submitted and cannot be updated",
                       "errorCode"    -> "CLAIM_ALREADY_SUBMITTED_ERROR"
                     )
                   )

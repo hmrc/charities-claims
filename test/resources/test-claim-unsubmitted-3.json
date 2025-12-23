@@ -2,6 +2,7 @@
     "claimId": "test-claim-unsubmitted-3",
     "claimSubmitted": false,
     "userId": "test-user-1",
+    "lastUpdatedReference": "test-last-updated-reference",
     "creationTimestamp": "2025-11-10T13:45:56.016Z",
     "claimData": {
         "repaymentClaimDetails": {

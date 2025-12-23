@@ -28,14 +28,15 @@ import uk.gov.hmrc.charitiesclaims.util.{ControllerSpec, TestClaimsService, Test
 import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
+import java.util.UUID
 
 class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
 
   private val claimId = "12345"
 
-  private def putClaims[A : Format](body: A) = testRequest(
+  private def putClaims[A : Format](claimId: String, body: A) = testRequest(
     "PUT",
-    "/claims",
+    s"/claims/$claimId",
     body
   )
 
@@ -94,16 +95,16 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
 
   private val requestRepaymentClaimDetails =
     putClaims(
+      claimId,
       UpdateClaimRequest(
-        claimId,
         repaymentClaimDetails = repaymentClaimDetails
       )
     )
 
   private val requestUpdateOrgDetails =
     putClaims(
+      claimId,
       UpdateClaimRequest(
-        claimId,
         repaymentClaimDetails = repaymentClaimDetails,
         organisationDetails = Some(orgDetails)
       )
@@ -111,8 +112,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
 
   val requestUpdateClaimGiftAidSmallDonationsSchemeDonationDetails =
     putClaims(
+      claimId,
       UpdateClaimRequest(
-        claimId,
         repaymentClaimDetails = repaymentClaimDetails,
         giftAidSmallDonationsSchemeDonationDetails = Some(giftAidSmallDonationsSchemeDonationDetails)
       )
@@ -124,6 +125,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     claimId = claimId,
     userId = organisation1,
     claimSubmitted = false,
+    lastUpdatedReference = UUID.randomUUID().toString,
     creationTimestamp = LocalDateTime.now().toString,
     claimData = ClaimData(
       repaymentClaimDetails = RepaymentClaimDetails(
@@ -165,7 +167,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
-      private val result = controller.updateClaim()(requestRepaymentClaimDetails)
+      private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
       status(result)                                shouldBe Status.OK
       contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
 
@@ -197,7 +199,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
-      private val result = controller.updateClaim()(requestUpdateOrgDetails)
+      private val result = controller.updateClaim(claimId)(requestUpdateOrgDetails)
       status(result)                                shouldBe Status.OK
       contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
 
@@ -229,7 +231,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
-      private val result = controller.updateClaim()(requestUpdateClaimGiftAidSmallDonationsSchemeDonationDetails)
+      private val result = controller.updateClaim(claimId)(requestUpdateClaimGiftAidSmallDonationsSchemeDonationDetails)
       status(result)                                shouldBe Status.OK
       contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
 
@@ -240,7 +242,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
 
       val controller = new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val result = controller.updateClaim()(requestUpdateOrgDetails)
+      val result = controller.updateClaim(claimId)(requestUpdateOrgDetails)
       status(result) shouldBe Status.NOT_FOUND
     }
 
@@ -255,7 +257,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
-      private val result = controller.updateClaim()(requestRepaymentClaimDetails)
+      private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
       status(result)                                               shouldBe Status.BAD_REQUEST
       contentAsJson(result).as[JsObject].value.get("errorMessage") shouldBe Some(
         JsString("Claim with claimId 12345 has already been submitted and cannot be updated")
@@ -279,7 +281,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
-      val result = controller.updateClaim()(requestUpdateOrgDetails)
+      val result = controller.updateClaim(claimId)(requestUpdateOrgDetails)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       val errorResponse = contentAsJson(result).as[JsObject]
       errorResponse.value.get("errorMessage") shouldBe Some(JsString("Error message"))
@@ -295,7 +297,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
-      val result = controller.updateClaim()(malformedRequest)
+      val result = controller.updateClaim(claimId)(malformedRequest)
       status(result) shouldBe Status.BAD_REQUEST
       val errorResponse = contentAsJson(result).as[JsObject]
       errorResponse.value.get("errorCode") shouldBe Some(JsString("INVALID_JSON_FORMAT"))
@@ -310,7 +312,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
-      val result = controller.updateClaim()(malformedRequest)
+      val result = controller.updateClaim(claimId)(malformedRequest)
       status(result) shouldBe Status.BAD_REQUEST
       val errorResponse = contentAsJson(result).as[JsObject]
       errorResponse.value.get("errorMessage") shouldBe Some(JsString("\"{\\\"claimingGiftAid\\\": true\""))

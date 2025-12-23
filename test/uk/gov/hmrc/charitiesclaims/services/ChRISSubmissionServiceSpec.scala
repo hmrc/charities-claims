@@ -27,6 +27,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.SessionId
 import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent}
+import java.util.UUID
 
 class ChRISSubmissionServiceSpec
     extends AnyWordSpec
@@ -53,6 +54,7 @@ class ChRISSubmissionServiceSpec
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
@@ -94,6 +96,7 @@ class ChRISSubmissionServiceSpec
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
@@ -173,6 +176,7 @@ class ChRISSubmissionServiceSpec
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
@@ -242,6 +246,7 @@ class ChRISSubmissionServiceSpec
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
@@ -316,6 +321,7 @@ class ChRISSubmissionServiceSpec
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
@@ -381,6 +387,7 @@ class ChRISSubmissionServiceSpec
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
@@ -455,6 +462,7 @@ class ChRISSubmissionServiceSpec
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
@@ -529,6 +537,7 @@ class ChRISSubmissionServiceSpec
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(

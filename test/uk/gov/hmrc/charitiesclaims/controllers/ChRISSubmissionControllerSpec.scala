@@ -28,6 +28,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
+import java.util.UUID
 
 class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
 
@@ -38,6 +39,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = false,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = ClaimData(
           repaymentClaimDetails = RepaymentClaimDetails(
@@ -130,6 +132,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = ClaimData(
           repaymentClaimDetails = RepaymentClaimDetails(
@@ -218,6 +221,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = false,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = ClaimData(
           repaymentClaimDetails = RepaymentClaimDetails(
@@ -290,6 +294,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimId = "test-claim-id",
         userId = "test-user-id",
         claimSubmitted = false,
+        lastUpdatedReference = UUID.randomUUID().toString,
         creationTimestamp = "2025-01-01",
         claimData = ClaimData(
           repaymentClaimDetails = RepaymentClaimDetails(

@@ -23,6 +23,7 @@ final case class Claim(
   claimId: String,
   userId: String,
   claimSubmitted: Boolean,
+  lastUpdatedReference: String,
   creationTimestamp: String,
   claimData: ClaimData,
   submissionDetails: Option[SubmissionDetails] = None

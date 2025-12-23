@@ -19,7 +19,6 @@ package uk.gov.hmrc.charitiesclaims.models
 import play.api.libs.json.{Format, Json}
 
 final case class UpdateClaimRequest(
-  claimId: String,
   repaymentClaimDetails: RepaymentClaimDetails,
   organisationDetails: Option[OrganisationDetails] = None,
   giftAidSmallDonationsSchemeDonationDetails: Option[GiftAidSmallDonationsSchemeDonationDetails] = None,

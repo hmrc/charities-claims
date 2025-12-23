@@ -20,13 +20,14 @@ import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents}
 import play.api.mvc.Results.InternalServerError
-import play.api.mvc.Results.Ok
+import play.api.mvc.Results.{NotFound, Ok}
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 
 import javax.inject.Inject
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.charitiesclaims.models.ClaimInfo
 
 @Singleton()
 class GetClaimsController @Inject() (
@@ -44,10 +45,36 @@ class GetClaimsController @Inject() (
           Ok(
             Json.obj(
               "claimsCount" -> claims.size,
-              "claimsList"  -> JsArray(claims)
+              "claimsList"  -> JsArray(claims.map(claim => Json.toJson(claim)(using ClaimInfo.format)))
             )
           )
         )
+        .recover { case e =>
+          InternalServerError(
+            Json.obj(
+              "errorMessage" -> e.getMessage,
+              "errorCode"    -> "CLAIM_SERVICE_ERROR"
+            )
+          )
+        }
+    }
+
+  def getClaim(claimId: String): Action[String] =
+    whenAuthorised {
+      claimsService
+        .getClaim(claimId)
+        .map {
+          case None =>
+            NotFound(
+              Json.obj(
+                "errorMessage" -> s"Claim with claimId $claimId not found",
+                "errorCode"    -> "CLAIM_NOT_FOUND_ERROR"
+              )
+            )
+
+          case Some(claim) =>
+            Ok(Json.toJson(claim))
+        }
         .recover { case e =>
           InternalServerError(
             Json.obj(

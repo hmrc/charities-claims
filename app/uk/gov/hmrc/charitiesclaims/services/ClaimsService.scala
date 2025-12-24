@@ -16,17 +16,16 @@
 
 package uk.gov.hmrc.charitiesclaims.services
 
-import uk.gov.hmrc.mongo.cache.CacheItem
+import com.google.inject.ImplementedBy
+import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.model.Projections.*
+import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
+import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
+import uk.gov.hmrc.charitiesclaims.repositories.ClaimsRepository
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.charitiesclaims.repositories.ClaimsRepository
-import com.google.inject.ImplementedBy
-import uk.gov.hmrc.charitiesclaims.models.Claim
-import org.mongodb.scala.bson.BsonDocument
-import play.api.libs.json.JsObject
-import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
-import uk.gov.hmrc.http.HeaderCarrier
 
 @ImplementedBy(classOf[ClaimsServiceImpl])
 trait ClaimsService {
@@ -34,7 +33,7 @@ trait ClaimsService {
   def putClaim(claim: Claim): Future[Unit]
   def getClaim(claimId: String): Future[Option[Claim]]
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit]
-  def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[JsObject]]
+  def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]]
 
 }
 
@@ -66,10 +65,22 @@ class ClaimsServiceImpl @Inject() (
       .deleteClaim(claimId)
       .flatMap(_ => repository.delete(claimId)(ClaimsRepository.claimDataKey))
 
-  def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[JsObject]] =
+  def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]] =
     repository.collection
+      .withDocumentClass[ClaimsRepository.CacheItemWithClaimInfo]
       .find(BsonDocument(ClaimsRepository.userIdPath -> userId, ClaimsRepository.claimSubmittedPath -> claimSubmitted))
-      .map(cacheItem => cacheItem.data.value.get("claim").get.asInstanceOf[JsObject])
+      .projection(
+        fields(
+          include(
+            ClaimsRepository.claimIdPath,
+            ClaimsRepository.userIdPath,
+            ClaimsRepository.lastUpdatedReferencePath,
+            ClaimsRepository.creationTimestampPath,
+            ClaimsRepository.claimSubmittedPath
+          )
+        )
+      )
+      .map(_.data.claim)
       .collect()
       .head()
 }

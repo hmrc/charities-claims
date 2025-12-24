@@ -19,6 +19,7 @@ package uk.gov.hmrc.charitiesclaims.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
+import java.util.UUID
 
 class SaveClaimResponseSpec extends AnyWordSpec with Matchers {
 
@@ -27,7 +28,8 @@ class SaveClaimResponseSpec extends AnyWordSpec with Matchers {
 
       val saveClaimResponse = SaveClaimResponse(
         claimId = "123",
-        creationTimestamp = "2025-11-10T13:45:56.016Z"
+        creationTimestamp = "2025-11-10T13:45:56.016Z",
+        lastUpdatedReference = UUID.randomUUID().toString
       )
 
       Json.parse(Json.prettyPrint(Json.toJson(saveClaimResponse))).as[SaveClaimResponse] shouldBe saveClaimResponse

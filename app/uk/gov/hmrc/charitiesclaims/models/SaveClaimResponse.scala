@@ -21,7 +21,8 @@ import play.api.libs.json.Json
 
 final case class SaveClaimResponse(
   claimId: String,
-  creationTimestamp: String
+  creationTimestamp: String,
+  lastUpdatedReference: String
 )
 
 object SaveClaimResponse {

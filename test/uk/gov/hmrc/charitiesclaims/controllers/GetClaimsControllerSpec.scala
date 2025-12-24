@@ -30,6 +30,7 @@ import uk.gov.hmrc.charitiesclaims.util.TestClaimsServiceHelper
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import uk.gov.hmrc.charitiesclaims.models.Claim
 
 class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
   given ExecutionContext = global
@@ -120,6 +121,59 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       val request = testRequest("GET", "/claims?claimSubmitted=true")
 
       val result = controller.getClaims(claimSubmitted = true)(request)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      val errorResponse = contentAsJson(result).as[JsObject]
+      errorResponse.value.get("errorMessage") shouldBe Some(JsString("Error message"))
+      errorResponse.value.get("errorCode")    shouldBe Some(JsString("CLAIM_SERVICE_ERROR"))
+    }
+  }
+
+  "GET /claims/:claimId" - {
+    "return 200 when the claim exists" in new AuthorisedOrganisationFixture {
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
+
+      val request = testRequest("GET", "/claims/test-claim-submitted")
+
+      val result = controller.getClaim(claimId = "test-claim-submitted")(request)
+      status(result) shouldBe Status.OK
+
+      val claim = contentAsJson(result).as[Claim]
+      claim.claimId                                                                  shouldBe "test-claim-submitted"
+      claim.userId                                                                   shouldBe organisation1
+      claim.claimSubmitted                                                           shouldBe true
+      claim.creationTimestamp                                                        shouldBe "2025-11-10T13:45:56.016Z"
+      claim.claimData.repaymentClaimDetails.claimingGiftAid                          shouldBe true
+      claim.claimData.repaymentClaimDetails.claimingTaxDeducted                      shouldBe false
+      claim.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme shouldBe false
+      claim.claimData.organisationDetails.isDefined                                  shouldBe true
+      claim.claimData.declarationDetails.isDefined                                   shouldBe true
+      claim.claimData.giftAidSmallDonationsSchemeDonationDetails.isDefined           shouldBe false
+      claim.submissionDetails.isDefined                                              shouldBe true
+    }
+
+    "return 404 when the claim does not exist" in new AuthorisedOrganisationFixture {
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
+
+      val request = testRequest("GET", "/claims/test-claim-not-found")
+
+      val result = controller.getClaim(claimId = "test-claim-not-found")(request)
+      status(result) shouldBe Status.NOT_FOUND
+    }
+
+    "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      (mockClaimsService
+        .getClaim(_: String))
+        .expects(*)
+        .anyNumberOfTimes()
+        .returning(Future.failed(new RuntimeException("Error message")))
+
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      val request = testRequest("GET", "/claims/test-claim-submitted")
+
+      val result = controller.getClaim(claimId = "test-claim-submitted")(request)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       val errorResponse = contentAsJson(result).as[JsObject]
       errorResponse.value.get("errorMessage") shouldBe Some(JsString("Error message"))

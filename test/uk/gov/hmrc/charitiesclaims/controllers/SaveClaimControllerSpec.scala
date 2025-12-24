@@ -104,6 +104,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
           claimId = saveClaimResponse.claimId,
           userId = organisation1,
           claimSubmitted = false,
+          lastUpdatedReference = saveClaimResponse.lastUpdatedReference,
           creationTimestamp = saveClaimResponse.creationTimestamp,
           claimData = ClaimData(
             repaymentClaimDetails = RepaymentClaimDetails(
@@ -135,6 +136,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
           claimId = saveClaimResponse.claimId,
           userId = organisation1,
           claimSubmitted = false,
+          lastUpdatedReference = saveClaimResponse.lastUpdatedReference,
           creationTimestamp = saveClaimResponse.creationTimestamp,
           claimData = ClaimData(
             repaymentClaimDetails = RepaymentClaimDetails(
@@ -180,6 +182,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
           claimId = saveClaimResponse.claimId,
           userId = agent1,
           claimSubmitted = false,
+          lastUpdatedReference = saveClaimResponse.lastUpdatedReference,
           creationTimestamp = saveClaimResponse.creationTimestamp,
           claimData = ClaimData(
             repaymentClaimDetails = RepaymentClaimDetails(

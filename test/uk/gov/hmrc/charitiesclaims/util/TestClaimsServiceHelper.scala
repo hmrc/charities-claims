@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.charitiesclaims.util
 
-import play.api.libs.json.{JsObject, Json, Reads}
-import uk.gov.hmrc.charitiesclaims.models.Claim
+import play.api.libs.json.{Json, Reads}
+import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -69,11 +69,19 @@ class TestClaimsService(initialClaims: Seq[Claim])(using ec: ExecutionContext) e
       .foreach(existingClaim => buffer.remove(buffer.indexOf(existingClaim)))
     Future.successful(())
 
-  override def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[JsObject]] =
+  override def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]] =
     Future.successful(
       buffer
         .filter(claim => claim.userId == userId && claim.claimSubmitted == claimSubmitted)
-        .map(claim => Json.toJson(claim)(using Claim.format).as[JsObject])
+        .map(claim =>
+          ClaimInfo(
+            claim.claimId,
+            claim.userId,
+            claim.claimSubmitted,
+            claim.lastUpdatedReference,
+            claim.creationTimestamp
+          )
+        )
         .toSeq
     )
 }

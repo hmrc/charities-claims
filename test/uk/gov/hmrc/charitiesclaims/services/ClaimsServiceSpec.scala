@@ -16,23 +16,23 @@
 
 package uk.gov.hmrc.charitiesclaims.services
 
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
-import uk.gov.hmrc.charitiesclaims.models.{Claim, GetClaimsResponse}
-import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
-import uk.gov.hmrc.http.HeaderCarrier
 import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
+import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
+import uk.gov.hmrc.http.HeaderCarrier
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.util.UUID
-import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
-import org.scalamock.scalatest.MockFactory
 import scala.concurrent.Future
+import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
 
 class ClaimsServiceSpec
     extends AnyWordSpec
@@ -59,10 +59,10 @@ class ClaimsServiceSpec
 
   private val realMongoDBClaimsService = app.injector.instanceOf[ClaimsService]
 
-  val claims = Json
+  val getClaimsResponse = Json
     .parse(this.getClass.getResourceAsStream("/get-claims-response.json"))
-    .as[GetClaimsResponse]
-    .claimsList
+
+  val claims = getClaimsResponse.as[JsObject].value.get("claimsList").get.as[Seq[Claim]]
 
   Seq(
     (realMongoDBClaimsService, "DefaultClaimsService"),
@@ -73,58 +73,81 @@ class ClaimsServiceSpec
         s"store, retrieve, list and delete claims when using $description" in {
           given HeaderCarrier = HeaderCarrier()
 
-          // create and store a submitted claim for the first user
-          val claim = claims.head.copy(claimId = UUID.randomUUID().toString)
+          info("create and store a submitted claim for the first user")
+          val claim     = claims.head.copy(claimId = UUID.randomUUID().toString, UUID.randomUUID().toString)
+          val claimInfo = ClaimInfo(
+            claim.claimId,
+            claim.userId,
+            claim.claimSubmitted,
+            claim.lastUpdatedReference,
+            claim.creationTimestamp
+          )
 
           claim.claimSubmitted shouldBe true
 
-          val claimJson = Json.toJson(claim)(using Claim.format)
-
           claimsService.putClaim(claim).futureValue
           claimsService.putClaim(claim).futureValue
 
-          // check the claim can be retrieved and listed
+          info("check the claim can be retrieved and listed")
           claimsService.getClaim(claim.claimId).futureValue shouldBe Some(claim)
           claimsService.getClaim(claim.claimId).futureValue shouldBe Some(claim)
 
-          claimsService.listClaims(claim.userId, claimSubmitted = true).futureValue  shouldBe Seq(claimJson)
+          claimsService.listClaims(claim.userId, claimSubmitted = true).futureValue  shouldBe Seq(claimInfo)
           claimsService.listClaims(claim.userId, claimSubmitted = false).futureValue shouldBe Seq.empty
 
-          // add a new submitted claim for the second user
+          info("add a new submitted claim for the second user")
           val claim2     = claim.copy(userId = UUID.randomUUID().toString)
-          val claimJson2 = Json.toJson(claim2)(using Claim.format)
+          val claimInfo2 = ClaimInfo(
+            claim2.claimId,
+            claim2.userId,
+            claim2.claimSubmitted,
+            claim2.lastUpdatedReference,
+            claim2.creationTimestamp
+          )
 
           claimsService.putClaim(claim2).futureValue
 
-          // check the second claim can be retrieved and listed
-          claimsService.listClaims(claim2.userId, claimSubmitted = true).futureValue  shouldBe Seq(claimJson2)
+          info("check the second claim can be retrieved and listed")
+          claimsService.listClaims(claim2.userId, claimSubmitted = true).futureValue  shouldBe Seq(claimInfo2)
           claimsService.listClaims(claim2.userId, claimSubmitted = false).futureValue shouldBe Seq.empty
 
-          // add the second submitted claim for the second user
+          info("add the second submitted claim for the second user")
           val claim3     = claim.copy(claimId = UUID.randomUUID().toString, userId = claim2.userId)
-          val claimJson3 = Json.toJson(claim3)(using Claim.format)
+          val claimInfo3 = ClaimInfo(
+            claim3.claimId,
+            claim3.userId,
+            claim3.claimSubmitted,
+            claim3.lastUpdatedReference,
+            claim3.creationTimestamp
+          )
           claimsService.putClaim(claim3).futureValue
 
-          // check both claims can be retrieved and listed
+          info("check both claims can be retrieved and listed")
           claimsService.listClaims(claim3.userId, claimSubmitted = true).futureValue  shouldBe Seq(
-            claimJson2,
-            claimJson3
+            claimInfo2,
+            claimInfo3
           )
           claimsService.listClaims(claim3.userId, claimSubmitted = false).futureValue shouldBe Seq.empty
 
-          // add a new unsubmitted claim for the second user
+          info("add a new unsubmitted claim for the second user")
           val claim4     = claim3.copy(claimId = UUID.randomUUID().toString, claimSubmitted = false)
-          val claimJson4 = Json.toJson(claim4)(using Claim.format)
+          val claimInfo4 = ClaimInfo(
+            claim4.claimId,
+            claim4.userId,
+            claim4.claimSubmitted,
+            claim4.lastUpdatedReference,
+            claim4.creationTimestamp
+          )
           claimsService.putClaim(claim4).futureValue
 
-          // check claims returned are only the submitted or unsubmitted claim
+          info("check claims returned are only the submitted or unsubmitted claim")
           claimsService.listClaims(claim4.userId, claimSubmitted = true).futureValue  shouldBe Seq(
-            claimJson2,
-            claimJson3
+            claimInfo2,
+            claimInfo3
           )
-          claimsService.listClaims(claim4.userId, claimSubmitted = false).futureValue shouldBe Seq(claimJson4)
+          claimsService.listClaims(claim4.userId, claimSubmitted = false).futureValue shouldBe Seq(claimInfo4)
 
-          // delete the claims
+          info("delete the claims")
           claimsService.deleteClaim(claim.claimId).futureValue
           claimsService.getClaim(claim.claimId).futureValue shouldBe None
 

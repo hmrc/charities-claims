@@ -2,8 +2,10 @@
 
 GET         /claims                 uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaims(claimSubmitted: Boolean)
 POST        /claims                 uk.gov.hmrc.charitiesclaims.controllers.SaveClaimController.saveClaim
+
+GET         /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaim(claimId: String)
 DELETE      /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.DeleteClaimController.deleteClaim(claimId: String)
-PUT         /claims                 uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateClaim
+PUT         /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateClaim(claimId: String)
 
 GET         /charities/:charityReference/unregulated-donations uk.gov.hmrc.charitiesclaims.controllers.UnregulatedDonationsController.getTotalUnregulatedDonations(charityReference: String)
 

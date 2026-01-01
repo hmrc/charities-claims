@@ -1,6 +1,6 @@
 # microservice specific routes
 
-GET         /claims                 uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaims(claimSubmitted: Boolean)
+GET         /claims                 uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaims(claimSubmitted: Boolean ?= false)
 POST        /claims                 uk.gov.hmrc.charitiesclaims.controllers.SaveClaimController.saveClaim
 
 GET         /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaim(claimId: String)

@@ -17,11 +17,12 @@
 package uk.gov.hmrc.charitiesclaims.controllers
 
 import play.api.http.Status
+import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.test.Helpers
 import play.api.test.Helpers.*
-import uk.gov.hmrc.charitiesclaims.models.GetClaimsResponse
+import uk.gov.hmrc.charitiesclaims.models.Claim
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
 import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
@@ -30,7 +31,6 @@ import uk.gov.hmrc.charitiesclaims.util.TestClaimsServiceHelper
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.charitiesclaims.models.Claim
 
 class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
   given ExecutionContext = global
@@ -38,7 +38,7 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
   val claimsService = new TestClaimsService(initialTestClaimsSet)
 
   "GET /claims" - {
-    "return 200 when requested submitted claims and user is an organisation" in new AuthorisedOrganisationFixture {
+    "return 200 with only claimId when user is an organisation" in new AuthorisedOrganisationFixture {
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
@@ -46,14 +46,20 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val result = controller.getClaims(claimSubmitted = true)(request)
       status(result) shouldBe Status.OK
-      val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
-      getClaimsResponse.claimsCount                    shouldBe 1
-      getClaimsResponse.claimsList.head.userId         shouldBe organisation1
-      getClaimsResponse.claimsList.head.claimSubmitted shouldBe true
-      getClaimsResponse.claimsList.head.claimId        shouldBe "test-claim-submitted"
+
+      val json       = contentAsJson(result).as[JsObject]
+      val claimsList = (json \ "claimsList").as[JsArray]
+
+      (json \ "claimsCount").as[Int] shouldBe 1
+      claimsList.value.size          shouldBe 1
+
+      val firstClaim = claimsList.value.head.as[JsObject]
+      (firstClaim \ "claimId").as[String] shouldBe "test-claim-submitted"
+
+      firstClaim.keys shouldBe Set("claimId")
     }
 
-    "return 200 when requested submitted claims and user is an agent" in new AuthorisedAgentFixture {
+    "return 200 with claimId, hmrcCharitiesReference, and nameOfCharity when user is an agent" in new AuthorisedAgentFixture {
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
@@ -61,14 +67,20 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val result = controller.getClaims(claimSubmitted = true)(request)
       status(result) shouldBe Status.OK
-      val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
-      getClaimsResponse.claimsCount                    shouldBe 1
-      getClaimsResponse.claimsList.head.userId         shouldBe agent1
-      getClaimsResponse.claimsList.head.claimSubmitted shouldBe true
-      getClaimsResponse.claimsList.head.claimId        shouldBe "test-claim-submitted-2"
+
+      val json       = contentAsJson(result).as[JsObject]
+      val claimsList = (json \ "claimsList").as[JsArray]
+
+      (json \ "claimsCount").as[Int] shouldBe 1
+      claimsList.value.size          shouldBe 1
+
+      val firstClaim = claimsList.value.head.as[JsObject]
+      (firstClaim \ "claimId").as[String] shouldBe "test-claim-submitted-2"
+
+      firstClaim.keys shouldBe Set("claimId", "hmrcCharitiesReference", "nameOfCharity")
     }
 
-    "return 200 when requested unsubmitted claims and user is an organisation" in new AuthorisedOrganisationFixture {
+    "return 200 with multiple claims for organisation" in new AuthorisedOrganisationFixture {
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
@@ -76,18 +88,21 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val result = controller.getClaims(claimSubmitted = false)(request)
       status(result) shouldBe Status.OK
-      val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
-      getClaimsResponse.claimsCount                                        shouldBe 3
-      getClaimsResponse.claimsList
-        .map(claim => (claim.claimId, claim.userId, claim.claimSubmitted)) shouldBe
-        Seq(
-          ("test-claim-unsubmitted-1", organisation1, false),
-          ("test-claim-unsubmitted-2", organisation1, false),
-          ("test-claim-unsubmitted-3", organisation1, false)
-        )
+
+      val json       = contentAsJson(result).as[JsObject]
+      val claimsList = (json \ "claimsList").as[JsArray]
+
+      (json \ "claimsCount").as[Int]                        shouldBe 3
+      claimsList.value.map(c => (c \ "claimId").as[String]) shouldBe Seq(
+        "test-claim-unsubmitted-1",
+        "test-claim-unsubmitted-2",
+        "test-claim-unsubmitted-3"
+      )
+
+      claimsList.value.foreach(c => c.as[JsObject].keys shouldBe Set("claimId"))
     }
 
-    "return 200 when requested unsubmitted claims and user is an agent" in new AuthorisedAgentFixture {
+    "return 200 with multiple claims for agent" in new AuthorisedAgentFixture {
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
@@ -95,15 +110,20 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val result = controller.getClaims(claimSubmitted = false)(request)
       status(result) shouldBe Status.OK
-      val getClaimsResponse = contentAsJson(result).as[GetClaimsResponse]
-      getClaimsResponse.claimsCount                                        shouldBe 3
-      getClaimsResponse.claimsList
-        .map(claim => (claim.claimId, claim.userId, claim.claimSubmitted)) shouldBe
-        Seq(
-          ("test-claim-unsubmitted-1-2", agent1, false),
-          ("test-claim-unsubmitted-2-2", agent1, false),
-          ("test-claim-unsubmitted-3-2", agent1, false)
-        )
+
+      val json       = contentAsJson(result).as[JsObject]
+      val claimsList = (json \ "claimsList").as[JsArray]
+
+      (json \ "claimsCount").as[Int]                        shouldBe 3
+      claimsList.value.map(c => (c \ "claimId").as[String]) shouldBe Seq(
+        "test-claim-unsubmitted-1-2",
+        "test-claim-unsubmitted-2-2",
+        "test-claim-unsubmitted-3-2"
+      )
+
+      claimsList.value.foreach(c =>
+        c.as[JsObject].keys shouldBe Set("claimId", "hmrcCharitiesReference", "nameOfCharity")
+      )
     }
 
     "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {

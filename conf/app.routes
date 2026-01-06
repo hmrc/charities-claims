@@ -10,3 +10,6 @@ PUT         /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.Upda
 GET         /charities/:charityReference/unregulated-donations uk.gov.hmrc.charitiesclaims.controllers.UnregulatedDonationsController.getTotalUnregulatedDonations(charityReference: String)
 
 POST        /chris                   uk.gov.hmrc.charitiesclaims.controllers.ChRISSubmissionController.submitClaim
+
+GET        /charities/agents/:agentRef                    uk.gov.hmrc.charitiesclaims.controllers.GetRdsDatacacheController.getAgentName(agentRef: String)
+GET        /charities/organisations/:charityRef           uk.gov.hmrc.charitiesclaims.controllers.GetRdsDatacacheController.getOrganisationName(charityRef: String)

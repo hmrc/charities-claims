@@ -105,9 +105,9 @@ class ChRISSubmissionServiceImpl @Inject() (
       then
         Some(
           OffName(
-            Ttl = organisationDetails.corporateTrusteeTitle,
-            Fore = organisationDetails.corporateTrusteeFirstName,
-            Sur = organisationDetails.corporateTrusteeLastName
+            Ttl = organisationDetails.authorisedOfficialTrusteeTitle,
+            Fore = organisationDetails.authorisedOfficialTrusteeFirstName,
+            Sur = organisationDetails.authorisedOfficialTrusteeLastName
           )
         )
       else None
@@ -122,16 +122,20 @@ class ChRISSubmissionServiceImpl @Inject() (
       // areYouACorporateTrustee == false and doYouHaveUKAddress == true then set the value of Postcode
       OffID(
         Overseas =
-          if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(false)
+          if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveCorporateTrusteeUKAddress
+              .contains(false)
           then Some(true)
-          else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(false)
+          else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveAuthorisedOfficialTrusteeUKAddress
+              .contains(false)
           then Some(true)
           else None,
         Postcode =
-          if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(true)
+          if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveCorporateTrusteeUKAddress
+              .contains(true)
           then organisationDetails.corporateTrusteePostcode
-          else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveUKAddress.contains(true)
-          then organisationDetails.corporateTrusteePostcode
+          else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveAuthorisedOfficialTrusteeUKAddress
+              .contains(true)
+          then organisationDetails.authorisedOfficialTrusteePostcode
           else None
       )
     )

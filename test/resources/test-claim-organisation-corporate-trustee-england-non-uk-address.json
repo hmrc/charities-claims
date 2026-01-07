@@ -18,13 +18,8 @@
       "doYouHaveCorporateTrusteeUKAddress": false,
       "doYouHaveAuthorisedOfficialTrusteeUKAddress": false,
       "nameOfCorporateTrustee": "Test-Corporate-Trustee",
-      "corporateTrusteePostcode": "post-code",
-      "corporateTrusteeDaytimeTelephoneNumber": "1234567890",
-      "authorisedOfficialTrusteePostcode": "post-code",
-      "authorisedOfficialTrusteeDaytimeTelephoneNumber": "1234567890",
-      "authorisedOfficialTrusteeTitle": "Mr",
-      "authorisedOfficialTrusteeFirstName": "John",
-      "authorisedOfficialTrusteeLastName": "Jones"
+      "corporateTrusteePostcode": "505201",
+      "corporateTrusteeDaytimeTelephoneNumber": "1234567890"
     }
   }
 }

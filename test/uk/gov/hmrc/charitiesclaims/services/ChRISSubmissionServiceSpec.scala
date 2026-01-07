@@ -112,13 +112,16 @@ class ChRISSubmissionServiceSpec
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = true,
-              doYouHaveUKAddress = Some(true),
+              doYouHaveCorporateTrusteeUKAddress = Some(true),
+              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(false),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
               corporateTrusteePostcode = Some("post-code"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              corporateTrusteeTitle = Some("Mr"),
-              corporateTrusteeFirstName = Some("John"),
-              corporateTrusteeLastName = Some("Jones")
+              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteeTitle = Some("Mr"),
+              authorisedOfficialTrusteeFirstName = Some("John"),
+              authorisedOfficialTrusteeLastName = Some("Jones")
             )
           )
         )
@@ -192,13 +195,16 @@ class ChRISSubmissionServiceSpec
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = true,
-              doYouHaveUKAddress = Some(false),
+              doYouHaveCorporateTrusteeUKAddress = Some(false),
+              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(false),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
               corporateTrusteePostcode = Some("post-code"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              corporateTrusteeTitle = Some("Mr"),
-              corporateTrusteeFirstName = Some("John"),
-              corporateTrusteeLastName = Some("Jones")
+              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteeTitle = Some("Mr"),
+              authorisedOfficialTrusteeFirstName = Some("John"),
+              authorisedOfficialTrusteeLastName = Some("Jones")
             )
           )
         )
@@ -262,13 +268,16 @@ class ChRISSubmissionServiceSpec
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,
-              doYouHaveUKAddress = Some(true),
+              doYouHaveCorporateTrusteeUKAddress = Some(true),
+              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
               corporateTrusteePostcode = Some("post-code"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              corporateTrusteeTitle = Some("Mr"),
-              corporateTrusteeFirstName = Some("John"),
-              corporateTrusteeLastName = Some("Jones")
+              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteeTitle = Some("Mr"),
+              authorisedOfficialTrusteeFirstName = Some("John"),
+              authorisedOfficialTrusteeLastName = Some("Jones")
             )
           )
         )
@@ -337,13 +346,16 @@ class ChRISSubmissionServiceSpec
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,
-              doYouHaveUKAddress = Some(false),
+              doYouHaveCorporateTrusteeUKAddress = Some(false),
+              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(false),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
               corporateTrusteePostcode = Some("post-code"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              corporateTrusteeTitle = Some("Mr"),
-              corporateTrusteeFirstName = Some("John"),
-              corporateTrusteeLastName = Some("Jones")
+              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteeTitle = Some("Mr"),
+              authorisedOfficialTrusteeFirstName = Some("John"),
+              authorisedOfficialTrusteeLastName = Some("Jones")
             )
           )
         )
@@ -403,13 +415,16 @@ class ChRISSubmissionServiceSpec
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,
-              doYouHaveUKAddress = Some(true),
+              doYouHaveCorporateTrusteeUKAddress = Some(true),
+              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
               corporateTrusteePostcode = Some("post-code"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              corporateTrusteeTitle = Some("Mr"),
-              corporateTrusteeFirstName = Some("John"),
-              corporateTrusteeLastName = Some("Jones")
+              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteeTitle = Some("Mr"),
+              authorisedOfficialTrusteeFirstName = Some("John"),
+              authorisedOfficialTrusteeLastName = Some("Jones")
             )
           )
         )
@@ -478,13 +493,16 @@ class ChRISSubmissionServiceSpec
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,
-              doYouHaveUKAddress = Some(true),
+              doYouHaveCorporateTrusteeUKAddress = Some(true),
+              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
               corporateTrusteePostcode = Some("post-code"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              corporateTrusteeTitle = Some("Mr"),
-              corporateTrusteeFirstName = Some("John"),
-              corporateTrusteeLastName = Some("Jones")
+              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteeTitle = Some("Mr"),
+              authorisedOfficialTrusteeFirstName = Some("John"),
+              authorisedOfficialTrusteeLastName = Some("Jones")
             )
           )
         )
@@ -553,13 +571,16 @@ class ChRISSubmissionServiceSpec
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,
-              doYouHaveUKAddress = Some(true),
+              doYouHaveCorporateTrusteeUKAddress = Some(true),
+              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
               corporateTrusteePostcode = Some("post-code"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              corporateTrusteeTitle = Some("Mr"),
-              corporateTrusteeFirstName = Some("John"),
-              corporateTrusteeLastName = Some("Jones")
+              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteeTitle = Some("Mr"),
+              authorisedOfficialTrusteeFirstName = Some("John"),
+              authorisedOfficialTrusteeLastName = Some("Jones")
             )
           )
         )

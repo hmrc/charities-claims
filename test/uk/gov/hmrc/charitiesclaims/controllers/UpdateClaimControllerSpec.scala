@@ -52,13 +52,16 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     reasonNotRegisteredWithRegulator = Some("test"),
     charityRegistrationNumber = Some("test"),
     areYouACorporateTrustee = true,
-    doYouHaveUKAddress = Some(true),
+    doYouHaveCorporateTrusteeUKAddress = Some(true),
+    doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
     nameOfCorporateTrustee = Some("test"),
     corporateTrusteePostcode = Some("test"),
     corporateTrusteeDaytimeTelephoneNumber = Some("test"),
-    corporateTrusteeTitle = Some("test"),
-    corporateTrusteeFirstName = Some("test"),
-    corporateTrusteeLastName = Some("test")
+    authorisedOfficialTrusteePostcode = Some("test"),
+    authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("test"),
+    authorisedOfficialTrusteeTitle = Some("test"),
+    authorisedOfficialTrusteeFirstName = Some("test"),
+    authorisedOfficialTrusteeLastName = Some("test")
   )
 
   private val giftAidSmallDonationsSchemeDonationDetails =

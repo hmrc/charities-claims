@@ -32,6 +32,8 @@
 
     <logger name="application" level="WARN"/>
 
+    <logger name="OutboundRequest" level="DEBUG"/>
+
     <logger name="connector" level="WARN">
         <appender-ref ref="STDOUT"/>
     </logger>

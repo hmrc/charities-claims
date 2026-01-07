@@ -70,7 +70,8 @@ final case class MessageDetails(
   CorrelationID: String = UUID
     .randomUUID()
     .toString()
-    .replace("-", ""), // All messages coming into ChRIS must have this ID for tracing purposes.
+    .replace("-", "")
+    .toUpperCase, // All messages coming into ChRIS must have this ID for tracing purposes.
   GatewayTimestamp: String =
     gatewayTimestampFormat.format(Instant.now()) // Current system datetime in format "yyyy-MM-ddTHH:mm:ss.SSS"
 ) derives XmlWriter

@@ -4,7 +4,7 @@ import play.core.PlayVersion
 
 object AppDependencies {
 
-  private val bootstrapVersion = "10.4.0"
+  private val bootstrapVersion = "10.5.0"
   private val hmrcMongoVersion = "2.11.0"
 
   val compile = Seq(

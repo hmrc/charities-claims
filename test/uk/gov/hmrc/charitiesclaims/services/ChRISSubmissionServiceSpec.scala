@@ -28,7 +28,6 @@ import uk.gov.hmrc.http.SessionId
 import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent}
 import java.util.UUID
-import play.api.libs.json.Json
 
 class ChRISSubmissionServiceSpec
     extends AnyWordSpec
@@ -211,8 +210,6 @@ class ChRISSubmissionServiceSpec
         )
       )
 
-      println(Json.prettyPrint(Json.toJson(claim)))
-
       val currentUser = TestCurrentUser(
         affinityGroup = AffinityGroup.Organisation,
         userId = "test-user-id",
@@ -285,8 +282,6 @@ class ChRISSubmissionServiceSpec
           )
         )
       )
-
-      println(Json.prettyPrint(Json.toJson(claim)))
 
       val currentUser = TestCurrentUser(
         affinityGroup = AffinityGroup.Organisation,
@@ -366,8 +361,6 @@ class ChRISSubmissionServiceSpec
         )
       )
 
-      println(Json.prettyPrint(Json.toJson(claim)))
-
       val currentUser = TestCurrentUser(
         affinityGroup = AffinityGroup.Organisation,
         userId = "test-user-id",
@@ -436,8 +429,6 @@ class ChRISSubmissionServiceSpec
           )
         )
       )
-
-      println(Json.prettyPrint(Json.toJson(claim)))
 
       val currentUser = TestCurrentUser(
         affinityGroup = AffinityGroup.Organisation,
@@ -517,8 +508,6 @@ class ChRISSubmissionServiceSpec
         )
       )
 
-      println(Json.prettyPrint(Json.toJson(claim)))
-
       val currentUser = TestCurrentUser(
         affinityGroup = AffinityGroup.Organisation,
         userId = "test-user-id",
@@ -596,8 +585,6 @@ class ChRISSubmissionServiceSpec
           )
         )
       )
-
-      println(Json.prettyPrint(Json.toJson(claim)))
 
       val currentUser = TestCurrentUser(
         affinityGroup = AffinityGroup.Organisation,

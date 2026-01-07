@@ -32,7 +32,7 @@ requires running locally [`prh-oracle-xe/databases/charities-db`](https://github
 ### test ChRIS submission
 provide input claim json path using `-i` option
 ```
-./scripts/testChRISSubmission.sc -i test/resources/test-claim-unsubmitted-1.json
+./scripts/testChRISSubmission.sc -i test/resources/test-claim-organisation-corporate-trustee-england-uk-address.json
 ```
 
 ### License

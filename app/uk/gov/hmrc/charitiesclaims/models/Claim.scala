@@ -64,13 +64,16 @@ final case class OrganisationDetails(
   reasonNotRegisteredWithRegulator: Option[String] = None,
   charityRegistrationNumber: Option[String] = None,
   areYouACorporateTrustee: Boolean,
-  doYouHaveUKAddress: Option[Boolean] = None,
+  doYouHaveCorporateTrusteeUKAddress: Option[Boolean] = None,
+  doYouHaveAuthorisedOfficialTrusteeUKAddress: Option[Boolean] = None,
   nameOfCorporateTrustee: Option[String] = None,
   corporateTrusteePostcode: Option[String] = None,
   corporateTrusteeDaytimeTelephoneNumber: Option[String] = None,
-  corporateTrusteeTitle: Option[String] = None,
-  corporateTrusteeFirstName: Option[String] = None,
-  corporateTrusteeLastName: Option[String] = None
+  authorisedOfficialTrusteePostcode: Option[String] = None,
+  authorisedOfficialTrusteeDaytimeTelephoneNumber: Option[String] = None,
+  authorisedOfficialTrusteeTitle: Option[String] = None,
+  authorisedOfficialTrusteeFirstName: Option[String] = None,
+  authorisedOfficialTrusteeLastName: Option[String] = None
 )
 
 object OrganisationDetails {

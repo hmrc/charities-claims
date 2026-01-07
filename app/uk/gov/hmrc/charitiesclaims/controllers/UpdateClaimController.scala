@@ -25,6 +25,7 @@ import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import java.util.UUID
 
 @Singleton()
 class UpdateClaimController @Inject() (
@@ -50,11 +51,8 @@ class UpdateClaimController @Inject() (
                 )
               )
             case Some(claim) =>
-              if claim.submissionDetails.isEmpty && !claim.claimSubmitted
+              if claim.submissionDetails.isDefined || claim.claimSubmitted
               then {
-                val updatedClaim = update(claim, updateClaimsRequest)
-                claimsService.putClaim(updatedClaim).map(_ => Ok(Json.toJson(UpdateClaimResponse(success = true))))
-              } else {
                 Future.successful(
                   BadRequest(
                     Json.obj(
@@ -63,6 +61,30 @@ class UpdateClaimController @Inject() (
                     )
                   )
                 )
+              } else if claim.lastUpdatedReference != updateClaimsRequest.lastUpdatedReference
+              then {
+                Future.successful(
+                  BadRequest(
+                    Json.obj(
+                      "errorMessage" -> s"Claim with claimId $claimId has already been updated by another user",
+                      "errorCode"    -> "UPDATED_BY_ANOTHER_USER"
+                    )
+                  )
+                )
+              } else {
+                val updatedClaim = update(claim, updateClaimsRequest)
+                claimsService
+                  .putClaim(updatedClaim)
+                  .map(_ =>
+                    Ok(
+                      Json.toJson(
+                        UpdateClaimResponse(
+                          success = true,
+                          lastUpdatedReference = updatedClaim.lastUpdatedReference
+                        )
+                      )
+                    )
+                  )
               }
           }
           .recover { case e =>
@@ -89,6 +111,6 @@ class UpdateClaimController @Inject() (
         .orElse(existing.declarationDetails)
     )
 
-    claim.copy(claimData = newClaimData)
+    claim.copy(claimData = newClaimData, lastUpdatedReference = UUID.randomUUID().toString)
   }
 }

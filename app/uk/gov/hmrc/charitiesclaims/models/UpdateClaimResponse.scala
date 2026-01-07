@@ -19,7 +19,8 @@ package uk.gov.hmrc.charitiesclaims.models
 import play.api.libs.json.{Format, Json}
 
 final case class UpdateClaimResponse(
-  success: Boolean
+  success: Boolean,
+  lastUpdatedReference: String
 )
 
 object UpdateClaimResponse {

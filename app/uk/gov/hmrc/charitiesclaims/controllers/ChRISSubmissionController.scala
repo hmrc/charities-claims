@@ -65,7 +65,16 @@ class ChRISSubmissionController @Inject() (
                     )
                   )
                 )
-              else
+              else if chrisSubmissionRequest.lastUpdatedReference != claim.lastUpdatedReference then {
+                Future.successful(
+                  BadRequest(
+                    Json.obj(
+                      "errorMessage" -> s"Claim with claimId ${chrisSubmissionRequest.claimId} has already been updated by another user",
+                      "errorCode"    -> "UPDATED_BY_ANOTHER_USER"
+                    )
+                  )
+                )
+              } else
                 chrisSubmissionService
                   .buildChRISSubmission(claim, currentUser)
                   .flatMap { govTalkMessage =>
@@ -80,7 +89,7 @@ class ChRISSubmissionController @Inject() (
                               submissionDetails = Some(
                                 SubmissionDetails(
                                   submissionTimestamp = submissionTimestamp,
-                                  submissionReference = chrisSubmissionRequest.lastUpdateReference
+                                  submissionReference = chrisSubmissionRequest.lastUpdatedReference
                                 )
                               )
                             )
@@ -91,7 +100,7 @@ class ChRISSubmissionController @Inject() (
                                 ChRISSubmissionResponse(
                                   success = true,
                                   submissionTimestamp = submissionTimestamp,
-                                  submissionReference = chrisSubmissionRequest.lastUpdateReference
+                                  submissionReference = chrisSubmissionRequest.lastUpdatedReference
                                 )
                               )
                             )

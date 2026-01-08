@@ -78,7 +78,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdateReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = claim.lastUpdatedReference
         )
       )
 
@@ -87,12 +87,12 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       val response = json.as[ChRISSubmissionResponse]
       status(result)               shouldBe OK
       response.success             shouldBe true
-      response.submissionReference shouldBe "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+      response.submissionReference shouldBe claim.lastUpdatedReference
 
       val updatedClaim = claimsService.getClaim("test-claim-id").futureValue.get
       updatedClaim.claimSubmitted                               shouldBe true
       updatedClaim.submissionDetails.map(_.submissionTimestamp) shouldBe Some(response.submissionTimestamp)
-      updatedClaim.submissionDetails.map(_.submissionReference) shouldBe Some("b4ae2a97-d97b-42d9-bf80-fe3db41968b4")
+      updatedClaim.submissionDetails.map(_.submissionReference) shouldBe Some(claim.lastUpdatedReference)
     }
 
     "return 404 when claim does not exist" in new AuthorisedOrganisationFixture {
@@ -114,7 +114,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdateReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
         )
       )
 
@@ -161,7 +161,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdateReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = claim.lastUpdatedReference
         )
       )
 
@@ -173,6 +173,55 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         JsString("Claim with claimId test-claim-id has already been submitted to ChRIS")
       )
       json.as[JsObject].value.get("errorCode")    shouldBe Some(JsString("CLAIM_ALREADY_SUBMITTED_ERROR"))
+    }
+
+    "return 400 when claim has already been updated by another user" in new AuthorisedOrganisationFixture {
+
+      val claim = Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = false,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        creationTimestamp = "2025-01-01",
+        claimData = ClaimData(
+          repaymentClaimDetails = RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          )
+        )
+      )
+
+      val claimsService              = new TestClaimsService(initialClaims = Seq(claim))
+      val chrisSubmissionServiceMock = mock[ChRISSubmissionService]
+      val chrisConnectorMock         = mock[ChRISConnector]
+
+      val controller = new ChRISSubmissionController(
+        Helpers.stubControllerComponents(),
+        authorisedAction,
+        claimsService,
+        chrisSubmissionServiceMock,
+        chrisConnectorMock
+      )
+
+      val request = testRequest(
+        "POST",
+        "/chris",
+        ChRISSubmissionRequest(
+          claimId = "test-claim-id",
+          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+        )
+      )
+
+      val result = controller.submitClaim()(request)
+      val json   = contentAsJson(result)
+      status(result) shouldBe BAD_REQUEST
+
+      json.as[JsObject].value.get("errorMessage") shouldBe Some(
+        JsString("Claim with claimId test-claim-id has already been updated by another user")
+      )
+      json.as[JsObject].value.get("errorCode")    shouldBe Some(JsString("UPDATED_BY_ANOTHER_USER"))
     }
 
     "return 500 when getting claim from claim service returns an error" in new AuthorisedOrganisationFixture {
@@ -199,7 +248,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdateReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
         )
       )
 
@@ -270,7 +319,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdateReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = claim.lastUpdatedReference
         )
       )
 
@@ -333,7 +382,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdateReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = claim.lastUpdatedReference
         )
       )
 

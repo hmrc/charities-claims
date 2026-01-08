@@ -28,7 +28,6 @@ import uk.gov.hmrc.charitiesclaims.util.{ControllerSpec, TestClaimsService, Test
 import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
-import java.util.UUID
 
 class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
 
@@ -100,7 +99,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     putClaims(
       claimId,
       UpdateClaimRequest(
-        repaymentClaimDetails = repaymentClaimDetails
+        repaymentClaimDetails = repaymentClaimDetails,
+        lastUpdatedReference = "0123456789"
       )
     )
 
@@ -109,7 +109,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       claimId,
       UpdateClaimRequest(
         repaymentClaimDetails = repaymentClaimDetails,
-        organisationDetails = Some(orgDetails)
+        organisationDetails = Some(orgDetails),
+        lastUpdatedReference = "0123456789"
       )
     )
 
@@ -118,7 +119,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       claimId,
       UpdateClaimRequest(
         repaymentClaimDetails = repaymentClaimDetails,
-        giftAidSmallDonationsSchemeDonationDetails = Some(giftAidSmallDonationsSchemeDonationDetails)
+        giftAidSmallDonationsSchemeDonationDetails = Some(giftAidSmallDonationsSchemeDonationDetails),
+        lastUpdatedReference = "0123456789"
       )
     )
 
@@ -128,7 +130,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     claimId = claimId,
     userId = organisation1,
     claimSubmitted = false,
-    lastUpdatedReference = UUID.randomUUID().toString,
+    lastUpdatedReference = "0123456789",
     creationTimestamp = LocalDateTime.now().toString,
     claimData = ClaimData(
       repaymentClaimDetails = RepaymentClaimDetails(
@@ -171,10 +173,11 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
       private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
-      status(result)                                shouldBe Status.OK
-      contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
+      status(result) shouldBe Status.OK
+      val response = contentAsJson(result).as[UpdateClaimResponse]
+      response.success shouldBe true
 
-      captured.value shouldBe expectedUpdate
+      captured.value shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
     }
 
     "return 200 when claim is updated for org details" in new AuthorisedOrganisationFixture {
@@ -203,10 +206,11 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
       private val result = controller.updateClaim(claimId)(requestUpdateOrgDetails)
-      status(result)                                shouldBe Status.OK
-      contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
+      status(result) shouldBe Status.OK
+      val response = contentAsJson(result).as[UpdateClaimResponse]
+      response.success shouldBe true
 
-      captured.value shouldBe expectedUpdate
+      captured.value shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
     }
 
     "return 200 if claim updated for giftAidSmallDonationsSchemeDonationDetails" in new AuthorisedOrganisationFixture {
@@ -235,10 +239,11 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
       private val result = controller.updateClaim(claimId)(requestUpdateClaimGiftAidSmallDonationsSchemeDonationDetails)
-      status(result)                                shouldBe Status.OK
-      contentAsJson(result).as[UpdateClaimResponse] shouldBe UpdateClaimResponse(success = true)
+      status(result) shouldBe Status.OK
+      val response = contentAsJson(result).as[UpdateClaimResponse]
+      response.success shouldBe true
 
-      captured.value shouldBe expectedUpdate
+      captured.value shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
     }
 
     "return 404 when claim is not found" in new AuthorisedOrganisationFixture {
@@ -264,6 +269,27 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       status(result)                                               shouldBe Status.BAD_REQUEST
       contentAsJson(result).as[JsObject].value.get("errorMessage") shouldBe Some(
         JsString("Claim with claimId 12345 has already been submitted and cannot be updated")
+      )
+    }
+
+    "return 400 when claim is already updated by another user" in new AuthorisedOrganisationFixture {
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      (mockClaimsService
+        .getClaim(_: String))
+        .expects(*)
+        .returning(Future.successful(Some(existingClaim.copy(lastUpdatedReference = "foobar"))))
+
+      val controller =
+        new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
+      status(result)                                               shouldBe Status.BAD_REQUEST
+      contentAsJson(result).as[JsObject].value.get("errorMessage") shouldBe Some(
+        JsString("Claim with claimId 12345 has already been updated by another user")
+      )
+      contentAsJson(result).as[JsObject].value.get("errorCode")    shouldBe Some(
+        JsString("UPDATED_BY_ANOTHER_USER")
       )
     }
 

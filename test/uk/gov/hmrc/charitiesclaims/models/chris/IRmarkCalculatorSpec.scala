@@ -50,6 +50,15 @@ class IRmarkCalculatorSpec extends BaseSpec {
       IRmarkCalculator.hashSHA1Base64(XmlUtils.canonicalizeXml(xml)) shouldBe "RXvO9aWqS4RSVmxzx9uvPe2FmtI="
     }
 
+    "compute hash SHA1 Base64 for a given XML example CIS" in {
+      val xml = scala.io.Source
+        .fromInputStream(getClass.getResourceAsStream("/test-irmark-cis.xml"))
+        .getLines()
+        .mkString("\n")
+      IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "wdE7oCYAx0O47w6hpyIMvm5LVoo="
+      IRmarkCalculator.hashSHA1Base64(XmlUtils.canonicalizeXml(xml)) shouldBe "wdE7oCYAx0O47w6hpyIMvm5LVoo="
+    }
+
     "compute the IRmark for a given body example 1" in {
       val body = Body(
         IRenvelope = IRenvelope(

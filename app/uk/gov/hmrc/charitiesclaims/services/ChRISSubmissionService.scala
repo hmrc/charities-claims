@@ -46,7 +46,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       Body = Body(
         IRenvelope = IRenvelope(
           IRheader = buildIRheader(currentUser),
-          R68 = buildR68(claim, currentUser)
+          R68 = Some(buildR68(claim, currentUser))
         )
       )
     ).withLiteIRmark

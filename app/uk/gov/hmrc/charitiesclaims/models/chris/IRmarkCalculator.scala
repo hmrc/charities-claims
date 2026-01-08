@@ -28,7 +28,9 @@ object IRmarkCalculator {
     val builder   = new LiteIRmarkBuilder()
     val xmlWriter = summon[XmlWriter[Body]]
     xmlWriter.write(xmlWriter.label, body)(using builder)
-    hashSHA1Base64(builder.xmlStringResult)
+    val xml       = builder.xmlStringResult
+    println(xml)
+    hashSHA1Base64(xml)
   }
 
   def computeFullIRmark(body: Body): String = {

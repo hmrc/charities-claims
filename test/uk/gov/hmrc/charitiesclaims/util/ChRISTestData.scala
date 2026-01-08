@@ -54,51 +54,53 @@ object ChRISTestData {
           IRmark = Some(IRmark(Type = "generic", Content = "oCHbGp+XAIi/AYdxWxLNLMmbEno=")),
           Sender = "Other"
         ),
-        R68 = R68(
-          AuthOfficial = Some(
-            AuthOfficial(
-              Trustee = Some("Joe Bloggs"),
-              OffID = Some(
-                OffID(
-                  Postcode = Some("AB12 3YZ")
-                )
-              ),
-              Phone = Some("07777777777")
-            )
-          ),
-          Declaration = true,
-          Claim = Claim(
-            OrgName = "CHARITY TC088",
-            HMRCref = "XR4010",
-            Regulator = Some(
-              Regulator(
-                RegName = Some(RegulatorName.CCEW),
-                RegNo = Some("1234")
-              )
-            ),
-            Repayment = Some(
-              Repayment(
-                GAD = Some(
-                  List(
-                    GAD(
-                      Donor = Some(
-                        Donor(
-                          Ttl = Some("Mr"),
-                          Fore = Some("John"),
-                          Sur = Some("Smith"),
-                          House = Some("100 Champs Elysees, Paris"),
-                          Overseas = Some(true)
-                        )
-                      ),
-                      Date = "2025-01-02",
-                      Total = "250.00"
-                    )
+        R68 = Some(
+          R68(
+            AuthOfficial = Some(
+              AuthOfficial(
+                Trustee = Some("Joe Bloggs"),
+                OffID = Some(
+                  OffID(
+                    Postcode = Some("AB12 3YZ")
                   )
                 ),
-                EarliestGAdate = "2025-01-01"
+                Phone = Some("07777777777")
               )
             ),
-            OtherInfo = Some("def")
+            Declaration = true,
+            Claim = Claim(
+              OrgName = "CHARITY TC088",
+              HMRCref = "XR4010",
+              Regulator = Some(
+                Regulator(
+                  RegName = Some(RegulatorName.CCEW),
+                  RegNo = Some("1234")
+                )
+              ),
+              Repayment = Some(
+                Repayment(
+                  GAD = Some(
+                    List(
+                      GAD(
+                        Donor = Some(
+                          Donor(
+                            Ttl = Some("Mr"),
+                            Fore = Some("John"),
+                            Sur = Some("Smith"),
+                            House = Some("100 Champs Elysees, Paris"),
+                            Overseas = Some(true)
+                          )
+                        ),
+                        Date = "2025-01-02",
+                        Total = "250.00"
+                      )
+                    )
+                  ),
+                  EarliestGAdate = "2025-01-01"
+                )
+              ),
+              OtherInfo = Some("def")
+            )
           )
         )
       )

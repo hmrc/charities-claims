@@ -106,14 +106,46 @@ final case class Body(
 final case class IRenvelope(
   xmlns: XmlAttribute[String] = XmlAttribute("http://www.govtalk.gov.uk/taxation/charities/r68/2"),
   IRheader: IRheader,
-  R68: R68
+  R68: Option[R68] = None,
+  CISreturn: Option[CISreturn] = None
+) derives XmlWriter
+final case class CISreturn(
+  Contractor: Contractor,
+  NilReturn: YesNo,
+  Declarations: Declarations
+) derives XmlWriter
+
+final case class Declarations(
+  InformationCorrect: YesNo,
+  Inactivity: YesNo
+) derives XmlWriter
+
+final case class Contractor(
+  UTR: String,
+  AOref: String
 ) derives XmlWriter
 
 final case class IRheader(
   Keys: List[Key],
   PeriodEnd: String,
+  DefaultCurrency: Option[String] = None,
+  Manifest: Option[Manifest] = None,
   IRmark: Option[IRmark] = None,
   Sender: String
+) derives XmlWriter
+
+final case class Manifest(
+  Contains: List[Contains]
+) derives XmlWriter
+
+final case class Contains(
+  Reference: Reference
+) derives XmlWriter
+
+final case class Reference(
+  Namespace: String,
+  SchemaVersion: String,
+  TopElementName: String
 ) derives XmlWriter
 
 final case class IRmark(

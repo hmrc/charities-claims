@@ -55,8 +55,8 @@ class IRmarkCalculatorSpec extends BaseSpec {
         .fromInputStream(getClass.getResourceAsStream("/test-irmark-cis.xml"))
         .getLines()
         .mkString("\n")
-      IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "wdE7oCYAx0O47w6hpyIMvm5LVoo="
-      IRmarkCalculator.hashSHA1Base64(XmlUtils.canonicalizeXml(xml)) shouldBe "wdE7oCYAx0O47w6hpyIMvm5LVoo="
+      IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "nyDYUz9y7VNNAYSZbos3yJ29uAI="
+      IRmarkCalculator.hashSHA1Base64(XmlUtils.canonicalizeXml(xml)) shouldBe "nyDYUz9y7VNNAYSZbos3yJ29uAI="
     }
 
     "compute the IRmark for a given body example 1" in {

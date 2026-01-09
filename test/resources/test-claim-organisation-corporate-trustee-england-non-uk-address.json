@@ -16,7 +16,6 @@
       "charityRegistrationNumber": "123456",
       "areYouACorporateTrustee": true,
       "doYouHaveCorporateTrusteeUKAddress": false,
-      "doYouHaveAuthorisedOfficialTrusteeUKAddress": false,
       "nameOfCorporateTrustee": "Test-Corporate-Trustee",
       "corporateTrusteePostcode": "505201",
       "corporateTrusteeDaytimeTelephoneNumber": "1234567890"

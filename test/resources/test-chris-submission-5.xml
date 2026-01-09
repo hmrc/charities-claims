@@ -1,0 +1,74 @@
+<GovTalkMessage xmlns="http://www.govtalk.gov.uk/CM/envelope">
+  <EnvelopeVersion>2.0</EnvelopeVersion>
+  <Header>
+    <MessageDetails>
+      <Class>HMRC-CHAR-CLM</Class>
+      <Qualifier>request</Qualifier>
+      <Function>submit</Function>
+      <CorrelationID>7D162389448F4F2597CFE48C3D1B31EF</CorrelationID>
+      <GatewayTimestamp>2026-01-08T21:33:57.860</GatewayTimestamp>
+    </MessageDetails>
+    <SenderDetails />
+  </Header>
+  <GovTalkDetails>
+    <Keys>
+      <Key Type="CredentialID">0000000290806672</Key>
+      <Key Type="CHARID">CH00038</Key>
+      <Key Type="SessionID">session-5d4ec6e1-3634-416a-9b54-cd61778cfc61</Key>
+    </Keys>
+    <ChannelRouting>
+      <Channel>
+        <URI>9998</URI>
+        <Product>Charities portal</Product>
+        <Version>1.0</Version>
+      </Channel>
+    </ChannelRouting>
+  </GovTalkDetails>
+  <Body>
+    <IRenvelope xmlns="http://www.govtalk.gov.uk/taxation/charities/r68/2">
+      <IRheader>
+        <Keys>
+          <Key Type="CHARID">CH00038</Key>
+        </Keys>
+        <PeriodEnd>2012-01-01</PeriodEnd>
+        <IRmark Type="generic">Hfg3qV3R1E9JZeb1Rp1Js9WUgHM=</IRmark>
+        <Sender>Other</Sender>
+      </IRheader>
+      <R68>
+        <AuthOfficial>
+          <Trustee>Jo Jo</Trustee>
+          <ClaimNo>123456789</ClaimNo>
+          <OffID>
+            <Overseas>yes</Overseas>
+          </OffID>
+          <Phone>441785601885</Phone>
+        </AuthOfficial>
+        <Declaration>yes</Declaration>
+        <Claim>
+          <OrgName>Organisation Name TC10</OrgName>
+          <HMRCref>CH00038</HMRCref>
+          <Repayment>
+            <GAD>
+              <Donor>
+                <Ttl>Mr</Ttl>
+                <Fore>Artur</Fore>
+                <Sur>Opala</Sur>
+                <House>4 Albany Close</House>
+                <Overseas>yes</Overseas>
+              </Donor>
+              <Date>2025-12-28</Date>
+              <Total>1000.00</Total>
+            </GAD>
+            <EarliestGAdate>2025-12-28</EarliestGAdate>
+            <OtherInc>
+              <Payer>Artur Opala</Payer>
+              <OIDate>2025-12-28</OIDate>
+              <Gross>128.00</Gross>
+              <Tax>5.00</Tax>
+            </OtherInc>
+          </Repayment>
+        </Claim>
+      </R68>
+    </IRenvelope>
+  </Body>
+</GovTalkMessage>

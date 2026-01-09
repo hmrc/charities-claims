@@ -614,5 +614,107 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         .getLines()
         .mkString("\n")
     }
+
+    "be serialised to XML correctly and equals an example 6 validChRIS submission XML" in {
+      val govTalkMessage = GovTalkMessage(
+        Header = Header(
+          MessageDetails = MessageDetails(
+            Class = "HMRC-CHAR-CLM",
+            Qualifier = "request",
+            Function = "submit",
+            CorrelationID = "A7593B6BFE0C4BE880909B531ADA507B",
+            GatewayTimestamp = "2026-01-07T00:39:57.138"
+          ),
+          SenderDetails = SenderDetails()
+        ),
+        GovTalkDetails = GovTalkDetails(
+          Keys = List(
+            Key(Type = "CredentialID", Value = "9131010324569480"),
+            Key(Type = "CHARID", Value = "XR4010"),
+            Key(Type = "SessionID", Value = "session-11d2ed2e-aabe-46f2-908d-00206ce031bd")
+          ),
+          ChannelRouting = ChannelRouting(
+            Channel = Channel(
+              URI = "9998",
+              Product = "Charities portal",
+              Version = "1.0"
+            )
+          )
+        ),
+        Body = Body(
+          IRenvelope = IRenvelope(
+            IRheader = IRheader(
+              Keys = List(
+                Key(Type = "CHARID", Value = "XR4010")
+              ),
+              PeriodEnd = "2012-01-01",
+              IRmark = Some(IRmark(Type = "generic", Content = "vCNb6l2nxXfOL9vMrD+o+sl05aU=")),
+              Sender = "Other"
+            ),
+            R68 = R68(
+              WelshSubmission = None,
+              AuthOfficial = Some(
+                AuthOfficial(
+                  Trustee = Some("Mr Test User"),
+                  ClaimNo = None,
+                  OffID = Some(
+                    OffID(
+                      Postcode = Some("AB12 3YZ"),
+                      Overseas = None
+                    )
+                  ),
+                  Phone = Some("01234567890")
+                )
+              ),
+              Declaration = true,
+              Claim = Claim(
+                OrgName = "CHARITY TC088",
+                HMRCref = "XR4010",
+                Regulator = Some(
+                  Regulator(
+                    RegName = None,
+                    NoReg = Some(true),
+                    RegNo = None
+                  )
+                ),
+                Repayment = Some(
+                  Repayment(
+                    GAD = Some(
+                      List(
+                        GAD(
+                          Donor = Some(
+                            Donor(
+                              Ttl = Some("Mr"),
+                              Fore = Some("DEV"),
+                              Sur = Some("Test"),
+                              House = Some("100 Champs Elysees, Paris"),
+                              Postcode = Some("SK8 1BX"),
+                              Overseas = None
+                            )
+                          ),
+                          Date = "2021-06-01",
+                          Total = "5000.00"
+                        )
+                      )
+                    ),
+                    EarliestGAdate = "2021-06-01"
+                  )
+                ),
+                OtherInfo = Some("test test")
+              )
+            )
+          )
+        )
+      )
+
+      val xml = XmlWriter.writeCompact(govTalkMessage)
+
+      XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
+
+      xml shouldBe scala.io.Source
+        .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-6.xml"))
+        .getLines()
+        .mkString("\n")
+    }
   }
 }

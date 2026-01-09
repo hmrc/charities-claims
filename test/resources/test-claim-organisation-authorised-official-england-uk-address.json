@@ -15,7 +15,6 @@
       "nameOfCharityRegulator": "EnglandAndWales",
       "charityRegistrationNumber": "123456",
       "areYouACorporateTrustee": false,
-      "doYouHaveCorporateTrusteeUKAddress": true,
       "doYouHaveAuthorisedOfficialTrusteeUKAddress": true,
       "authorisedOfficialTrusteePostcode": "AB1 AB1",
       "authorisedOfficialTrusteeDaytimeTelephoneNumber": "1234567890",

@@ -22,7 +22,7 @@ import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent, XmlWriter}
 object ChRISTestData {
 
   val exampleSubmissionXML = scala.io.Source
-    .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-1.xml"))
+    .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-1-flat.xml"))
     .getLines()
     .mkString("\n")
 

@@ -64,7 +64,7 @@ class ChRISConnectorImpl @Inject() (
   final def submitClaim(govTalkMessage: GovTalkMessage)(using
     hc: HeaderCarrier
   ): Future[Unit] =
-    val xml = XmlWriter.writeIndented(govTalkMessage)
+    val xml = XmlWriter.writeCompact(govTalkMessage)
     Future
       .fromTry(XmlUtils.validateChRISSubmission(xml))
       .flatMap { _ =>

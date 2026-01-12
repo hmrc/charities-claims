@@ -293,6 +293,33 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       )
     }
 
+    "generate a new lastUpdatedReference different from the original on successful update" in new AuthorisedOrganisationFixture {
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+      val originalReference                = "0123456789"
+
+      val captured = CaptureOne[Claim]()
+
+      (mockClaimsService
+        .getClaim(_: String))
+        .expects(*)
+        .returning(Future.successful(Some(existingClaim.copy(lastUpdatedReference = originalReference))))
+
+      (mockClaimsService
+        .putClaim(_: Claim))
+        .expects(capture(captured))
+        .returning(Future.successful(()))
+
+      val controller =
+        new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
+      status(result) shouldBe Status.OK
+
+      val response = contentAsJson(result).as[UpdateClaimResponse]
+      response.lastUpdatedReference         should not be originalReference
+      captured.value.lastUpdatedReference shouldBe response.lastUpdatedReference
+    }
+
     "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {
 
       val mockClaimsService: ClaimsService = mock[ClaimsService]

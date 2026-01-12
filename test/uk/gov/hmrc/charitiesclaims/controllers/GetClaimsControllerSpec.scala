@@ -171,6 +171,18 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       claim.submissionDetails.isDefined                                              shouldBe true
     }
 
+    "return lastUpdatedReference in response for optimistic locking" in new AuthorisedOrganisationFixture {
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
+
+      val request = testRequest("GET", "/claims/test-claim-submitted")
+
+      val result = controller.getClaim(claimId = "test-claim-submitted")(request)
+      status(result) shouldBe Status.OK
+
+      val claim = contentAsJson(result).as[Claim]
+      claim.lastUpdatedReference shouldBe "test-last-updated-reference"
+    }
+
     "return 404 when the claim does not exist" in new AuthorisedOrganisationFixture {
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 

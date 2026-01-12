@@ -1,0 +1,26 @@
+{
+  "claimId": "test-claim-id",
+  "userId": "test-user-id",
+  "claimSubmitted": true,
+  "lastUpdatedReference": "4ceb3abb-a48e-4af7-8421-44b2578fecbf",
+  "creationTimestamp": "2025-01-01",
+  "claimData": {
+    "repaymentClaimDetails": {
+      "claimingGiftAid": true,
+      "claimingTaxDeducted": false,
+      "claimingUnderGiftAidSmallDonationsScheme": false,
+      "claimReferenceNumber": "test-claim-reference-number"
+    },
+    "organisationDetails": {
+      "nameOfCharityRegulator": "Scottish",
+      "charityRegistrationNumber": "123456",
+      "areYouACorporateTrustee": false,
+      "doYouHaveAuthorisedOfficialTrusteeUKAddress": true,
+      "authorisedOfficialTrusteePostcode": "AB1 AB1",
+      "authorisedOfficialTrusteeDaytimeTelephoneNumber": "1234567890",
+      "authorisedOfficialTrusteeTitle": "Mr",
+      "authorisedOfficialTrusteeFirstName": "John",
+      "authorisedOfficialTrusteeLastName": "Jones"
+    }
+  }
+}

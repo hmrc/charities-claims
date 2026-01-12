@@ -1,0 +1,24 @@
+{
+  "claimId": "test-claim-id",
+  "userId": "test-user-id",
+  "claimSubmitted": true,
+  "lastUpdatedReference": "730db5c7-7b45-4264-8e32-911327b29d01",
+  "creationTimestamp": "2025-01-01",
+  "claimData": {
+    "repaymentClaimDetails": {
+      "claimingGiftAid": true,
+      "claimingTaxDeducted": false,
+      "claimingUnderGiftAidSmallDonationsScheme": false,
+      "claimReferenceNumber": "test-claim-reference-number"
+    },
+    "organisationDetails": {
+      "nameOfCharityRegulator": "EnglandAndWales",
+      "charityRegistrationNumber": "123456",
+      "areYouACorporateTrustee": true,
+      "doYouHaveCorporateTrusteeUKAddress": true,
+      "nameOfCorporateTrustee": "Test-Corporate-Trustee",
+      "corporateTrusteePostcode": "SW1 5TY",
+      "corporateTrusteeDaytimeTelephoneNumber": "1234567890"
+    }
+  }
+}

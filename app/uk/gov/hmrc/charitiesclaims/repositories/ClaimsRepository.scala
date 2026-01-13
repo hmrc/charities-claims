@@ -59,12 +59,14 @@ class ClaimsRepository @Inject() (
 
 object ClaimsRepository {
 
-  val claimDataKey: DataKey[Claim]     = DataKey[Claim]("claim")
-  val userIdPath: String               = "data.claim.userId"
-  val claimSubmittedPath: String       = "data.claim.claimSubmitted"
-  val claimIdPath: String              = "data.claim.claimId"
-  val lastUpdatedReferencePath: String = "data.claim.lastUpdatedReference"
-  val creationTimestampPath: String    = "data.claim.creationTimestamp"
+  val claimDataKey: DataKey[Claim]       = DataKey[Claim]("claim")
+  val userIdPath: String                 = "data.claim.userId"
+  val claimSubmittedPath: String         = "data.claim.claimSubmitted"
+  val claimIdPath: String                = "data.claim.claimId"
+  val lastUpdatedReferencePath: String   = "data.claim.lastUpdatedReference"
+  val creationTimestampPath: String      = "data.claim.creationTimestamp"
+  val hmrcCharitiesReferencePath: String = "data.claim.claimData.repaymentClaimDetails.hmrcCharitiesReference"
+  val nameOfCharityPath: String          = "data.claim.claimData.repaymentClaimDetails.nameOfCharity"
 
   case class CacheItemClaim(claim: ClaimInfo)
 

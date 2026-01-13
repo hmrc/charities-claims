@@ -76,11 +76,13 @@ class ClaimsServiceImpl @Inject() (
             ClaimsRepository.userIdPath,
             ClaimsRepository.lastUpdatedReferencePath,
             ClaimsRepository.creationTimestampPath,
-            ClaimsRepository.claimSubmittedPath
+            ClaimsRepository.claimSubmittedPath,
+            ClaimsRepository.hmrcCharitiesReferencePath,
+            ClaimsRepository.nameOfCharityPath
           )
         )
       )
-      .map(_.data.claim)
+      .map(_.data.claim.flatten)
       .collect()
       .head()
 }

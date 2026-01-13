@@ -112,13 +112,25 @@ class ClaimsServiceSpec
           claimsService.listClaims(claim2.userId, claimSubmitted = false).futureValue shouldBe Seq.empty
 
           info("add the second submitted claim for the second user")
-          val claim3     = claim.copy(claimId = UUID.randomUUID().toString, userId = claim2.userId)
+          val claim3     = claim.copy(
+            claimId = UUID.randomUUID().toString,
+            userId = claim2.userId,
+            claimData = claim.claimData.copy(repaymentClaimDetails =
+              claim.claimData.repaymentClaimDetails
+                .copy(
+                  hmrcCharitiesReference = Some("XR1234"),
+                  nameOfCharity = Some("Test Charity")
+                )
+            )
+          )
           val claimInfo3 = ClaimInfo(
             claim3.claimId,
             claim3.userId,
             claim3.claimSubmitted,
             claim3.lastUpdatedReference,
-            claim3.creationTimestamp
+            claim3.creationTimestamp,
+            claim3.claimData.repaymentClaimDetails.hmrcCharitiesReference,
+            claim3.claimData.repaymentClaimDetails.nameOfCharity
           )
           claimsService.putClaim(claim3).futureValue
 
@@ -136,7 +148,9 @@ class ClaimsServiceSpec
             claim4.userId,
             claim4.claimSubmitted,
             claim4.lastUpdatedReference,
-            claim4.creationTimestamp
+            claim4.creationTimestamp,
+            claim4.claimData.repaymentClaimDetails.hmrcCharitiesReference,
+            claim4.claimData.repaymentClaimDetails.nameOfCharity
           )
           claimsService.putClaim(claim4).futureValue
 

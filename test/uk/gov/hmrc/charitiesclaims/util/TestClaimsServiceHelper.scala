@@ -79,7 +79,9 @@ class TestClaimsService(initialClaims: Seq[Claim])(using ec: ExecutionContext) e
             claim.userId,
             claim.claimSubmitted,
             claim.lastUpdatedReference,
-            claim.creationTimestamp
+            claim.creationTimestamp,
+            claim.claimData.repaymentClaimDetails.hmrcCharitiesReference,
+            claim.claimData.repaymentClaimDetails.nameOfCharity
           )
         )
         .toSeq

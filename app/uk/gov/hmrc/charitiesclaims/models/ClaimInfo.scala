@@ -26,9 +26,35 @@ final case class ClaimInfo(
   lastUpdatedReference: String,
   creationTimestamp: String,
   hmrcCharitiesReference: Option[String] = None,
-  nameOfCharity: Option[String] = None
-)
+  nameOfCharity: Option[String] = None,
+  claimData: Option[ClaimInfoData] = None
+) {
+
+  def flatten: ClaimInfo = this.copy(
+    hmrcCharitiesReference = this.claimData.flatMap(_.repaymentClaimDetails.hmrcCharitiesReference),
+    nameOfCharity = this.claimData.flatMap(_.repaymentClaimDetails.nameOfCharity),
+    claimData = None
+  )
+
+}
 
 object ClaimInfo {
   given format: Format[ClaimInfo] = Json.format[ClaimInfo]
+}
+
+case class ClaimInfoData(
+  repaymentClaimDetails: RepaymentClaimInfoDetails
+)
+
+object ClaimInfoData {
+  given format: Format[ClaimInfoData] = Json.format[ClaimInfoData]
+}
+
+case class RepaymentClaimInfoDetails(
+  hmrcCharitiesReference: Option[String] = None,
+  nameOfCharity: Option[String] = None
+)
+
+object RepaymentClaimInfoDetails {
+  given format: Format[RepaymentClaimInfoDetails] = Json.format[RepaymentClaimInfoDetails]
 }

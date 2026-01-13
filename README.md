@@ -35,8 +35,10 @@ provide input claim json path using `-i` option
 ./scripts/testChRISSubmission.sc -i test/resources/test-claim-organisation-authorised-official-england-uk-address.json
 sm2 --logs CHARITIES_CLAIMS
 ```
+
+login as an agent adding `--agent`
 ```
-./scripts/testChRISSubmission.sc -i test/resources/test-claim-organisation-corporate-trustee-england-non-uk-address.json
+./scripts/testChRISSubmission.sc -i test/resources/test-claim-organisation-corporate-trustee-england-non-uk-address.json --agent
 sm2 --logs CHARITIES_CLAIMS
 ```
 

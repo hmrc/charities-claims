@@ -24,6 +24,7 @@ import uk.gov.hmrc.charitiesclaims.connectors.RdsDatacacheProxyConnector
 import scala.concurrent.Future
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
+import scala.concurrent.ExecutionContext
 
 @ImplementedBy(classOf[ChRISSubmissionServiceImpl])
 trait ChRISSubmissionService {
@@ -37,24 +38,41 @@ trait ChRISSubmissionService {
 @Singleton
 class ChRISSubmissionServiceImpl @Inject() (
   rdsConnector: RdsDatacacheProxyConnector
-) extends ChRISSubmissionService {
+)(using ExecutionContext)
+    extends ChRISSubmissionService {
 
   def buildChRISSubmission(
     claim: models.Claim,
     currentUser: models.CurrentUser
   )(using HeaderCarrier): Future[GovTalkMessage] = {
 
-    val govTalkMessage = GovTalkMessage(
-      GovTalkDetails = buildGovTalkDetails(currentUser),
-      Body = Body(
-        IRenvelope = IRenvelope(
-          IRheader = buildIRheader(currentUser),
-          R68 = buildR68(claim, currentUser)
-        )
-      )
-    ).withLiteIRmark
+    val orgNameFuture =
+      if currentUser.isAgent
+      then
+        rdsConnector
+          .getAgentName(currentUser.enrolmentIdentifierValue)
+          .flatMap {
+            case Some(agentName) => Future.successful(Some(agentName))
+            case None            =>
+              Future.failed(
+                new Exception(
+                  s"No agent name found for the given agent reference ${currentUser.enrolmentIdentifierValue}"
+                )
+              )
+          }
+      else Future.successful(None)
 
-    Future.successful(govTalkMessage)
+    orgNameFuture.map(orgName =>
+      GovTalkMessage(
+        GovTalkDetails = buildGovTalkDetails(currentUser),
+        Body = Body(
+          IRenvelope = IRenvelope(
+            IRheader = buildIRheader(currentUser),
+            R68 = buildR68(claim, currentUser, orgName)
+          )
+        )
+      ).withLiteIRmark
+    )
   }
 
   def buildGovTalkDetails(currentUser: models.CurrentUser)(using hc: HeaderCarrier): GovTalkDetails =
@@ -82,12 +100,17 @@ class ChRISSubmissionServiceImpl @Inject() (
   def buildR68(
     claim: models.Claim,
     currentUser: models.CurrentUser,
-    orgName: Option[String],
-    refNo: Option[String]
+    orgName: Option[String]
   ): R68 =
     R68(
-      AgtOrNom = buildAgtOrNom(claim, orgName, refNo),
-      AuthOfficial = buildAuthOfficial(claim),
+      AgtOrNom =
+        if currentUser.isAgent
+        then buildAgtOrNom(claim, orgName, currentUser.enrolmentIdentifierValue)
+        else None,
+      AuthOfficial =
+        if currentUser.isAgent
+        then None
+        else buildAuthOfficial(claim),
       Declaration = true,
       Claim = buildClaim(claim, currentUser)
     )
@@ -108,14 +131,12 @@ class ChRISSubmissionServiceImpl @Inject() (
       )
     )
 
-  def buildAgtOrNom(claim: models.Claim, orgName: Option[String], refNo: Option[String]): Option[AgtOrNom] =
-
+  def buildAgtOrNom(claim: models.Claim, orgName: Option[String], refNo: String): Option[AgtOrNom] =
     for {
       o <- orgName
-      r <- refNo
     } yield AgtOrNom(
       OrgName = o,
-      RefNo = r,
+      RefNo = refNo,
       ClaimNo = claim.claimData.repaymentClaimDetails.hmrcCharitiesReference, // TODO
       PayToAoN =
         if claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.eq("Tax Agent") then Some(true)

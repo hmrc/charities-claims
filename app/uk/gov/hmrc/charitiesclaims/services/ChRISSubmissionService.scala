@@ -139,7 +139,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       RefNo = refNo,
       ClaimNo = claim.claimData.repaymentClaimDetails.hmrcCharitiesReference, // TODO
       PayToAoN =
-        if claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.eq("Tax Agent") then Some(true)
+        if claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.contains("Tax Agent") then Some(true)
         else None, // TODO
       AoNID = None, // TODO
       Phone = "1234567890" // TODO

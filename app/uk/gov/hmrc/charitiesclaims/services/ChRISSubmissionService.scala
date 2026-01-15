@@ -17,8 +17,10 @@
 package uk.gov.hmrc.charitiesclaims.services
 
 import uk.gov.hmrc.charitiesclaims.models.chris.*
-import uk.gov.hmrc.charitiesclaims.models as models
+import uk.gov.hmrc.charitiesclaims.models
 import com.google.inject.ImplementedBy
+import uk.gov.hmrc.charitiesclaims.connectors.RdsDatacacheProxyConnector
+
 import scala.concurrent.Future
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -34,6 +36,7 @@ trait ChRISSubmissionService {
 
 @Singleton
 class ChRISSubmissionServiceImpl @Inject() (
+  rdsConnector: RdsDatacacheProxyConnector
 ) extends ChRISSubmissionService {
 
   def buildChRISSubmission(
@@ -76,9 +79,14 @@ class ChRISSubmissionServiceImpl @Inject() (
       Sender = "Other" // constant value
     )
 
-  def buildR68(claim: models.Claim, currentUser: models.CurrentUser): R68 =
+  def buildR68(
+    claim: models.Claim,
+    currentUser: models.CurrentUser,
+    orgName: Option[String],
+    refNo: Option[String]
+  ): R68 =
     R68(
-      AgtOrNom = buildAgtOrNom(claim), // TODO
+      AgtOrNom = buildAgtOrNom(claim, orgName, refNo),
       AuthOfficial = buildAuthOfficial(claim),
       Declaration = true,
       Claim = buildClaim(claim, currentUser)
@@ -92,12 +100,29 @@ class ChRISSubmissionServiceImpl @Inject() (
         OffName = buildOffName(claim),
         ClaimNo = None, // TODO
         OffID = buildOffId(claim),
-        Phone = organisationDetails.corporateTrusteeDaytimeTelephoneNumber
+        Phone =
+          if (organisationDetails.areYouACorporateTrustee)
+            organisationDetails.corporateTrusteeDaytimeTelephoneNumber
+          else
+            organisationDetails.authorisedOfficialTrusteeDaytimeTelephoneNumber
       )
     )
 
-  def buildAgtOrNom(claim: models.Claim): Option[AgtOrNom] =
-    None
+  def buildAgtOrNom(claim: models.Claim, orgName: Option[String], refNo: Option[String]): Option[AgtOrNom] =
+
+    for {
+      o <- orgName
+      r <- refNo
+    } yield AgtOrNom(
+      OrgName = o,
+      RefNo = r,
+      ClaimNo = claim.claimData.repaymentClaimDetails.hmrcCharitiesReference, // TODO
+      PayToAoN =
+        if claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.eq("Tax Agent") then Some(true)
+        else None, // TODO
+      AoNID = None, // TODO
+      Phone = "1234567890" // TODO
+    )
 
   def buildOffName(claim: models.Claim): Option[OffName] =
     claim.claimData.organisationDetails.flatMap(organisationDetails =>

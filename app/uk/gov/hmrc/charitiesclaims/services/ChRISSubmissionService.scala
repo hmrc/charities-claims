@@ -17,11 +17,14 @@
 package uk.gov.hmrc.charitiesclaims.services
 
 import uk.gov.hmrc.charitiesclaims.models.chris.*
-import uk.gov.hmrc.charitiesclaims.models as models
+import uk.gov.hmrc.charitiesclaims.models
 import com.google.inject.ImplementedBy
+import uk.gov.hmrc.charitiesclaims.connectors.RdsDatacacheProxyConnector
+
 import scala.concurrent.Future
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
+import scala.concurrent.ExecutionContext
 
 @ImplementedBy(classOf[ChRISSubmissionServiceImpl])
 trait ChRISSubmissionService {
@@ -34,24 +37,42 @@ trait ChRISSubmissionService {
 
 @Singleton
 class ChRISSubmissionServiceImpl @Inject() (
-) extends ChRISSubmissionService {
+  rdsConnector: RdsDatacacheProxyConnector
+)(using ExecutionContext)
+    extends ChRISSubmissionService {
 
   def buildChRISSubmission(
     claim: models.Claim,
     currentUser: models.CurrentUser
   )(using HeaderCarrier): Future[GovTalkMessage] = {
 
-    val govTalkMessage = GovTalkMessage(
-      GovTalkDetails = buildGovTalkDetails(currentUser),
-      Body = Body(
-        IRenvelope = IRenvelope(
-          IRheader = buildIRheader(currentUser),
-          R68 = buildR68(claim, currentUser)
-        )
-      )
-    ).withLiteIRmark
+    val orgNameFuture =
+      if currentUser.isAgent
+      then
+        rdsConnector
+          .getAgentName(currentUser.enrolmentIdentifierValue)
+          .flatMap {
+            case Some(agentName) => Future.successful(Some(agentName))
+            case None            =>
+              Future.failed(
+                new Exception(
+                  s"No agent name found for the given agent reference ${currentUser.enrolmentIdentifierValue}"
+                )
+              )
+          }
+      else Future.successful(None)
 
-    Future.successful(govTalkMessage)
+    orgNameFuture.map(orgName =>
+      GovTalkMessage(
+        GovTalkDetails = buildGovTalkDetails(currentUser),
+        Body = Body(
+          IRenvelope = IRenvelope(
+            IRheader = buildIRheader(currentUser),
+            R68 = buildR68(claim, currentUser, orgName)
+          )
+        )
+      ).withLiteIRmark
+    )
   }
 
   def buildGovTalkDetails(currentUser: models.CurrentUser)(using hc: HeaderCarrier): GovTalkDetails =
@@ -76,10 +97,20 @@ class ChRISSubmissionServiceImpl @Inject() (
       Sender = "Other" // constant value
     )
 
-  def buildR68(claim: models.Claim, currentUser: models.CurrentUser): R68 =
+  def buildR68(
+    claim: models.Claim,
+    currentUser: models.CurrentUser,
+    orgName: Option[String]
+  ): R68 =
     R68(
-      AgtOrNom = buildAgtOrNom(claim), // TODO
-      AuthOfficial = buildAuthOfficial(claim),
+      AgtOrNom =
+        if currentUser.isAgent
+        then buildAgtOrNom(claim, orgName, currentUser.enrolmentIdentifierValue)
+        else None,
+      AuthOfficial =
+        if currentUser.isAgent
+        then None
+        else buildAuthOfficial(claim),
       Declaration = true,
       Claim = buildClaim(claim, currentUser)
     )
@@ -92,12 +123,27 @@ class ChRISSubmissionServiceImpl @Inject() (
         OffName = buildOffName(claim),
         ClaimNo = None, // TODO
         OffID = buildOffId(claim),
-        Phone = organisationDetails.corporateTrusteeDaytimeTelephoneNumber
+        Phone =
+          if (organisationDetails.areYouACorporateTrustee)
+            organisationDetails.corporateTrusteeDaytimeTelephoneNumber
+          else
+            organisationDetails.authorisedOfficialTrusteeDaytimeTelephoneNumber
       )
     )
 
-  def buildAgtOrNom(claim: models.Claim): Option[AgtOrNom] =
-    None
+  def buildAgtOrNom(claim: models.Claim, orgName: Option[String], refNo: String): Option[AgtOrNom] =
+    for {
+      o <- orgName
+    } yield AgtOrNom(
+      OrgName = o,
+      RefNo = refNo,
+      ClaimNo = claim.claimData.repaymentClaimDetails.hmrcCharitiesReference, // TODO
+      PayToAoN =
+        if claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.contains("Tax Agent") then Some(true)
+        else None, // TODO
+      AoNID = None, // TODO
+      Phone = "1234567890" // TODO
+    )
 
   def buildOffName(claim: models.Claim): Option[OffName] =
     claim.claimData.organisationDetails.flatMap(organisationDetails =>

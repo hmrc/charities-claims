@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Results.*
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.charitiesclaims.models.{Claim, UpdateClaimRequest, UpdateClaimResponse}
+import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimData, UpdateClaimRequest, UpdateClaimResponse}
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 
 import javax.inject.{Inject, Singleton}
@@ -99,16 +99,11 @@ class UpdateClaimController @Inject() (
     }
 
   private def update(claim: Claim, update: UpdateClaimRequest): Claim = {
-    val existing = claim.claimData
-
-    val newClaimData = existing.copy(
+    val newClaimData = ClaimData(
       repaymentClaimDetails = update.repaymentClaimDetails,
-      organisationDetails = update.organisationDetails
-        .orElse(existing.organisationDetails),
-      giftAidSmallDonationsSchemeDonationDetails = update.giftAidSmallDonationsSchemeDonationDetails
-        .orElse(existing.giftAidSmallDonationsSchemeDonationDetails),
+      organisationDetails = update.organisationDetails,
+      giftAidSmallDonationsSchemeDonationDetails = update.giftAidSmallDonationsSchemeDonationDetails,
       declarationDetails = update.declarationDetails
-        .orElse(existing.declarationDetails)
     )
 
     claim.copy(claimData = newClaimData, lastUpdatedReference = UUID.randomUUID().toString)

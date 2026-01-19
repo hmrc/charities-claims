@@ -374,5 +374,100 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       errorResponse.value.get("errorMessage") shouldBe Some(JsString("\"{\\\"claimingGiftAid\\\": true\""))
       errorResponse.value.get("errorCode")    shouldBe Some(JsString("MALFORMED_JSON"))
     }
+
+    "remove organisationDetails when omitted from PUT request" in new AuthorisedOrganisationFixture {
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val existingClaimWithOrgDetails = existingClaim.copy(
+        claimData = existingClaim.claimData.copy(
+          organisationDetails = Some(orgDetails)
+        )
+      )
+
+      val captured = CaptureOne[Claim]()
+
+      (mockClaimsService
+        .getClaim(_: String))
+        .expects(*)
+        .returning(Future.successful(Some(existingClaimWithOrgDetails)))
+
+      (mockClaimsService
+        .putClaim(_: Claim))
+        .expects(capture(captured))
+        .returning(Future.successful(()))
+
+      val controller =
+        new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
+      status(result) shouldBe Status.OK
+
+      captured.value.claimData.organisationDetails shouldBe None
+    }
+
+    "remove giftAidSmallDonationsSchemeDonationDetails when omitted from PUT request" in new AuthorisedOrganisationFixture {
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val existingClaimWithGasds = existingClaim.copy(
+        claimData = existingClaim.claimData.copy(
+          giftAidSmallDonationsSchemeDonationDetails = Some(giftAidSmallDonationsSchemeDonationDetails)
+        )
+      )
+
+      val captured = CaptureOne[Claim]()
+
+      (mockClaimsService
+        .getClaim(_: String))
+        .expects(*)
+        .returning(Future.successful(Some(existingClaimWithGasds)))
+
+      (mockClaimsService
+        .putClaim(_: Claim))
+        .expects(capture(captured))
+        .returning(Future.successful(()))
+
+      val controller =
+        new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
+      status(result) shouldBe Status.OK
+
+      captured.value.claimData.giftAidSmallDonationsSchemeDonationDetails shouldBe None
+    }
+
+    "remove declarationDetails when omitted from PUT request" in new AuthorisedOrganisationFixture {
+      val mockClaimsService: ClaimsService = mock[ClaimsService]
+
+      val declarationDetails = DeclarationDetails(
+        understandFalseStatements = true,
+        includedAnyAdjustmentsInClaimPrompt = "Yes"
+      )
+
+      val existingClaimWithDeclaration = existingClaim.copy(
+        claimData = existingClaim.claimData.copy(
+          declarationDetails = Some(declarationDetails)
+        )
+      )
+
+      val captured = CaptureOne[Claim]()
+
+      (mockClaimsService
+        .getClaim(_: String))
+        .expects(*)
+        .returning(Future.successful(Some(existingClaimWithDeclaration)))
+
+      (mockClaimsService
+        .putClaim(_: Claim))
+        .expects(capture(captured))
+        .returning(Future.successful(()))
+
+      val controller =
+        new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
+
+      private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
+      status(result) shouldBe Status.OK
+
+      captured.value.claimData.declarationDetails shouldBe None
+    }
   }
 }

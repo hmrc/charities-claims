@@ -26,7 +26,6 @@ import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.SessionId
 import uk.gov.hmrc.charitiesclaims.models.chris.*
-import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent}
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.charitiesclaims.connectors.RdsDatacacheProxyConnector

@@ -16,26 +16,25 @@
 
 package uk.gov.hmrc.charitiesclaims.models.chris
 
-import uk.gov.hmrc.charitiesclaims.xml.{XmlStringBuilder, XmlUtils, XmlWriter}
-
 import java.security.MessageDigest
 import java.util.Base64
-import scala.collection.View
+import org.encalmo.writer.xml.XmlWriter
+import org.encalmo.writer.xml.XmlOutputBuilder
+
+import uk.gov.hmrc.charitiesclaims.xml.XmlUtils
 
 object IRmarkCalculator {
 
   def computeLiteIRmark(body: Body): String = {
-    val builder   = new LiteIRmarkBuilder()
-    val xmlWriter = summon[XmlWriter[Body]]
-    xmlWriter.write(xmlWriter.label, body)(using builder)
-    hashSHA1Base64(builder.xmlStringResult)
+    val builder = new LiteIRmarkBuilder()
+    XmlWriter.append("Body", body)(using builder)
+    hashSHA1Base64(builder.result)
   }
 
   def computeFullIRmark(body: Body): String = {
-    val builder   = new LiteIRmarkBuilder()
-    val xmlWriter = summon[XmlWriter[Body]]
-    xmlWriter.write(xmlWriter.label, body)(using builder)
-    hashSHA1Base64(XmlUtils.canonicalizeXml(builder.xmlStringResult))
+    val builder = new LiteIRmarkBuilder()
+    XmlWriter.append("Body", body)(using builder)
+    hashSHA1Base64(XmlUtils.canonicalizeXml(builder.result))
   }
 
   def hashSHA1Base64(xml: String): String = {
@@ -45,44 +44,56 @@ object IRmarkCalculator {
     Base64.getEncoder.encodeToString(digest)
   }
 
-  private class LiteIRmarkBuilder extends XmlStringBuilder {
+  private class LiteIRmarkBuilder extends XmlOutputBuilder {
 
-    private val sb = new StringBuilder()
+    type Result = String
 
-    private var context = 'e'
-    private var skip    = false
+    private val sb   = new StringBuilder()
+    private var skip = false
 
-    final def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit = {
+    final def appendElementStart(
+      name: String
+    ): Unit = {
+      if name == "IRmark" then skip = true
+      if !skip then {
+        sb.append("<")
+        sb.append(transformElementName(name))
+        sb.append(">")
+      }
+    }
+
+    final def appendElementStart(
+      name: String,
+      attributes: Iterable[(String, String)]
+    ): Unit = {
       if name == "IRmark" then skip = true
       if !skip then {
         sb.append(s"<$name")
         if name == "Body" then sb.append(s" xmlns=\"http://www.govtalk.gov.uk/CM/envelope\"")
-        attributes.foreach { case (k, w, v) =>
-          sb.append(s" $k=")
-          context = 'a'
-          sb.append(s"\"")
-          w.asInstanceOf[XmlWriter[Any]].write(k, v)(using this)
-          sb.append(s"\"")
-          context = 'e'
+        attributes.foreach { case (k, v) =>
+          sb.append(" ")
+          sb.append(transformAttributeName(k))
+          sb.append("=")
+          sb.append("\"")
+          sb.append(escapeTextForAttribute(v))
+          sb.append("\"")
         }
         sb.append(">")
       }
     }
 
     final def appendElementEnd(name: String): Unit = {
-      if !skip then sb.append(s"</$name>")
+      if !skip then {
+        sb.append("</")
+        sb.append(transformElementName(name))
+        sb.append(">")
+      }
       if name == "IRmark" then skip = false
     }
 
     final def appendText(text: String): Unit =
-      if !skip then
-        sb.append(
-          context match {
-            case 'a' => escapeForAttribute(text)
-            case 'e' => escapeForElement(text)
-          }
-        )
+      if !skip then sb.append(escapeTextForElement(text))
 
-    def xmlStringResult: String = sb.toString()
+    def result: String = sb.toString()
   }
 }

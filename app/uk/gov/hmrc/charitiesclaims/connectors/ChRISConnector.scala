@@ -20,7 +20,6 @@ import com.google.inject.ImplementedBy
 import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
 import uk.gov.hmrc.charitiesclaims.models.chris.GovTalkMessage
-import uk.gov.hmrc.charitiesclaims.xml.XmlWriter
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -34,6 +33,7 @@ import play.api.libs.ws.BodyWritable
 import play.api.libs.ws.InMemoryBody
 import org.apache.pekko.util.ByteString
 import uk.gov.hmrc.charitiesclaims.xml.XmlUtils
+import org.encalmo.writer.xml.XmlWriter
 
 @ImplementedBy(classOf[ChRISConnectorImpl])
 trait ChRISConnector {

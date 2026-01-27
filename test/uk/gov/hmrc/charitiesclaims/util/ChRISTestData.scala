@@ -17,7 +17,6 @@
 package uk.gov.hmrc.charitiesclaims.util
 
 import uk.gov.hmrc.charitiesclaims.models.chris.*
-import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent, XmlWriter}
 
 object ChRISTestData {
 

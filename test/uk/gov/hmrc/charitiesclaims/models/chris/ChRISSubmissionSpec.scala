@@ -18,12 +18,16 @@ package uk.gov.hmrc.charitiesclaims.models.chris
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.charitiesclaims.xml.{XmlUtils, XmlWriter}
+import org.encalmo.writer.xml.XmlWriter
+import uk.gov.hmrc.charitiesclaims.xml.XmlUtils
 
 class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
 
+  def writeGovTalkMessage(govTalkMessage: GovTalkMessage): String =
+    XmlWriter.writeIndented(govTalkMessage)
+
   "ChRISSubmission" should {
-    "be serialised to XML correctly and equals an example 1 validChRIS submission XML" in {
+    "be serialised to XML correctly and equals an example 1 valid ChRIS submission XML" in {
 
       val govTalkMessage = GovTalkMessage(
         Header = Header(
@@ -104,7 +108,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.writeIndented(govTalkMessage)
+      val xml = writeGovTalkMessage(govTalkMessage)
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
@@ -312,7 +316,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.writeIndented(govTalkMessage)
+      val xml = writeGovTalkMessage(govTalkMessage)
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
@@ -472,7 +476,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.writeIndented(govTalkMessage)
+      val xml = writeGovTalkMessage(govTalkMessage)
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
@@ -605,7 +609,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.writeIndented(govTalkMessage)
+      val xml = writeGovTalkMessage(govTalkMessage)
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 

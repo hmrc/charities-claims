@@ -8,8 +8,12 @@ object AppDependencies {
   private val hmrcMongoVersion = "2.11.0"
 
   val compile = Seq(
-    "uk.gov.hmrc"       %% "bootstrap-backend-play-30" % bootstrapVersion,
-    "uk.gov.hmrc.mongo" %% s"hmrc-mongo-play-30"       % hmrcMongoVersion
+    "uk.gov.hmrc"                       %% "bootstrap-backend-play-30" % bootstrapVersion,
+    "uk.gov.hmrc.mongo"                 %% s"hmrc-mongo-play-30"       % hmrcMongoVersion,
+    // GSL Schematron validator (Approach C spike - integration blocked, see ADR)
+    "com.gsl"                            % "GSLSchematronValidator-nojoda" % "2.0.0",
+    "uk.gov.hmrc.aspire.esps.validator"  % "HMRC-Charities"                % "2.0.0",
+    "org.eclipse.jdt"                    % "org.eclipse.jdt.core"          % "3.32.0"
   )
 
   val test = Seq(

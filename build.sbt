@@ -5,6 +5,9 @@ ThisBuild / majorVersion := 0
 ThisBuild / scalaVersion := "3.7.4"
 ThisBuild / scalacOptions += "-Wconf:msg=Flag.*repeatedly:s"
 
+// Resolvers for internal HMRC artifacts (GSL Schematron validator)
+ThisBuild / resolvers += "HMRC third-party releases" at "https://artefacts.tax.service.gov.uk/artifactory/third-party-maven-releases/"
+
 lazy val microservice = Project("charities-claims", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427

@@ -1,0 +1,42 @@
+{
+  "reference": "f5da5578-8393-4cd1-be0e-d8ef1b78d8e7",
+  "validationType": "CommunityBuildings",
+  "fileStatus": "VALIDATION_FAILED",
+  "communityBuildingsData": {
+    "totalOfAllAmounts": "17520.00",
+    "communityBuildings": [
+      {
+        "communityBuildingItem": 1,
+        "buildingName": "The Vault",
+        "firstLineOfAddress": "22 Liberty Place",
+        "postcode": "L20 3UD",
+        "taxYear1": 2023,
+        "amountYear1": 1500,
+        "taxYear2": 2024,
+        "amountYear2": 2500
+      },
+      {
+        "communityBuildingItem": 2,
+        "buildingName": "The Vault",
+        "firstLineOfAddress": "22 Liberty Place",
+        "postcode": "L20 3UD",
+        "taxYear1": 2025,
+        "amountYear1": 2000
+      },
+      {
+        "communityBuildingItem": 3,
+        "buildingName": "Bootle Village Hall",
+        "firstLineOfAddress": "11A Grange Road",
+        "postcode": "L20 1KL",
+        "taxYear1": 2025,
+        "amountYear1": 1750
+      }
+    ]
+  },
+  "errors": [
+    {
+      "field": "communityBuildings",
+      "error": "ERROR: If donations under the Gift Aid Small Donations Scheme is being claimed for community buildings then the details of at least one community building must be supplied."
+    }
+  ]
+}

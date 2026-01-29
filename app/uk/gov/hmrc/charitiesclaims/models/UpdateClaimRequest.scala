@@ -17,13 +17,18 @@
 package uk.gov.hmrc.charitiesclaims.models
 
 import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.charitiesclaims.models.FileUploadReference
 
 final case class UpdateClaimRequest(
   lastUpdatedReference: String,
   repaymentClaimDetails: RepaymentClaimDetails,
   organisationDetails: Option[OrganisationDetails] = None,
   giftAidSmallDonationsSchemeDonationDetails: Option[GiftAidSmallDonationsSchemeDonationDetails] = None,
-  declarationDetails: Option[DeclarationDetails] = None
+  declarationDetails: Option[DeclarationDetails] = None,
+  giftAidScheduleFileUploadReference: Option[FileUploadReference] = None,
+  otherIncomeScheduleFileUploadReference: Option[FileUploadReference] = None,
+  communityBuildingsScheduleFileUploadReference: Option[FileUploadReference] = None,
+  connectedCharitiesScheduleFileUploadReference: Option[FileUploadReference] = None
 )
 
 object UpdateClaimRequest {

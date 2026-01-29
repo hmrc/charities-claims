@@ -1,0 +1,69 @@
+{
+  "reference": "f5da5578-8393-4cd1-be0e-d8ef1b78d8e7",
+  "validationType": "OtherIncome",
+  "fileStatus": "VALIDATION_FAILED",
+  "otherIncomeData": {
+    "adjustmentForOtherIncomePreviousOverClaimed": 78.00,
+    "totalOfGrossPayments": 123.00,
+    "totalOfTaxDeducted": 39.00,
+    "otherIncomes": [
+      {
+        "otherIncomeItem": 1,
+        "payerName": "Test User",
+        "paymentDate": "2025-01-01",
+        "grossPayment": 1234,
+        "taxDeducted": 56
+      }
+    ]
+  },
+  "errors": [
+    {
+      "field": "adjustmentForOtherIncomePreviouslyOverClaimed",
+      "error": "ERROR: The amount overclaimed is in the wrong format. Please amend your entry."
+    },
+    {
+      "field": "payerName[24]",
+      "error": "ERROR: Item 1 Name of payer is missing."
+    },
+    {
+      "field": "paymentDate[25]",
+      "error": "ERROR: Item 2 Income date is missing."
+    },
+    {
+      "field": "grossPayment[26]",
+      "error": "ERROR: Item 3 Gross payment is missing."
+    },
+    {
+      "field": "taxDeducted[27]",
+      "error": "ERROR: Item 4 Tax deducted is missing."
+    },
+    {
+      "field": "payerName[28]",
+      "error": "ERROR: Item 5 Name of payer format is invalid. You can only supply a maximum of 40 valid characters."
+    },
+    {
+      "field": "paymentDate[29]",
+      "error": "ERROR: Item 6 Income date is in an invalid format. It should be DD/MM/YY."
+    },
+    {
+      "field": "paymentDate[30]",
+      "error": "ERROR: Item 7 Other income date of payment cannot be in the future."
+    },
+    {
+      "field": "grossPayment[31]",
+      "error": "ERROR: Item 8 The gross payment you have provided is in an invalid format."
+    },
+    {
+      "field": "taxDeducted[32]",
+      "error": "ERROR: Item 9 The tax deducted you have provided is in an invalid format."
+    },
+    {
+      "field": "item[33]",
+      "error": "ERROR: You have entered data in an invalid area of the form."
+    },
+    {
+      "field": "taxDeducted[33]",
+      "error": "ERROR: Item The tax deducted must be less than the gross payment."
+    }
+  ]
+}

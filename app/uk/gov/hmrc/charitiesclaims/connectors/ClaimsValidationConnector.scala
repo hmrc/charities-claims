@@ -28,12 +28,18 @@ import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.charitiesclaims.models.FileUploadReference
+import uk.gov.hmrc.charitiesclaims.models.GetUploadResultResponse
 
 @ImplementedBy(classOf[ClaimsValidationConnectorImpl])
 trait ClaimsValidationConnector {
   type UserId = String
 
   def deleteClaim(claimId: UserId)(using hc: HeaderCarrier): Future[Unit]
+
+  def getUploadResult(claimId: String, reference: FileUploadReference)(using
+    hc: HeaderCarrier
+  ): Future[Option[GetUploadResultResponse]]
 }
 
 class ClaimsValidationConnectorImpl @Inject() (
@@ -67,6 +73,26 @@ class ClaimsValidationConnectorImpl @Inject() (
         Future.failed(
           Exception(
             s"Request to DELETE $baseUrl$contextPath/$claimId/upload-results failed because of $response ${response.body}"
+          )
+        )
+    )
+
+  final def getUploadResult(claimId: String, reference: FileUploadReference)(using
+    hc: HeaderCarrier
+  ): Future[Option[GetUploadResultResponse]] =
+    retry(retryIntervals*)(shouldRetry, retryReason)(
+      http
+        .get(URL(s"$baseUrl$contextPath/$claimId/upload-results/$reference"))
+        .execute[HttpResponse]
+    ).flatMap(response =>
+      if response.status == 200
+      then Future.successful(response.json.asOpt[GetUploadResultResponse])
+      else if response.status == 404
+      then Future.successful(None)
+      else
+        Future.failed(
+          Exception(
+            s"Request to GET $baseUrl$contextPath/$claimId/upload-results/$reference failed because of $response ${response.body}"
           )
         )
     )

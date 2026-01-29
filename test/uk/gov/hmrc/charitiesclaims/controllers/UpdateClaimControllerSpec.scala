@@ -47,8 +47,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
   )
 
   private val orgDetails = OrganisationDetails(
-    nameOfCharityRegulator = "test",
-    reasonNotRegisteredWithRegulator = Some("test"),
+    nameOfCharityRegulator = NameOfCharityRegulator.None,
+    reasonNotRegisteredWithRegulator = Some(ReasonNotRegisteredWithRegulator.LowIncome),
     charityRegistrationNumber = Some("test"),
     areYouACorporateTrustee = true,
     doYouHaveCorporateTrusteeUKAddress = Some(true),
@@ -110,7 +110,11 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       UpdateClaimRequest(
         repaymentClaimDetails = repaymentClaimDetails,
         organisationDetails = Some(orgDetails),
-        lastUpdatedReference = "0123456789"
+        lastUpdatedReference = "0123456789",
+        giftAidScheduleFileUploadReference = Some(FileUploadReference("test-1")),
+        otherIncomeScheduleFileUploadReference = Some(FileUploadReference("test-2")),
+        communityBuildingsScheduleFileUploadReference = Some(FileUploadReference("test-3")),
+        connectedCharitiesScheduleFileUploadReference = Some(FileUploadReference("test-4"))
       )
     )
 
@@ -142,18 +146,26 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         claimingDonationsCollectedInCommunityBuildings = None,
         connectedToAnyOtherCharities = None,
         makingAdjustmentToPreviousClaim = None
-      )
+      ),
+      giftAidScheduleFileUploadReference = Some(FileUploadReference("test-12")),
+      otherIncomeScheduleFileUploadReference = Some(FileUploadReference("test-23")),
+      communityBuildingsScheduleFileUploadReference = Some(FileUploadReference("test-34")),
+      connectedCharitiesScheduleFileUploadReference = Some(FileUploadReference("test-45"))
     )
   )
 
   "PUT /claims" - {
 
-    "return 200 when claim is updated for repayment claim details" in new AuthorisedOrganisationFixture {
+    "return 200 when claim is updated for repayment claim details and all file upload references are removed" in new AuthorisedOrganisationFixture {
       val mockClaimsService: ClaimsService = mock[ClaimsService]
 
       val expectedUpdate: Claim = existingClaim.copy(
         claimData = existingClaim.claimData.copy(
-          repaymentClaimDetails = repaymentClaimDetails
+          repaymentClaimDetails = repaymentClaimDetails,
+          giftAidScheduleFileUploadReference = None,
+          otherIncomeScheduleFileUploadReference = None,
+          communityBuildingsScheduleFileUploadReference = None,
+          connectedCharitiesScheduleFileUploadReference = None
         )
       )
 
@@ -180,13 +192,17 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       captured.value shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
     }
 
-    "return 200 when claim is updated for org details" in new AuthorisedOrganisationFixture {
+    "return 200 when claim is updated for org details and all file upload references are updated" in new AuthorisedOrganisationFixture {
       val mockClaimsService: ClaimsService = mock[ClaimsService]
 
       val expectedUpdate: Claim = existingClaim.copy(
         claimData = existingClaim.claimData.copy(
           repaymentClaimDetails = repaymentClaimDetails,
-          organisationDetails = Some(orgDetails)
+          organisationDetails = Some(orgDetails),
+          giftAidScheduleFileUploadReference = Some(FileUploadReference("test-1")),
+          otherIncomeScheduleFileUploadReference = Some(FileUploadReference("test-2")),
+          communityBuildingsScheduleFileUploadReference = Some(FileUploadReference("test-3")),
+          connectedCharitiesScheduleFileUploadReference = Some(FileUploadReference("test-4"))
         )
       )
 
@@ -219,7 +235,11 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val expectedUpdate: Claim = existingClaim.copy(
         claimData = existingClaim.claimData.copy(
           repaymentClaimDetails = repaymentClaimDetails,
-          giftAidSmallDonationsSchemeDonationDetails = Some(giftAidSmallDonationsSchemeDonationDetails)
+          giftAidSmallDonationsSchemeDonationDetails = Some(giftAidSmallDonationsSchemeDonationDetails),
+          giftAidScheduleFileUploadReference = None,
+          otherIncomeScheduleFileUploadReference = None,
+          communityBuildingsScheduleFileUploadReference = None,
+          connectedCharitiesScheduleFileUploadReference = None
         )
       )
 

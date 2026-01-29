@@ -1,0 +1,14 @@
+{
+  "reference": "f5da5578-8393-4cd1-be0e-d8ef1b78d8e7",
+  "validationType": "ConnectedCharities",
+  "fileStatus": "VALIDATED",
+  "connectedCharitiesData": {
+    "charities": [
+      {
+        "charityItem": 1,
+        "charityName": "Charity of the 501st Legion",
+        "charityReference": "CW501"
+      }
+    ]
+  }
+}

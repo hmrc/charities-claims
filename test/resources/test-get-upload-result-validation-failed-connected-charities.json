@@ -1,0 +1,36 @@
+{
+  "reference": "f5da5578-8393-4cd1-be0e-d8ef1b78d8e7",
+  "validationType": "ConnectedCharities",
+  "fileStatus": "VALIDATION_FAILED",
+  "connectedCharitiesData": {
+    "charities": [
+      {
+        "charityItem": 1,
+        "charityName": "Charity of the 501st Legion",
+        "charityReference": "CW501"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "field": "charityName[15]",
+      "error": "ERROR: Item 1 Charity name is missing."
+    },
+    {
+      "field": "charityReference[16]",
+      "error": "ERROR: Item 2 HMRC charities reference is missing."
+    },
+    {
+      "field": "charityName[17]",
+      "error": "ERROR: Item 3 Name of charity is in an invalid format. You can only supply a maximum of 160 characters."
+    },
+    {
+      "field": "charityReference[18]",
+      "error": "ERROR: Item 4 HMRC charities reference number is in an invalid format."
+    },
+    {
+      "field": "item[19]",
+      "error": "ERROR: You have entered data in an invalid area of the form."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "reference": "f5da5578-8393-4cd1-be0e-d8ef1b78d8e7",
+  "validationType": "OtherIncome",
+  "fileStatus": "VALIDATED",
+  "otherIncomeData": {
+    "adjustmentForOtherIncomePreviousOverClaimed": 78.00,
+    "totalOfGrossPayments": 123.00,
+    "totalOfTaxDeducted": 39.00,
+    "otherIncomes": [
+      {
+        "otherIncomeItem": 1,
+        "payerName": "Test User",
+        "paymentDate": "2025-01-01",
+        "grossPayment": 1234,
+        "taxDeducted": 56
+      }
+    ]
+  }
+}

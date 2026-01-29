@@ -1,0 +1,77 @@
+{
+  "reference": "f5da5578-8393-4cd1-be0e-d8ef1b78d8e7",
+  "validationType": "GiftAid",
+  "fileStatus": "VALIDATION_FAILED",
+  "giftAidScheduleData": {
+    "earliestDonationDate": "2025-01-31",
+    "prevOverclaimedGiftAid": 0.00,
+    "totalDonations": 1450,
+    "donations": [
+      {
+        "donationItem": null,
+        "donorTitle": "Mr",
+        "donorFirstName": "Henry",
+        "donorLastName": "House Martin",
+        "donorHouse": "152A",
+        "donorPostcode": "M99 2QD",
+        "sponsoredEvent": false,
+        "donationDate": "2025-03-24",
+        "donationAmount": 240
+      },
+      {
+        "donationItem": 2,
+        "donorTitle": "Mr",
+        "donorFirstName": "John",
+        "donorLastName": "Smith",
+        "donorHouse": "100 Champs Elysees, Paris",
+        "donorPostcode": "X",
+        "sponsoredEvent": false,
+        "donationDate": "2025-06-24",
+        "donationAmount": 250
+      },
+      {
+        "donationItem": 3,
+        "donorTitle": "Dr",
+        "donorFirstName": "Jane",
+        "donorLastName": "Doe",
+        "aggregatedDonations": "One off Gift Aid donations",
+        "sponsoredEvent": false,
+        "donationDate": "2025-03-31",
+        "donationAmount": 880
+      },
+      {
+        "donationItem": 4,
+        "donorTitle": "Miss",
+        "donorFirstName": "B",
+        "donorLastName": "Chaudry",
+        "donorHouse": "21",
+        "donorPostcode": "L43 4FB",
+        "sponsoredEvent": true,
+        "donationDate": "2025-04-26",
+        "donationAmount": 80
+      }
+    ]
+  },
+  "errors": [
+    {
+      "field": "earliestDonationDate",
+      "error": "ERROR: Earliest donation date is missing."
+    },
+    {
+      "field": "donations[0]",
+      "error": "ERROR: Item You have entered data in an invalid area of the form."
+    },
+    {
+      "field": "donations[2]",
+      "error": "ERROR: Item 3 You cannot provide both a title and an entry for an aggregated donation box. Please amend your entry"
+    },
+    {
+      "field": "donations[2]",
+      "error": "ERROR: Item 3 You cannot provide both a first name and an entry for an aggregated donation. Please amend your entry."
+    },
+    {
+      "field": "donations[2]",
+      "error": "ERROR: Item 3 You cannot provide both a last name and an entry for an aggregated donation. Please amend your entry."
+    }
+  ]
+}

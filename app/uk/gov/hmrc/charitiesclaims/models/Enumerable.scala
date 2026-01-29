@@ -1,0 +1,49 @@
+/*
+ * Copyright 2025 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.charitiesclaims.models
+
+import play.api.libs.json._
+
+import scala.annotation.nowarn
+
+trait Enumerable[A] {
+
+  def get(str: String): Option[A]
+}
+
+object Enumerable {
+
+  def apply[A](f: String => Option[A]): Enumerable[A] = f(_)
+
+  trait Implicits {
+
+    given reads[A](using ev: Enumerable[A]): Reads[A] =
+      Reads {
+        case JsString(str) =>
+          ev.get(str)
+            .map { s =>
+              JsSuccess(s)
+            }
+            .getOrElse(JsError("error.invalid"))
+        case _             =>
+          JsError("error.invalid")
+      }
+
+    @nowarn given writes[A : Enumerable]: Writes[A] =
+      Writes(value => JsString(value.toString))
+  }
+}

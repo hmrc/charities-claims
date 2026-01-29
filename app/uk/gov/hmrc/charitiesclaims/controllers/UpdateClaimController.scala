@@ -103,7 +103,11 @@ class UpdateClaimController @Inject() (
       repaymentClaimDetails = update.repaymentClaimDetails,
       organisationDetails = update.organisationDetails,
       giftAidSmallDonationsSchemeDonationDetails = update.giftAidSmallDonationsSchemeDonationDetails,
-      declarationDetails = update.declarationDetails
+      declarationDetails = update.declarationDetails,
+      giftAidScheduleFileUploadReference = update.giftAidScheduleFileUploadReference,
+      otherIncomeScheduleFileUploadReference = update.otherIncomeScheduleFileUploadReference,
+      communityBuildingsScheduleFileUploadReference = update.communityBuildingsScheduleFileUploadReference,
+      connectedCharitiesScheduleFileUploadReference = update.connectedCharitiesScheduleFileUploadReference
     )
 
     claim.copy(claimData = newClaimData, lastUpdatedReference = UUID.randomUUID().toString)

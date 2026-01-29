@@ -31,6 +31,7 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.charitiesclaims.connectors.RdsDatacacheProxyConnector
 import scala.concurrent.Future
+import uk.gov.hmrc.charitiesclaims.models.NameOfCharityRegulator
 
 class ChRISSubmissionServiceSpec
     extends AnyWordSpec
@@ -113,7 +114,7 @@ class ChRISSubmissionServiceSpec
           // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
-              nameOfCharityRegulator = "EnglandAndWales",
+              nameOfCharityRegulator = NameOfCharityRegulator.EnglandAndWales,
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = true,
@@ -197,7 +198,7 @@ class ChRISSubmissionServiceSpec
           // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
-              nameOfCharityRegulator = "EnglandAndWales",
+              nameOfCharityRegulator = NameOfCharityRegulator.EnglandAndWales,
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = true,
@@ -271,7 +272,7 @@ class ChRISSubmissionServiceSpec
           // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
-              nameOfCharityRegulator = "EnglandAndWales",
+              nameOfCharityRegulator = NameOfCharityRegulator.EnglandAndWales,
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,
@@ -350,7 +351,7 @@ class ChRISSubmissionServiceSpec
           // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
-              nameOfCharityRegulator = "EnglandAndWales",
+              nameOfCharityRegulator = NameOfCharityRegulator.EnglandAndWales,
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,
@@ -420,7 +421,7 @@ class ChRISSubmissionServiceSpec
           // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
-              nameOfCharityRegulator = "NorthernIreland",
+              nameOfCharityRegulator = NameOfCharityRegulator.NorthernIreland,
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,
@@ -499,7 +500,7 @@ class ChRISSubmissionServiceSpec
           // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
-              nameOfCharityRegulator = "Scottish",
+              nameOfCharityRegulator = NameOfCharityRegulator.Scottish,
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,
@@ -578,7 +579,7 @@ class ChRISSubmissionServiceSpec
           // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
-              nameOfCharityRegulator = "None",
+              nameOfCharityRegulator = NameOfCharityRegulator.None,
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,
@@ -664,7 +665,7 @@ class ChRISSubmissionServiceSpec
           // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
-              nameOfCharityRegulator = "None",
+              nameOfCharityRegulator = NameOfCharityRegulator.None,
               reasonNotRegisteredWithRegulator = None,
               charityRegistrationNumber = Some("123456"),
               areYouACorporateTrustee = false,

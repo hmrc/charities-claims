@@ -13,7 +13,7 @@
     },
     "organisationDetails": {
       "nameOfCharityRegulator": "None",
-      "reasonNotRegisteredWithRegulator": "lowIncome",
+      "reasonNotRegisteredWithRegulator": "LowIncome",
       "areYouACorporateTrustee": false,
       "doYouHaveAuthorisedOfficialTrusteeUKAddress": true,
       "authorisedOfficialTrusteePostcode": "AB1 AB1",

@@ -20,6 +20,7 @@ import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.models
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.charitiesclaims.connectors.RdsDatacacheProxyConnector
+import uk.gov.hmrc.charitiesclaims.models.NameOfCharityRegulator
 
 import scala.concurrent.Future
 import javax.inject.{Inject, Singleton}
@@ -210,14 +211,14 @@ class ChRISSubmissionServiceImpl @Inject() (
     claim.claimData.organisationDetails.map(organisationDetails =>
       Regulator(
         RegName = organisationDetails.nameOfCharityRegulator match {
-          case "EnglandAndWales" => Some(RegulatorName.CCEW)
-          case "NorthernIreland" => Some(RegulatorName.CCNI)
-          case "Scottish"        => Some(RegulatorName.OSCR)
-          case _                 => None
+          case NameOfCharityRegulator.EnglandAndWales => Some(RegulatorName.CCEW)
+          case NameOfCharityRegulator.NorthernIreland => Some(RegulatorName.CCNI)
+          case NameOfCharityRegulator.Scottish        => Some(RegulatorName.OSCR)
+          case _                                      => None
         },
         NoReg = organisationDetails.nameOfCharityRegulator match {
-          case "None" => Some(true)
-          case _      => None
+          case NameOfCharityRegulator.None => Some(true)
+          case _                           => None
         },
         RegNo = organisationDetails.charityRegistrationNumber
       )

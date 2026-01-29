@@ -13,7 +13,7 @@
         },
         "organisationDetails": {
             "nameOfCharityRegulator": "EnglandAndWales",
-            "reasonNotRegisteredWithRegulator": "lowIncome",
+            "reasonNotRegisteredWithRegulator": "LowIncome",
             "charityRegistrationNumber": "1137948",
             "areYouACorporateTrustee": true,
             "doYouHaveCorporateTrusteeUKAddress": true,

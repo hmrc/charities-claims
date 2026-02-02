@@ -22,7 +22,7 @@ object TestScheduleData {
 
   val exampleGiftAidScheduleData: GiftAidScheduleData = GiftAidScheduleData(
     earliestDonationDate = "2025-01-01",
-    prevOverclaimedGiftAid = 2000.00,
+    prevOverclaimedGiftAid = Some(BigDecimal(2000.00)),
     totalDonations = 1000.00,
     donations = Seq(
       Donation(donationItem = Some(1), donationDate = "2025-01-01", donationAmount = 1000.00),

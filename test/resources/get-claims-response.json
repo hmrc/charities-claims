@@ -6,7 +6,6 @@
             "claimSubmitted": true,
             "userId": "0000000290806672",
             "lastUpdatedReference": "test-last-updated-reference",
-            "creationTimestamp": "2025-11-10T13:45:56.016Z",
             "claimData": {
                 "repaymentClaimDetails": {
                     "claimingGiftAid": true,

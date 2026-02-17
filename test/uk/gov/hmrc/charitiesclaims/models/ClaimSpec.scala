@@ -39,7 +39,6 @@ class ClaimSpec extends AnyWordSpec with Matchers {
 
       claim.claimId                                                                  shouldBe "test-claim-submitted"
       claim.userId                                                                   shouldBe "test-user-1"
-      claim.creationTimestamp                                                        shouldBe "2025-11-10T13:45:56.016Z"
       claim.claimData.repaymentClaimDetails.claimingGiftAid                          shouldBe true
       claim.claimData.repaymentClaimDetails.claimingTaxDeducted                      shouldBe false
       claim.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme shouldBe false

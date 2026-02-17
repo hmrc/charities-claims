@@ -16,15 +16,21 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
+import play.api.libs.json.{Format, JsString, Reads, Writes}
+
 import java.time.format.DateTimeFormatter
-import java.time.ZoneOffset
-import java.time.Instant
+import java.time.{Instant, ZoneOffset}
 
 object ISODateTime {
 
-  val formatter = DateTimeFormatter
+  val formatter: DateTimeFormatter = DateTimeFormatter
     .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     .withZone(ZoneOffset.UTC)
+
+  given instantFormat: Format[Instant] = Format(
+    Reads[Instant](js => js.validate[String].map(s => Instant.from(formatter.parse(s)))),
+    Writes[Instant](instant => JsString(formatter.format(instant)))
+  )
 
   def timestampNow(): String = formatter.format(Instant.now())
 

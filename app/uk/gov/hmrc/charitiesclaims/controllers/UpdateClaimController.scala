@@ -41,7 +41,7 @@ class UpdateClaimController @Inject() (
         claimsService
           .getClaim(claimId)
           .flatMap {
-            case None        =>
+            case None           =>
               Future.successful(
                 NotFound(
                   Json.obj(
@@ -50,7 +50,7 @@ class UpdateClaimController @Inject() (
                   )
                 )
               )
-            case Some(claim) =>
+            case Some(claim, _) =>
               if claim.submissionDetails.isDefined || claim.claimSubmitted
               then {
                 Future.successful(

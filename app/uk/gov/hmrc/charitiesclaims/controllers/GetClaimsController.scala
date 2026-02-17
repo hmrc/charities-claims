@@ -22,6 +22,7 @@ import play.api.mvc.Results.InternalServerError
 import play.api.mvc.Results.{NotFound, Ok}
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.charitiesclaims.models.GetClaimResponse
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 
 import javax.inject.Inject
@@ -79,8 +80,8 @@ class GetClaimsController @Inject() (
               )
             )
 
-          case Some(claim) =>
-            Ok(Json.toJson(claim))
+          case Some((claim, createdAt)) =>
+            Ok(Json.toJson(GetClaimResponse(claim, createdAt)))
         }
         .recover { case e =>
           InternalServerError(

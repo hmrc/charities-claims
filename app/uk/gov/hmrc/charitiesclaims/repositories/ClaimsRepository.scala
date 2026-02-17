@@ -21,12 +21,15 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.charitiesclaims.config.AppConfig
 import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
+import play.api.libs.json.Reads
 import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
 import uk.gov.hmrc.mongo.play.json.Codecs
+
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ClaimsRepository @Inject() (
@@ -55,7 +58,13 @@ class ClaimsRepository @Inject() (
         Codecs.playFormatCodec(ClaimsRepository.CacheItemClaim.format),
         Codecs.playFormatCodec(ClaimsRepository.CacheItemWithClaimInfo.format)
       )
+    ) {
+
+  def getWithCreatedAt[A : Reads](cacheId: String)(dataKey: DataKey[A]): Future[Option[(A, Instant)]] =
+    findById(cacheId).map(
+      _.flatMap(ci => (ci.data \ dataKey.unwrap).asOpt[A].map(_ -> ci.createdAt))
     )
+}
 
 object ClaimsRepository {
 
@@ -64,7 +73,6 @@ object ClaimsRepository {
   val claimSubmittedPath: String         = "data.claim.claimSubmitted"
   val claimIdPath: String                = "data.claim.claimId"
   val lastUpdatedReferencePath: String   = "data.claim.lastUpdatedReference"
-  val creationTimestampPath: String      = "data.claim.creationTimestamp"
   val hmrcCharitiesReferencePath: String = "data.claim.claimData.repaymentClaimDetails.hmrcCharitiesReference"
   val nameOfCharityPath: String          = "data.claim.claimData.repaymentClaimDetails.nameOfCharity"
 

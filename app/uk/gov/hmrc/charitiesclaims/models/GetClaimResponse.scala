@@ -16,17 +16,15 @@
 
 package uk.gov.hmrc.charitiesclaims.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{JsObject, Json, Writes}
 import uk.gov.hmrc.charitiesclaims.controllers.ISODateTime.instantFormat
 
 import java.time.Instant
 
-final case class SaveClaimResponse(
-  claimId: String,
-  creationTimestamp: Instant,
-  lastUpdatedReference: String
-)
+final case class GetClaimResponse(claim: Claim, creationTimestamp: Instant)
 
-object SaveClaimResponse {
-  given format: Format[SaveClaimResponse] = Json.format[SaveClaimResponse]
+object GetClaimResponse {
+  given Writes[GetClaimResponse] = Writes { response =>
+    Json.toJson(response.claim).as[JsObject] + ("creationTimestamp" -> instantFormat.writes(response.creationTimestamp))
+  }
 }

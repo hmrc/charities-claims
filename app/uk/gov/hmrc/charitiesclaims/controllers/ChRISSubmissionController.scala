@@ -45,7 +45,7 @@ class ChRISSubmissionController @Inject() (
         claimsService
           .getClaim(chrisSubmissionRequest.claimId)
           .flatMap {
-            case None        =>
+            case None           =>
               Future.successful(
                 NotFound(
                   Json.obj(
@@ -54,7 +54,7 @@ class ChRISSubmissionController @Inject() (
                   )
                 )
               )
-            case Some(claim) =>
+            case Some(claim, _) =>
               if claim.submissionDetails.isDefined || claim.claimSubmitted
               then
                 Future.successful(

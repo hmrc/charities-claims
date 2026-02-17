@@ -25,7 +25,7 @@ import uk.gov.hmrc.charitiesclaims.models.*
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 import uk.gov.hmrc.charitiesclaims.util.{ControllerSpec, TestClaimsService, TestClaimsServiceHelper}
 
-import java.time.LocalDateTime
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -135,7 +135,6 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
     userId = organisation1,
     claimSubmitted = false,
     lastUpdatedReference = "0123456789",
-    creationTimestamp = LocalDateTime.now().toString,
     claimData = ClaimData(
       repaymentClaimDetails = RepaymentClaimDetails(
         claimingGiftAid = true,
@@ -174,12 +173,12 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       (mockClaimsService
         .getClaim(_: String))
         .expects(*)
-        .returning(Future.successful(Some(existingClaim)))
+        .returning(Future.successful(Some((existingClaim, Instant.now()))))
 
       (mockClaimsService
         .putClaim(_: Claim))
         .expects(capture(captured))
-        .returning(Future.successful(()))
+        .returning(Future.successful(Instant.now()))
 
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
@@ -211,12 +210,12 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       (mockClaimsService
         .getClaim(_: String))
         .expects(*)
-        .returning(Future.successful(Some(existingClaim)))
+        .returning(Future.successful(Some((existingClaim, Instant.now()))))
 
       (mockClaimsService
         .putClaim(_: Claim))
         .expects(capture(captured))
-        .returning(Future.successful(()))
+        .returning(Future.successful(Instant.now()))
 
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
@@ -248,12 +247,12 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       (mockClaimsService
         .getClaim(_: String))
         .expects(*)
-        .returning(Future.successful(Some(existingClaim)))
+        .returning(Future.successful(Some((existingClaim, Instant.now()))))
 
       (mockClaimsService
         .putClaim(_: Claim))
         .expects(capture(captured))
-        .returning(Future.successful(()))
+        .returning(Future.successful(Instant.now()))
 
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
@@ -280,7 +279,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       (mockClaimsService
         .getClaim(_: String))
         .expects(*)
-        .returning(Future.successful(Some(existingClaim.copy(claimSubmitted = true))))
+        .returning(Future.successful(Some((existingClaim.copy(claimSubmitted = true), Instant.now()))))
 
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
@@ -298,7 +297,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       (mockClaimsService
         .getClaim(_: String))
         .expects(*)
-        .returning(Future.successful(Some(existingClaim.copy(lastUpdatedReference = "foobar"))))
+        .returning(Future.successful(Some((existingClaim.copy(lastUpdatedReference = "foobar"), Instant.now()))))
 
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
@@ -322,12 +321,14 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       (mockClaimsService
         .getClaim(_: String))
         .expects(*)
-        .returning(Future.successful(Some(existingClaim.copy(lastUpdatedReference = originalReference))))
+        .returning(
+          Future.successful(Some((existingClaim.copy(lastUpdatedReference = originalReference), Instant.now())))
+        )
 
       (mockClaimsService
         .putClaim(_: Claim))
         .expects(capture(captured))
-        .returning(Future.successful(()))
+        .returning(Future.successful(Instant.now()))
 
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
@@ -347,7 +348,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       (mockClaimsService
         .getClaim(_: String))
         .expects(*)
-        .returning(Future.successful(Some(existingClaim)))
+        .returning(Future.successful(Some((existingClaim, Instant.now()))))
 
       (mockClaimsService
         .putClaim(_: Claim))
@@ -409,12 +410,12 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       (mockClaimsService
         .getClaim(_: String))
         .expects(*)
-        .returning(Future.successful(Some(existingClaimWithOrgDetails)))
+        .returning(Future.successful(Some((existingClaimWithOrgDetails, Instant.now()))))
 
       (mockClaimsService
         .putClaim(_: Claim))
         .expects(capture(captured))
-        .returning(Future.successful(()))
+        .returning(Future.successful(Instant.now()))
 
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
@@ -439,12 +440,12 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       (mockClaimsService
         .getClaim(_: String))
         .expects(*)
-        .returning(Future.successful(Some(existingClaimWithGasds)))
+        .returning(Future.successful(Some((existingClaimWithGasds, Instant.now()))))
 
       (mockClaimsService
         .putClaim(_: Claim))
         .expects(capture(captured))
-        .returning(Future.successful(()))
+        .returning(Future.successful(Instant.now()))
 
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
@@ -474,12 +475,12 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       (mockClaimsService
         .getClaim(_: String))
         .expects(*)
-        .returning(Future.successful(Some(existingClaimWithDeclaration)))
+        .returning(Future.successful(Some((existingClaimWithDeclaration, Instant.now()))))
 
       (mockClaimsService
         .putClaim(_: Claim))
         .expects(capture(captured))
-        .returning(Future.successful(()))
+        .returning(Future.successful(Instant.now()))
 
       val controller =
         new UpdateClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)

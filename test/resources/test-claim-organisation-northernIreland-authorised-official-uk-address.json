@@ -3,7 +3,6 @@
   "userId": "test-user-id",
   "claimSubmitted": true,
   "lastUpdatedReference": "4ceb3abb-a48e-4af7-8421-44b2578fecbf",
-  "creationTimestamp": "2025-01-01",
   "claimData": {
     "repaymentClaimDetails": {
       "claimingGiftAid": true,

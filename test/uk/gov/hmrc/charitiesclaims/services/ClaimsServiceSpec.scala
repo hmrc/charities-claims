@@ -79,8 +79,7 @@ class ClaimsServiceSpec
             claim.claimId,
             claim.userId,
             claim.claimSubmitted,
-            claim.lastUpdatedReference,
-            claim.creationTimestamp
+            claim.lastUpdatedReference
           )
 
           claim.claimSubmitted shouldBe true
@@ -89,8 +88,8 @@ class ClaimsServiceSpec
           claimsService.putClaim(claim).futureValue
 
           info("check the claim can be retrieved and listed")
-          claimsService.getClaim(claim.claimId).futureValue shouldBe Some(claim)
-          claimsService.getClaim(claim.claimId).futureValue shouldBe Some(claim)
+          claimsService.getClaim(claim.claimId).futureValue.map(_._1) shouldBe Some(claim)
+          claimsService.getClaim(claim.claimId).futureValue.map(_._1) shouldBe Some(claim)
 
           claimsService.listClaims(claim.userId, claimSubmitted = true).futureValue  shouldBe Seq(claimInfo)
           claimsService.listClaims(claim.userId, claimSubmitted = false).futureValue shouldBe Seq.empty
@@ -101,8 +100,7 @@ class ClaimsServiceSpec
             claim2.claimId,
             claim2.userId,
             claim2.claimSubmitted,
-            claim2.lastUpdatedReference,
-            claim2.creationTimestamp
+            claim2.lastUpdatedReference
           )
 
           claimsService.putClaim(claim2).futureValue
@@ -128,7 +126,6 @@ class ClaimsServiceSpec
             claim3.userId,
             claim3.claimSubmitted,
             claim3.lastUpdatedReference,
-            claim3.creationTimestamp,
             claim3.claimData.repaymentClaimDetails.hmrcCharitiesReference,
             claim3.claimData.repaymentClaimDetails.nameOfCharity
           )
@@ -148,7 +145,6 @@ class ClaimsServiceSpec
             claim4.userId,
             claim4.claimSubmitted,
             claim4.lastUpdatedReference,
-            claim4.creationTimestamp,
             claim4.claimData.repaymentClaimDetails.hmrcCharitiesReference,
             claim4.claimData.repaymentClaimDetails.nameOfCharity
           )

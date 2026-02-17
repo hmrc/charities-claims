@@ -37,9 +37,8 @@ class GetClaimResponseSpec extends AnyWordSpec with Matchers {
 
       Json.parse(Json.prettyPrint(Json.toJson(getClaimsResponse))).as[GetClaimsResponse] shouldBe getClaimsResponse
 
-      getClaimsResponse.claimsCount                       shouldBe 1
-      getClaimsResponse.claimsList.head.claimId           shouldBe "123"
-      getClaimsResponse.claimsList.head.creationTimestamp shouldBe "2025-11-10T13:45:56.016Z"
+      getClaimsResponse.claimsCount             shouldBe 1
+      getClaimsResponse.claimsList.head.claimId shouldBe "123"
     }
   }
 }

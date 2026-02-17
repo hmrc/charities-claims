@@ -24,7 +24,6 @@ final case class Claim(
   userId: String,
   claimSubmitted: Boolean,
   lastUpdatedReference: String,
-  creationTimestamp: String,
   claimData: ClaimData,
   submissionDetails: Option[SubmissionDetails] = None
 )

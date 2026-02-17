@@ -21,6 +21,7 @@ import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.Instant
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
@@ -51,39 +52,36 @@ trait TestClaimsServiceHelper extends TestUsers {
 
 class TestClaimsService(initialClaims: Seq[Claim])(using ec: ExecutionContext) extends ClaimsService {
 
-  private val buffer: ListBuffer[Claim] = ListBuffer.from(initialClaims)
+  private val claims: ListBuffer[(Claim, Instant)] =
+    ListBuffer.from(initialClaims.map(_ -> Instant.now()))
 
-  override def putClaim(claim: Claim): Future[Unit] =
-    deleteClaim(claim.claimId)(using HeaderCarrier())
-      .map { _ =>
-        buffer.append(claim)
-        ()
-      }
+  override def putClaim(claim: Claim): Future[Instant] = {
+    claims.filterInPlace((c, _) => c.claimId != claim.claimId)
+    val createdAt = Instant.now()
+    claims.append((claim, createdAt))
+    Future.successful(createdAt)
+  }
 
-  override def getClaim(claimId: String): Future[Option[Claim]] =
-    Future.successful(buffer.find(_.claimId == claimId))
+  override def getClaim(claimId: String): Future[Option[(Claim, Instant)]] =
+    Future.successful(claims.find((c, _) => c.claimId == claimId))
 
-  override def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit] =
-    buffer
-      .find(_.claimId == claimId)
-      .foreach(existingClaim => buffer.remove(buffer.indexOf(existingClaim)))
+  override def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit] = {
+    claims.filterInPlace((c, _) => c.claimId != claimId)
     Future.successful(())
+  }
 
   override def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]] =
     Future.successful(
-      buffer
-        .filter(claim => claim.userId == userId && claim.claimSubmitted == claimSubmitted)
-        .map(claim =>
+      claims.collect {
+        case (claim, _) if claim.userId == userId && claim.claimSubmitted == claimSubmitted =>
           ClaimInfo(
             claim.claimId,
             claim.userId,
             claim.claimSubmitted,
             claim.lastUpdatedReference,
-            claim.creationTimestamp,
             claim.claimData.repaymentClaimDetails.hmrcCharitiesReference,
             claim.claimData.repaymentClaimDetails.nameOfCharity
           )
-        )
-        .toSeq
+      }.toSeq
     )
 }

@@ -99,13 +99,12 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       status(result) shouldBe Status.OK
       val saveClaimResponse = contentAsJson(result).as[SaveClaimResponse]
 
-      await(claimsService.getClaim(saveClaimResponse.claimId)) shouldBe Some(
+      await(claimsService.getClaim(saveClaimResponse.claimId)).map(_._1) shouldBe Some(
         Claim(
           claimId = saveClaimResponse.claimId,
           userId = organisation1,
           claimSubmitted = false,
           lastUpdatedReference = saveClaimResponse.lastUpdatedReference,
-          creationTimestamp = saveClaimResponse.creationTimestamp,
           claimData = ClaimData(
             repaymentClaimDetails = RepaymentClaimDetails(
               claimingGiftAid = true,
@@ -131,13 +130,12 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       status(result) shouldBe Status.OK
       val saveClaimResponse = contentAsJson(result).as[SaveClaimResponse]
 
-      await(claimsService.getClaim(saveClaimResponse.claimId)) shouldBe Some(
+      await(claimsService.getClaim(saveClaimResponse.claimId)).map(_._1) shouldBe Some(
         Claim(
           claimId = saveClaimResponse.claimId,
           userId = organisation1,
           claimSubmitted = false,
           lastUpdatedReference = saveClaimResponse.lastUpdatedReference,
-          creationTimestamp = saveClaimResponse.creationTimestamp,
           claimData = ClaimData(
             repaymentClaimDetails = RepaymentClaimDetails(
               claimingGiftAid = false,
@@ -177,13 +175,12 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       status(result) shouldBe Status.OK
       val saveClaimResponse = contentAsJson(result).as[SaveClaimResponse]
 
-      await(claimsService.getClaim(saveClaimResponse.claimId)) shouldBe Some(
+      await(claimsService.getClaim(saveClaimResponse.claimId)).map(_._1) shouldBe Some(
         Claim(
           claimId = saveClaimResponse.claimId,
           userId = agent1,
           claimSubmitted = false,
           lastUpdatedReference = saveClaimResponse.lastUpdatedReference,
-          creationTimestamp = saveClaimResponse.creationTimestamp,
           claimData = ClaimData(
             repaymentClaimDetails = RepaymentClaimDetails(
               claimingGiftAid = true,

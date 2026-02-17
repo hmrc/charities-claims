@@ -28,6 +28,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
+import java.time.Instant
 import java.util.UUID
 
 class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
@@ -40,7 +41,6 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         userId = "test-user-id",
         claimSubmitted = false,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = ClaimData(
           repaymentClaimDetails = RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -89,7 +89,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       response.success             shouldBe true
       response.submissionReference shouldBe claim.lastUpdatedReference
 
-      val updatedClaim = claimsService.getClaim("test-claim-id").futureValue.get
+      val (updatedClaim, _) = claimsService.getClaim("test-claim-id").futureValue.get
       updatedClaim.claimSubmitted                               shouldBe true
       updatedClaim.submissionDetails.map(_.submissionTimestamp) shouldBe Some(response.submissionTimestamp)
       updatedClaim.submissionDetails.map(_.submissionReference) shouldBe Some(claim.lastUpdatedReference)
@@ -133,7 +133,6 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         userId = "test-user-id",
         claimSubmitted = true,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = ClaimData(
           repaymentClaimDetails = RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -182,7 +181,6 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         userId = "test-user-id",
         claimSubmitted = false,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = ClaimData(
           repaymentClaimDetails = RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -271,7 +269,6 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         userId = "test-user-id",
         claimSubmitted = false,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = ClaimData(
           repaymentClaimDetails = RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -297,7 +294,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       (claimsService
         .getClaim(_: String))
         .expects("test-claim-id")
-        .returning(Future.successful(Some(claim)))
+        .returning(Future.successful(Some((claim, Instant.now()))))
 
       (claimsService
         .putClaim(_: Claim))
@@ -344,7 +341,6 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         userId = "test-user-id",
         claimSubmitted = false,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = ClaimData(
           repaymentClaimDetails = RepaymentClaimDetails(
             claimingGiftAid = true,

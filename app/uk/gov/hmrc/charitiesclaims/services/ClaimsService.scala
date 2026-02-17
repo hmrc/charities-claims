@@ -24,14 +24,15 @@ import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
 import uk.gov.hmrc.charitiesclaims.repositories.ClaimsRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[ClaimsServiceImpl])
 trait ClaimsService {
 
-  def putClaim(claim: Claim): Future[Unit]
-  def getClaim(claimId: String): Future[Option[Claim]]
+  def putClaim(claim: Claim): Future[Instant]
+  def getClaim(claimId: String): Future[Option[(Claim, Instant)]]
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit]
   def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]]
 
@@ -45,20 +46,19 @@ class ClaimsServiceImpl @Inject() (
   ExecutionContext
 ) extends ClaimsService {
 
-  def putClaim(claim: Claim): Future[Unit] =
-    repository.get(claim.claimId)(ClaimsRepository.claimDataKey).flatMap {
-      case Some(existingClaim) if claim == existingClaim =>
-        Future.successful(())
+  def putClaim(claim: Claim): Future[Instant] =
+    repository.getWithCreatedAt(claim.claimId)(ClaimsRepository.claimDataKey).flatMap {
+      case Some(existingClaim, createdAt) if existingClaim == claim =>
+        Future.successful(createdAt)
 
       case _ =>
         repository
           .put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
-          .map(_ => ())
-
+          .map(_.createdAt)
     }
 
-  def getClaim(claimId: String): Future[Option[Claim]] =
-    repository.get(claimId)(ClaimsRepository.claimDataKey)
+  def getClaim(claimId: String): Future[Option[(Claim, Instant)]] =
+    repository.getWithCreatedAt(claimId)(ClaimsRepository.claimDataKey)
 
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit] =
     claimsValidationConnector
@@ -75,7 +75,6 @@ class ClaimsServiceImpl @Inject() (
             ClaimsRepository.claimIdPath,
             ClaimsRepository.userIdPath,
             ClaimsRepository.lastUpdatedReferencePath,
-            ClaimsRepository.creationTimestampPath,
             ClaimsRepository.claimSubmittedPath,
             ClaimsRepository.hmrcCharitiesReferencePath,
             ClaimsRepository.nameOfCharityPath

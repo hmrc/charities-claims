@@ -60,7 +60,6 @@ class ChRISSubmissionServiceSpec
         userId = "test-user-id",
         claimSubmitted = true,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -103,7 +102,6 @@ class ChRISSubmissionServiceSpec
         userId = "test-user-id",
         claimSubmitted = true,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -187,7 +185,6 @@ class ChRISSubmissionServiceSpec
         userId = "test-user-id",
         claimSubmitted = true,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -261,7 +258,6 @@ class ChRISSubmissionServiceSpec
         userId = "test-user-id",
         claimSubmitted = true,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -340,7 +336,6 @@ class ChRISSubmissionServiceSpec
         userId = "test-user-id",
         claimSubmitted = true,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -410,7 +405,6 @@ class ChRISSubmissionServiceSpec
         userId = "test-user-id",
         claimSubmitted = true,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -489,7 +483,6 @@ class ChRISSubmissionServiceSpec
         userId = "test-user-id",
         claimSubmitted = true,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -568,7 +561,6 @@ class ChRISSubmissionServiceSpec
         userId = "test-user-id",
         claimSubmitted = true,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
             claimingGiftAid = true,
@@ -654,7 +646,6 @@ class ChRISSubmissionServiceSpec
         userId = "test-user-id",
         claimSubmitted = true,
         lastUpdatedReference = UUID.randomUUID().toString,
-        creationTimestamp = "2025-01-01",
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
             claimingGiftAid = true,

@@ -24,7 +24,6 @@ final case class ClaimInfo(
   userId: String,
   claimSubmitted: Boolean,
   lastUpdatedReference: String,
-  creationTimestamp: String,
   hmrcCharitiesReference: Option[String] = None,
   nameOfCharity: Option[String] = None,
   claimData: Option[ClaimInfoData] = None

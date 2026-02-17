@@ -28,6 +28,7 @@ import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
 import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
 import uk.gov.hmrc.charitiesclaims.util.TestClaimsServiceHelper
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -157,11 +158,12 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       val result = controller.getClaim(claimId = "test-claim-submitted")(request)
       status(result) shouldBe Status.OK
 
-      val claim = contentAsJson(result).as[Claim]
-      claim.claimId                                                                  shouldBe "test-claim-submitted"
-      claim.userId                                                                   shouldBe organisation1
-      claim.claimSubmitted                                                           shouldBe true
-      claim.creationTimestamp                                                        shouldBe "2025-11-10T13:45:56.016Z"
+      val json = contentAsJson(result).as[JsObject]
+      (json \ "claimId").as[String]            shouldBe "test-claim-submitted"
+      (json \ "userId").as[String]             shouldBe organisation1
+      (json \ "claimSubmitted").as[Boolean]    shouldBe true
+      (json \ "creationTimestamp").asOpt[String] should not be empty
+      val claim = (json - "creationTimestamp").as[Claim]
       claim.claimData.repaymentClaimDetails.claimingGiftAid                          shouldBe true
       claim.claimData.repaymentClaimDetails.claimingTaxDeducted                      shouldBe false
       claim.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme shouldBe false
@@ -179,8 +181,8 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       val result = controller.getClaim(claimId = "test-claim-submitted")(request)
       status(result) shouldBe Status.OK
 
-      val claim = contentAsJson(result).as[Claim]
-      claim.lastUpdatedReference shouldBe "test-last-updated-reference"
+      val json = contentAsJson(result).as[JsObject]
+      (json \ "lastUpdatedReference").as[String] shouldBe "test-last-updated-reference"
     }
 
     "return 404 when the claim does not exist" in new AuthorisedOrganisationFixture {

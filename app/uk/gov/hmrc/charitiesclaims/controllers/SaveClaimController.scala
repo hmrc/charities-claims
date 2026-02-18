@@ -117,6 +117,6 @@ class SaveClaimController @Inject() (
 
     claimsService
       .putClaim(claim)
-      .map(createdAt => Ok(Json.toJson(SaveClaimResponse(claimId, createdAt, lastUpdatedReference))))
+      .map(_ => Ok(Json.toJson(SaveClaimResponse(claimId, lastUpdatedReference))))
   }
 }

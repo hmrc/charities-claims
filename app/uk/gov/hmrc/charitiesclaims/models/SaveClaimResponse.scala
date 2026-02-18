@@ -17,13 +17,9 @@
 package uk.gov.hmrc.charitiesclaims.models
 
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.charitiesclaims.controllers.ISODateTime.instantFormat
-
-import java.time.Instant
 
 final case class SaveClaimResponse(
   claimId: String,
-  creationTimestamp: Instant,
   lastUpdatedReference: String
 )
 

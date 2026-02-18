@@ -55,11 +55,10 @@ class TestClaimsService(initialClaims: Seq[Claim])(using ec: ExecutionContext) e
   private val claims: ListBuffer[(Claim, Instant)] =
     ListBuffer.from(initialClaims.map(_ -> Instant.now()))
 
-  override def putClaim(claim: Claim): Future[Instant] = {
+  override def putClaim(claim: Claim): Future[Unit] = {
     claims.filterInPlace((c, _) => c.claimId != claim.claimId)
-    val createdAt = Instant.now()
-    claims.append((claim, createdAt))
-    Future.successful(createdAt)
+    claims.append((claim, Instant.now()))
+    Future.successful(())
   }
 
   override def getClaim(claimId: String): Future[Option[(Claim, Instant)]] =

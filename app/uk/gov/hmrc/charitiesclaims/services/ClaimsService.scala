@@ -31,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[ClaimsServiceImpl])
 trait ClaimsService {
 
-  def putClaim(claim: Claim): Future[Instant]
+  def putClaim(claim: Claim): Future[Unit]
   def getClaim(claimId: String): Future[Option[(Claim, Instant)]]
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit]
   def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]]
@@ -46,15 +46,15 @@ class ClaimsServiceImpl @Inject() (
   ExecutionContext
 ) extends ClaimsService {
 
-  def putClaim(claim: Claim): Future[Instant] =
+  def putClaim(claim: Claim): Future[Unit] =
     repository.getWithCreatedAt(claim.claimId)(ClaimsRepository.claimDataKey).flatMap {
-      case Some(existingClaim, createdAt) if existingClaim == claim =>
-        Future.successful(createdAt)
+      case Some(existingClaim, _) if existingClaim == claim =>
+        Future.successful(())
 
       case _ =>
         repository
           .put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
-          .map(_.createdAt)
+          .map(_ => ())
     }
 
   def getClaim(claimId: String): Future[Option[(Claim, Instant)]] =

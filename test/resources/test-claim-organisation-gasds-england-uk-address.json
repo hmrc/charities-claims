@@ -1,0 +1,84 @@
+{
+  "claimId": "test-claim-id",
+  "userId": "test-user-id",
+  "claimSubmitted": true,
+  "lastUpdatedReference": "4ceb3abb-a48e-4af7-8421-44b2578fecbf",
+  "claimData": {
+    "repaymentClaimDetails": {
+      "claimingGiftAid": true,
+      "claimingTaxDeducted": false,
+      "claimingUnderGiftAidSmallDonationsScheme": true,
+      "claimReferenceNumber": "test-claim-reference-number",
+      "claimingDonationsNotFromCommunityBuilding": true,
+      "claimingDonationsCollectedInCommunityBuildings": true,
+      "connectedToAnyOtherCharities": true,
+      "makingAdjustmentToPreviousClaim": true
+    },
+    "organisationDetails": {
+      "nameOfCharityRegulator": "EnglandAndWales",
+      "charityRegistrationNumber": "123456",
+      "areYouACorporateTrustee": false,
+      "doYouHaveAuthorisedOfficialTrusteeUKAddress": true,
+      "authorisedOfficialTrusteePostcode": "AB1 AB1",
+      "authorisedOfficialTrusteeDaytimeTelephoneNumber": "1234567890",
+      "authorisedOfficialTrusteeTitle": "Mr",
+      "authorisedOfficialTrusteeFirstName": "John",
+      "authorisedOfficialTrusteeLastName": "Jones"
+    },
+    "giftAidSmallDonationsSchemeDonationDetails": {
+      "adjustmentForGiftAidOverClaimed": 50.00,
+      "claims": [
+        {
+          "taxYear": 2025,
+          "amountOfDonationsReceived": 1500.00
+        },
+        {
+          "taxYear": 2024,
+          "amountOfDonationsReceived": 1200.00
+        }
+      ],
+      "connectedCharitiesScheduleData": [
+        {
+          "charityItem": 1,
+          "charityName": "Connected Charity One",
+          "charityReference": "XR12345"
+        },
+        {
+          "charityItem": 2,
+          "charityName": "Connected Charity Two",
+          "charityReference": "XR67890"
+        }
+      ],
+      "communityBuildingsScheduleData": [
+        {
+          "buildingItem": 1,
+          "buildingName": "Village Hall",
+          "firstLineOfAddress": "1 High Street",
+          "postcode": "AB1 2CD",
+          "taxYearOneEnd": 2025,
+          "taxYearOneAmount": 500.00,
+          "taxYearTwoEnd": 2024,
+          "taxYearTwoAmount": 300.00,
+          "taxYearThreeEnd": 2023,
+          "taxYearThreeAmount": 0
+        },
+        {
+          "buildingItem": 2,
+          "buildingName": "Community Centre",
+          "firstLineOfAddress": "10 Church Lane",
+          "postcode": "EF3 4GH",
+          "taxYearOneEnd": 2025,
+          "taxYearOneAmount": 800.00,
+          "taxYearTwoEnd": 2024,
+          "taxYearTwoAmount": 600.00,
+          "taxYearThreeEnd": 2023,
+          "taxYearThreeAmount": 400.00
+        }
+      ]
+    },
+    "declarationDetails": {
+      "understandFalseStatements": true,
+      "includedAnyAdjustmentsInClaimPrompt": "Yes"
+    }
+  }
+}

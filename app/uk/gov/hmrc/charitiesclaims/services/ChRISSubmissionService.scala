@@ -187,11 +187,13 @@ class ChRISSubmissionServiceImpl @Inject() (
       )
     )
 
-  def buildClaim(claim: models.Claim, currentUser: models.CurrentUser): Claim =
+  def buildClaim(
+    claim: models.Claim,
+    currentUser: models.CurrentUser
+  ): Claim =
     Claim(
       // If user has an affinity group of "Agent", then set to the value of "Name of Charity or CASC"
       // Else set to the Organisation name returned from I3 - RDS DataCache Proxy Microservice - GetOrganisationNamebyCharityReference
-
       OrgName =
         if currentUser.isAgent
         then "CASC" // TODO
@@ -204,6 +206,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         else currentUser.enrolmentIdentifierValue,
       Regulator = buildRegulator(claim),
       Repayment = buildRepayment(claim),
+      GiftAidSmallDonationsScheme = buildGiftAidSmallDonationsScheme(claim),
       OtherInfo = None // ToDo
     )
 
@@ -226,5 +229,72 @@ class ChRISSubmissionServiceImpl @Inject() (
 
   def buildRepayment(claim: models.Claim): Option[Repayment] =
     None
+
+  def buildGiftAidSmallDonationsScheme(
+    claim: models.Claim
+  ): Option[GiftAidSmallDonationsScheme] =
+    if !claim.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme then None
+    else
+      claim.claimData.giftAidSmallDonationsSchemeDonationDetails.map { gasdsDetails =>
+        val repaymentDetails = claim.claimData.repaymentClaimDetails
+
+        val connectedCharities: YesNo = repaymentDetails.connectedToAnyOtherCharities.getOrElse(false)
+
+        val charities: Option[List[Charity]] =
+          gasdsDetails.connectedCharitiesScheduleData
+            .map(c => Charity(Name = c.charityName, HMRCref = c.charityReference))
+            .toList match
+            case Nil  => None
+            case list => Some(list)
+
+        val gasdsClaims: Option[List[GiftAidSmallDonationsSchemeClaim]] =
+          gasdsDetails.claims
+            .map(c =>
+              GiftAidSmallDonationsSchemeClaim(
+                Year = Some(c.taxYear.toString),
+                Amount = Some(c.amountOfDonationsReceived)
+              )
+            )
+            .toList match
+            case Nil  => None
+            case list => Some(list)
+
+        val commBldgs: Option[YesNo] =
+          Some(repaymentDetails.claimingDonationsCollectedInCommunityBuildings.getOrElse(false))
+
+        val buildings: Option[List[Building]] =
+          gasdsDetails.communityBuildingsScheduleData.map { b =>
+            val bldgClaims = List(
+              (b.taxYearOneEnd, b.taxYearOneAmount),
+              (b.taxYearTwoEnd, b.taxYearTwoAmount),
+              (b.taxYearThreeEnd, b.taxYearThreeAmount)
+            ).filter(_._2 > 0).map { case (year, amount) =>
+              BldgClaim(Year = year.toString, Amount = amount)
+            }
+
+            Building(
+              BldgName = b.buildingName,
+              Address = b.firstLineOfAddress,
+              Postcode = b.postcode,
+              BldgClaim = bldgClaims
+            )
+          }.toList match
+            case Nil  => None
+            case list => Some(list)
+
+        val adj: Option[String] =
+          Option.when(gasdsDetails.adjustmentForGiftAidOverClaimed > 0)(
+            gasdsDetails.adjustmentForGiftAidOverClaimed.toString
+          )
+
+        GiftAidSmallDonationsScheme(
+          ConnectedCharities = connectedCharities,
+          Charity = charities,
+          GiftAidSmallDonationsSchemeClaim = gasdsClaims,
+          CommBldgs = commBldgs,
+          Building = buildings,
+          Adj = adj
+        )
+      }
 
 }

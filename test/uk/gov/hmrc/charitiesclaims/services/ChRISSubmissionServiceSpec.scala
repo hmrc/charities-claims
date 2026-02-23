@@ -712,5 +712,548 @@ class ChRISSubmissionServiceSpec
 
     // TODO Add more assertions for the rest of the submission
 
+    "buildGiftAidSmallDonationsScheme" should {
+
+      "populate GASDS when claimingUnderGiftAidSmallDonationsScheme is true with all sections present" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = false,
+              claimingUnderGiftAidSmallDonationsScheme = true,
+              connectedToAnyOtherCharities = Some(true),
+              claimingDonationsCollectedInCommunityBuildings = Some(true),
+              makingAdjustmentToPreviousClaim = Some(true)
+            ),
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              models.GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal("56.89"),
+                claims = Seq(
+                  models
+                    .GiftAidSmallDonationsSchemeClaim(taxYear = 2024, amountOfDonationsReceived = BigDecimal("67.09"))
+                ),
+                connectedCharitiesScheduleData = Seq(
+                  models.ConnectedCharity(charityItem = 1, charityName = "Charity One", charityReference = "X95442")
+                ),
+                communityBuildingsScheduleData = Seq(
+                  models.CommunityBuilding(
+                    buildingItem = 1,
+                    buildingName = "YMCA",
+                    firstLineOfAddress = "123 New Street",
+                    postcode = "AB12 3CD",
+                    taxYearOneEnd = 2024,
+                    taxYearOneAmount = BigDecimal("1257.21"),
+                    taxYearTwoEnd = 2023,
+                    taxYearTwoAmount = BigDecimal("500.00"),
+                    taxYearThreeEnd = 2022,
+                    taxYearThreeAmount = BigDecimal("0")
+                  )
+                )
+              )
+            )
+          )
+        )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val result = service.buildClaim(claim, currentUser)
+        result.GiftAidSmallDonationsScheme shouldBe Some(
+          GiftAidSmallDonationsScheme(
+            ConnectedCharities = true,
+            Charity = Some(List(Charity(Name = "Charity One", HMRCref = "X95442"))),
+            GiftAidSmallDonationsSchemeClaim = Some(
+              List(
+                GiftAidSmallDonationsSchemeClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09")))
+              )
+            ),
+            CommBldgs = Some(true),
+            Building = Some(
+              List(
+                Building(
+                  BldgName = "YMCA",
+                  Address = "123 New Street",
+                  Postcode = "AB12 3CD",
+                  BldgClaim = List(
+                    BldgClaim(Year = "2024", Amount = BigDecimal("1257.21")),
+                    BldgClaim(Year = "2023", Amount = BigDecimal("500.00"))
+                  )
+                )
+              )
+            ),
+            Adj = Some("56.89")
+          )
+        )
+      }
+
+      "return None when claimingUnderGiftAidSmallDonationsScheme is false" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = false,
+              claimingUnderGiftAidSmallDonationsScheme = false,
+              connectedToAnyOtherCharities = Some(true)
+            ),
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              models.GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal("10.00"),
+                claims = Seq(
+                  models
+                    .GiftAidSmallDonationsSchemeClaim(taxYear = 2024, amountOfDonationsReceived = BigDecimal("50.00"))
+                ),
+                connectedCharitiesScheduleData = Seq.empty,
+                communityBuildingsScheduleData = Seq.empty
+              )
+            )
+          )
+        )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val result = service.buildClaim(claim, currentUser)
+        result.GiftAidSmallDonationsScheme shouldBe None
+      }
+
+      "return None when giftAidSmallDonationsSchemeDonationDetails is None" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = false,
+              claimingUnderGiftAidSmallDonationsScheme = true
+            ),
+            giftAidSmallDonationsSchemeDonationDetails = None
+          )
+        )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val result = service.buildClaim(claim, currentUser)
+        result.GiftAidSmallDonationsScheme shouldBe None
+      }
+
+      "map multiple connected charities correctly" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = false,
+              claimingUnderGiftAidSmallDonationsScheme = true,
+              connectedToAnyOtherCharities = Some(true),
+              claimingDonationsCollectedInCommunityBuildings = Some(false)
+            ),
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              models.GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+                claims = Seq.empty,
+                connectedCharitiesScheduleData = Seq(
+                  models.ConnectedCharity(charityItem = 1, charityName = "Charity One", charityReference = "X95442"),
+                  models.ConnectedCharity(charityItem = 2, charityName = "Charity Two", charityReference = "Y12345")
+                ),
+                communityBuildingsScheduleData = Seq.empty
+              )
+            )
+          )
+        )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val result = service.buildClaim(claim, currentUser)
+        result.GiftAidSmallDonationsScheme.get.Charity shouldBe Some(
+          List(
+            Charity(Name = "Charity One", HMRCref = "X95442"),
+            Charity(Name = "Charity Two", HMRCref = "Y12345")
+          )
+        )
+      }
+
+      "return Charity as None when no connected charities exist" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = false,
+              claimingUnderGiftAidSmallDonationsScheme = true,
+              connectedToAnyOtherCharities = Some(false),
+              claimingDonationsCollectedInCommunityBuildings = Some(false)
+            ),
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              models.GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+                claims = Seq.empty,
+                connectedCharitiesScheduleData = Seq.empty,
+                communityBuildingsScheduleData = Seq.empty
+              )
+            )
+          )
+        )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val result = service.buildClaim(claim, currentUser)
+        result.GiftAidSmallDonationsScheme.get.Charity shouldBe None
+      }
+
+      "map GiftAidSmallDonationsSchemeClaim correctly" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = false,
+              claimingUnderGiftAidSmallDonationsScheme = true,
+              connectedToAnyOtherCharities = Some(false),
+              claimingDonationsCollectedInCommunityBuildings = Some(false)
+            ),
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              models.GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+                claims = Seq(
+                  models
+                    .GiftAidSmallDonationsSchemeClaim(taxYear = 2024, amountOfDonationsReceived = BigDecimal("67.09")),
+                  models
+                    .GiftAidSmallDonationsSchemeClaim(taxYear = 2023, amountOfDonationsReceived = BigDecimal("120.50"))
+                ),
+                connectedCharitiesScheduleData = Seq.empty,
+                communityBuildingsScheduleData = Seq.empty
+              )
+            )
+          )
+        )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val result = service.buildClaim(claim, currentUser)
+        result.GiftAidSmallDonationsScheme.get.GiftAidSmallDonationsSchemeClaim shouldBe Some(
+          List(
+            GiftAidSmallDonationsSchemeClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
+            GiftAidSmallDonationsSchemeClaim(Year = Some("2023"), Amount = Some(BigDecimal("120.50")))
+          )
+        )
+      }
+
+      "map Building with multiple BldgClaims filtering out zero amounts" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = false,
+              claimingUnderGiftAidSmallDonationsScheme = true,
+              connectedToAnyOtherCharities = Some(false),
+              claimingDonationsCollectedInCommunityBuildings = Some(true)
+            ),
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              models.GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+                claims = Seq.empty,
+                connectedCharitiesScheduleData = Seq.empty,
+                communityBuildingsScheduleData = Seq(
+                  models.CommunityBuilding(
+                    buildingItem = 1,
+                    buildingName = "YMCA",
+                    firstLineOfAddress = "123 New Street",
+                    postcode = "AB12 3CD",
+                    taxYearOneEnd = 2024,
+                    taxYearOneAmount = BigDecimal("1257.21"),
+                    taxYearTwoEnd = 2023,
+                    taxYearTwoAmount = BigDecimal("500.00"),
+                    taxYearThreeEnd = 2022,
+                    taxYearThreeAmount = BigDecimal("0")
+                  )
+                )
+              )
+            )
+          )
+        )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val result = service.buildClaim(claim, currentUser)
+        result.GiftAidSmallDonationsScheme.get.Building shouldBe Some(
+          List(
+            Building(
+              BldgName = "YMCA",
+              Address = "123 New Street",
+              Postcode = "AB12 3CD",
+              BldgClaim = List(
+                BldgClaim(Year = "2024", Amount = BigDecimal("1257.21")),
+                BldgClaim(Year = "2023", Amount = BigDecimal("500.00"))
+              )
+            )
+          )
+        )
+      }
+
+      "return Building as None when no community buildings exist" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = false,
+              claimingUnderGiftAidSmallDonationsScheme = true,
+              connectedToAnyOtherCharities = Some(false),
+              claimingDonationsCollectedInCommunityBuildings = Some(false)
+            ),
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              models.GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+                claims = Seq.empty,
+                connectedCharitiesScheduleData = Seq.empty,
+                communityBuildingsScheduleData = Seq.empty
+              )
+            )
+          )
+        )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val result = service.buildClaim(claim, currentUser)
+        result.GiftAidSmallDonationsScheme.get.Building shouldBe None
+      }
+
+      "set Adj when adjustment > 0 and None when 0" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        val claimWithAdj = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = false,
+              claimingUnderGiftAidSmallDonationsScheme = true,
+              connectedToAnyOtherCharities = Some(false),
+              claimingDonationsCollectedInCommunityBuildings = Some(false)
+            ),
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              models.GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal("56.89"),
+                claims = Seq.empty,
+                connectedCharitiesScheduleData = Seq.empty,
+                communityBuildingsScheduleData = Seq.empty
+              )
+            )
+          )
+        )
+
+        val claimWithZeroAdj = claimWithAdj.copy(
+          claimData = claimWithAdj.claimData.copy(
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              models.GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+                claims = Seq.empty,
+                connectedCharitiesScheduleData = Seq.empty,
+                communityBuildingsScheduleData = Seq.empty
+              )
+            )
+          )
+        )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val resultWithAdj = service.buildClaim(claimWithAdj, currentUser)
+        resultWithAdj.GiftAidSmallDonationsScheme.get.Adj shouldBe Some("56.89")
+
+        val resultWithZeroAdj = service.buildClaim(claimWithZeroAdj, currentUser)
+        resultWithZeroAdj.GiftAidSmallDonationsScheme.get.Adj shouldBe None
+      }
+
+      "map ConnectedCharities yes/no from repaymentClaimDetails" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        def buildClaimWithConnected(connected: Option[Boolean]): models.Claim =
+          models.Claim(
+            claimId = "test-claim-id",
+            userId = "test-user-id",
+            claimSubmitted = false,
+            lastUpdatedReference = UUID.randomUUID().toString,
+            claimData = models.ClaimData(
+              repaymentClaimDetails = models.RepaymentClaimDetails(
+                claimingGiftAid = false,
+                claimingTaxDeducted = false,
+                claimingUnderGiftAidSmallDonationsScheme = true,
+                connectedToAnyOtherCharities = connected,
+                claimingDonationsCollectedInCommunityBuildings = Some(false)
+              ),
+              giftAidSmallDonationsSchemeDonationDetails = Some(
+                models.GiftAidSmallDonationsSchemeDonationDetails(
+                  adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+                  claims = Seq.empty,
+                  connectedCharitiesScheduleData = Seq.empty,
+                  communityBuildingsScheduleData = Seq.empty
+                )
+              )
+            )
+          )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val resultYes = service.buildClaim(buildClaimWithConnected(Some(true)), currentUser)
+        resultYes.GiftAidSmallDonationsScheme.get.ConnectedCharities shouldBe (true: YesNo)
+
+        val resultNo = service.buildClaim(buildClaimWithConnected(Some(false)), currentUser)
+        resultNo.GiftAidSmallDonationsScheme.get.ConnectedCharities shouldBe (false: YesNo)
+
+        val resultNone = service.buildClaim(buildClaimWithConnected(None), currentUser)
+        resultNone.GiftAidSmallDonationsScheme.get.ConnectedCharities shouldBe (false: YesNo)
+      }
+
+      "map CommBldgs yes/no from repaymentClaimDetails" in {
+        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
+        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+
+        def buildClaimWithCommBldgs(claiming: Option[Boolean]): models.Claim =
+          models.Claim(
+            claimId = "test-claim-id",
+            userId = "test-user-id",
+            claimSubmitted = false,
+            lastUpdatedReference = UUID.randomUUID().toString,
+            claimData = models.ClaimData(
+              repaymentClaimDetails = models.RepaymentClaimDetails(
+                claimingGiftAid = false,
+                claimingTaxDeducted = false,
+                claimingUnderGiftAidSmallDonationsScheme = true,
+                connectedToAnyOtherCharities = Some(false),
+                claimingDonationsCollectedInCommunityBuildings = claiming
+              ),
+              giftAidSmallDonationsSchemeDonationDetails = Some(
+                models.GiftAidSmallDonationsSchemeDonationDetails(
+                  adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+                  claims = Seq.empty,
+                  connectedCharitiesScheduleData = Seq.empty,
+                  communityBuildingsScheduleData = Seq.empty
+                )
+              )
+            )
+          )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val resultYes = service.buildClaim(buildClaimWithCommBldgs(Some(true)), currentUser)
+        resultYes.GiftAidSmallDonationsScheme.get.CommBldgs shouldBe Some(true: YesNo)
+
+        val resultNo = service.buildClaim(buildClaimWithCommBldgs(Some(false)), currentUser)
+        resultNo.GiftAidSmallDonationsScheme.get.CommBldgs shouldBe Some(false: YesNo)
+
+        val resultNone = service.buildClaim(buildClaimWithCommBldgs(None), currentUser)
+        resultNone.GiftAidSmallDonationsScheme.get.CommBldgs shouldBe Some(false: YesNo)
+      }
+
+    }
+
   }
 }

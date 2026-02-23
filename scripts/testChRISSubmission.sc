@@ -11,6 +11,10 @@
 //> using file ../app/uk/gov/hmrc/charitiesclaims/models/ChRISSubmissionRequest.scala
 //> using file ../app/uk/gov/hmrc/charitiesclaims/models/ChRISSubmissionResponse.scala
 //> using file ../app/uk/gov/hmrc/charitiesclaims/models/Claim.scala
+//> using file ../app/uk/gov/hmrc/charitiesclaims/models/Enumerable.scala
+//> using file ../app/uk/gov/hmrc/charitiesclaims/models/UploadSummary.scala
+//> using file ../app/uk/gov/hmrc/charitiesclaims/models/NameOfCharityRegulator.scala
+//> using file ../app/uk/gov/hmrc/charitiesclaims/models/ReasonNotRegisteredWithRegulator.scala
 
 import scala.util.Random
 import sttp.model.*
@@ -38,7 +42,9 @@ val claimFile: String = requiredScriptParameter('i',"input-claim-file")(args)
 
 val isAgentUser: Boolean = optionalScriptFlag('a',"agent")(args)
 
-val claimFilePath: os.Path = os.pwd / claimFile.split("/")
+val claimFilePath: os.Path =
+  if claimFile.startsWith("/") then os.Path(claimFile)
+  else os.pwd / os.RelPath(claimFile)
 
 if(!os.exists(claimFilePath)) {
   printlnErrorMessage(s"Claim file $claimFilePath not found")

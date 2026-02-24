@@ -261,8 +261,35 @@ class ChRISSubmissionServiceImpl @Inject() (
       )
     )
 
-  def buildRepayment(claim: models.Claim): Option[Repayment] =
-    None
+  def buildRepayment(claim: models.Claim,
+                     currentUser: models.CurrentUser
+                    ): Repayment = {
+
+    val paymentList: Option[List[OtherInc]] = claim.claimData.repaymentClaimDetails.OtherIncome.Payment.map(p => Charity(Payer = p.nameOfPayer,
+        OIDate = p.dateOfPayment,
+        Gross = p.grossPayment,
+        Tax = p.taxDeducted))
+      .toList match
+      case Nil => None
+      case list => Some(list)
+
+    val adjGiftAid=  Option.when(claim.claimData.giftAidSmallDonationsSchemeDonationDetails.adjustmentForGiftAidOverClaimed > 0)(
+      claim.claimData.giftAidSmallDonationsSchemeDonationDetails.adjustmentForGiftAidOverClaimed
+    )
+    val adjOtherIncome=
+      Option.when(models.OtherIncomeScheduleData.adjustmentForOtherIncomePreviousOverClaimed > 0)(
+        models.OtherIncomeScheduleData.adjustmentForOtherIncomePreviousOverClaimed
+      )
+    val adj: Option[String] = (Some(adjGiftAid) + Some(adjOtherIncome)).toString
+
+
+    Repayment(
+      GAD = None, // TODO - buildRepaymentGAD(claim)
+      EarliestGAdate = models.GiftAidScheduleData.earliestDonationDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), // TODO - earliestDonationDate (YYYY-MM-DD)
+      OtherInc = paymentList,
+      Adjustment = adj
+    )
+  }
 
   def buildGiftAidSmallDonationsScheme(
     claim: models.Claim,

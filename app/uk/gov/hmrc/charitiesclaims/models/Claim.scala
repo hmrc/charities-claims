@@ -168,9 +168,7 @@ object Payment {
 
 final case class GiftAidSmallDonationsSchemeDonationDetails(
   adjustmentForGiftAidOverClaimed: BigDecimal,
-  claims: Seq[GiftAidSmallDonationsSchemeClaim],
-  connectedCharitiesScheduleData: Seq[ConnectedCharity],
-  communityBuildingsScheduleData: Seq[CommunityBuilding]
+  claims: Seq[GiftAidSmallDonationsSchemeClaim]
 )
 
 object GiftAidSmallDonationsSchemeDonationDetails {
@@ -209,23 +207,6 @@ final case class CommunityBuilding1(
 
 object CommunityBuilding1 {
   given Format[CommunityBuilding1] = Json.format[CommunityBuilding1]
-}
-
-final case class CommunityBuilding(
-  buildingItem: Int,
-  buildingName: String,
-  firstLineOfAddress: String,
-  postcode: String,
-  taxYearOneEnd: Int,
-  taxYearOneAmount: BigDecimal,
-  taxYearTwoEnd: Int,
-  taxYearTwoAmount: BigDecimal,
-  taxYearThreeEnd: Int,
-  taxYearThreeAmount: BigDecimal
-)
-
-object CommunityBuilding {
-  given Format[CommunityBuilding] = Json.format[CommunityBuilding]
 }
 
 case class CommunityBuildingsScheduleData(

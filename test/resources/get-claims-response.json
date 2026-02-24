@@ -94,32 +94,6 @@
                             "taxYear": 2024,
                             "amountOfDonationsReceived": 650.21
                         }
-                    ],
-                    "connectedCharitiesScheduleData": [
-                        {
-                            "charityItem": 1,
-                            "charityName": "Charity ABC",
-                            "charityReference": "AB123"
-                        },
-                        {
-                            "charityItem": 2,
-                            "charityName": "Charity DEF",
-                            "charityReference": "DE123"
-                        }
-                    ],
-                    "communityBuildingsScheduleData": [
-                        {
-                            "buildingItem": 1,
-                            "buildingName": "Charity ABC",
-                            "firstLineOfAddress": "AB123",
-                            "postcode": "Charity ABC",
-                            "taxYearOneEnd": 2022,
-                            "taxYearOneAmount": 123.00,
-                            "taxYearTwoEnd": 2023,
-                            "taxYearTwoAmount": 456.00,
-                            "taxYearThreeEnd": 2024,
-                            "taxYearThreeAmount": 789.00
-                        }
                     ]
                 },
                 "declarationDetails": {

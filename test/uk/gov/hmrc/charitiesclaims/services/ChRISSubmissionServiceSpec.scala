@@ -29,9 +29,10 @@ import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent}
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.charitiesclaims.connectors.RdsDatacacheProxyConnector
+import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
 import scala.concurrent.Future
 import uk.gov.hmrc.charitiesclaims.models.NameOfCharityRegulator
+import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding1, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities}
 
 class ChRISSubmissionServiceSpec
     extends AnyWordSpec
@@ -52,8 +53,9 @@ class ChRISSubmissionServiceSpec
 
   "ChRISSubmissionService" should {
     "build a ChRISSubmission correctly for an organisation user claiming gift aid" in {
-      val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-      val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -88,14 +90,10 @@ class ChRISSubmissionServiceSpec
       )
     }
 
-    // test for regulator (EnglandAndWales, NorthernIreland,Scottish), Corporate Trustee =Y, then test Corporate Trustee Address (in UK , and overseas)
-    // test for regulator (EnglandAndWales, NorthernIreland,Scottish), Corporate Trustee =N, then test Authorised Official Trustee Address (in UK , and overseas)
-    // test for regulator (None), reason charity not registered not (LowIncome,Excepted, Exempt, Waiting), Corporate Trustee =Y, then test Corporate Trustee Address (in UK , and overseas)
-    // test for regulator (None), reason charity not registered not (LowIncome, Excepted, Exempt,Waiting), Corporate Trustee =N, then test Authorised Official Trustee Address (in UK , and overseas)
-
     "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = true and address in UK " in {
-      val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-      val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -109,7 +107,6 @@ class ChRISSubmissionServiceSpec
             claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
           ),
-          // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
               nameOfCharityRegulator = NameOfCharityRegulator.EnglandAndWales,
@@ -138,7 +135,7 @@ class ChRISSubmissionServiceSpec
         enrolmentIdentifierKey = "test-enrolment-identifier-key"
       )
 
-      val submissionR68       = service.buildR68(claim, currentUser, None)
+      val submissionR68       = service.buildR68(claim, currentUser, None, None, None)
       val submissionOffId     = service.buildOffId(claim)
       val submissionOffName   = service.buildOffName(claim)
       val submissionRegulator = service.buildRegulator(claim)
@@ -177,8 +174,9 @@ class ChRISSubmissionServiceSpec
 
     }
     "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = true and address NOT in UK " in {
-      val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-      val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -192,7 +190,6 @@ class ChRISSubmissionServiceSpec
             claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
           ),
-          // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
               nameOfCharityRegulator = NameOfCharityRegulator.EnglandAndWales,
@@ -221,7 +218,7 @@ class ChRISSubmissionServiceSpec
         enrolmentIdentifierKey = "test-enrolment-identifier-key"
       )
 
-      val submissionR68       = service.buildR68(claim, currentUser, None)
+      val submissionR68       = service.buildR68(claim, currentUser, None, None, None)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -250,8 +247,9 @@ class ChRISSubmissionServiceSpec
     }
 
     "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = false and address in UK " in {
-      val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-      val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -265,7 +263,6 @@ class ChRISSubmissionServiceSpec
             claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
           ),
-          // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
               nameOfCharityRegulator = NameOfCharityRegulator.EnglandAndWales,
@@ -294,7 +291,7 @@ class ChRISSubmissionServiceSpec
         enrolmentIdentifierKey = "test-enrolment-identifier-key"
       )
 
-      val submissionR68       = service.buildR68(claim, currentUser, None)
+      val submissionR68       = service.buildR68(claim, currentUser, None, None, None)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -328,8 +325,9 @@ class ChRISSubmissionServiceSpec
 
     }
     "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = false and address NOT in UK " in {
-      val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-      val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -343,7 +341,6 @@ class ChRISSubmissionServiceSpec
             claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
           ),
-          // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
               nameOfCharityRegulator = NameOfCharityRegulator.EnglandAndWales,
@@ -372,7 +369,7 @@ class ChRISSubmissionServiceSpec
         enrolmentIdentifierKey = "test-enrolment-identifier-key"
       )
 
-      val submissionR68 = service.buildR68(claim, currentUser, None)
+      val submissionR68 = service.buildR68(claim, currentUser, None, None, None)
 
       submissionR68.AuthOfficial shouldBe Some(
         AuthOfficial(
@@ -397,8 +394,9 @@ class ChRISSubmissionServiceSpec
     }
 
     "build a ChRISSubmission correctly for an organisation - Regulator = NorthernIreland, Corporate Trustee = false and address in UK " in {
-      val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-      val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -412,7 +410,6 @@ class ChRISSubmissionServiceSpec
             claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
           ),
-          // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
               nameOfCharityRegulator = NameOfCharityRegulator.NorthernIreland,
@@ -441,7 +438,7 @@ class ChRISSubmissionServiceSpec
         enrolmentIdentifierKey = "test-enrolment-identifier-key"
       )
 
-      val submissionR68       = service.buildR68(claim, currentUser, None)
+      val submissionR68       = service.buildR68(claim, currentUser, None, None, None)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -475,8 +472,9 @@ class ChRISSubmissionServiceSpec
     }
 
     "build a ChRISSubmission correctly for an organisation - Regulator = Scottish, Corporate Trustee = false and address in UK " in {
-      val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-      val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -490,7 +488,6 @@ class ChRISSubmissionServiceSpec
             claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
           ),
-          // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
               nameOfCharityRegulator = NameOfCharityRegulator.Scottish,
@@ -519,7 +516,7 @@ class ChRISSubmissionServiceSpec
         enrolmentIdentifierKey = "test-enrolment-identifier-key"
       )
 
-      val submissionR68       = service.buildR68(claim, currentUser, None)
+      val submissionR68       = service.buildR68(claim, currentUser, None, None, None)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -553,8 +550,9 @@ class ChRISSubmissionServiceSpec
     }
 
     "build a ChRISSubmission correctly for an organisation - Regulator = None, Corporate Trustee = false and address in UK " in {
-      val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-      val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -568,7 +566,6 @@ class ChRISSubmissionServiceSpec
             claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
           ),
-          // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
               nameOfCharityRegulator = NameOfCharityRegulator.None,
@@ -597,7 +594,7 @@ class ChRISSubmissionServiceSpec
         enrolmentIdentifierKey = "test-enrolment-identifier-key"
       )
 
-      val submissionR68       = service.buildR68(claim, currentUser, None)
+      val submissionR68       = service.buildR68(claim, currentUser, None, None, None)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -630,11 +627,10 @@ class ChRISSubmissionServiceSpec
       )
     }
 
-    // TODO Add more assertions for the rest of the submission
-
     "build a ChRISSubmission correctly for an agent - Regulator = None, Corporate Trustee = false and address in UK " in {
-      val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-      val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
       (rdsConnectorMock
         .getAgentName(_: String)(using _: HeaderCarrier))
@@ -653,7 +649,6 @@ class ChRISSubmissionServiceSpec
             claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
           ),
-          // Organisation details
           organisationDetails = Some(
             models.OrganisationDetails(
               nameOfCharityRegulator = NameOfCharityRegulator.None,
@@ -684,7 +679,7 @@ class ChRISSubmissionServiceSpec
 
       val submission = service.buildChRISSubmission(claim, currentUser).futureValue
 
-      val submissionR68       = service.buildR68(claim, currentUser, Some("Test-Agent-Name"))
+      val submissionR68       = service.buildR68(claim, currentUser, Some("Test-Agent-Name"), None, None)
       val submissionRegulator = service.buildRegulator(claim)
 
       submission.Body.IRenvelope.R68 shouldBe submissionR68
@@ -710,13 +705,110 @@ class ChRISSubmissionServiceSpec
       )
     }
 
-    // TODO Add more assertions for the rest of the submission
+    "buildChRISSubmission fetches upload data from validation service when GASDS upload references are present" in {
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+
+      val communityBuildingsRef = FileUploadReference("cb-ref-123")
+      val connectedCharitiesRef = FileUploadReference("cc-ref-456")
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = false,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = false,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = true,
+            connectedToAnyOtherCharities = Some(true),
+            claimingDonationsCollectedInCommunityBuildings = Some(true)
+          ),
+          giftAidSmallDonationsSchemeDonationDetails = Some(
+            models.GiftAidSmallDonationsSchemeDonationDetails(
+              adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+              claims = Seq(
+                models
+                  .GiftAidSmallDonationsSchemeClaim(taxYear = 2024, amountOfDonationsReceived = BigDecimal("100.00"))
+              )
+            )
+          ),
+          communityBuildingsScheduleFileUploadReference = Some(communityBuildingsRef),
+          connectedCharitiesScheduleFileUploadReference = Some(connectedCharitiesRef)
+        )
+      )
+
+      val communityBuildingsData = CommunityBuildingsScheduleData(
+        totalOfAllAmounts = BigDecimal("500.00"),
+        communityBuildings = Seq(
+          CommunityBuilding1(
+            communityBuildingItem = 1,
+            buildingName = "Village Hall",
+            firstLineOfAddress = "1 High Street",
+            postcode = "AB1 2CD",
+            taxYear1 = 2024,
+            amountYear1 = BigDecimal("500.00")
+          )
+        )
+      )
+
+      val connectedCharitiesData = ConnectedCharitiesScheduleData(
+        charities = Seq(
+          ConnectedCharity(charityItem = 1, charityName = "Charity One", charityReference = "X95442")
+        )
+      )
+
+      (claimsValidationConnectorMock
+        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
+        .expects("test-claim-id", communityBuildingsRef, *)
+        .returns(
+          Future.successful(
+            Some(GetUploadResultValidatedCommunityBuildings(communityBuildingsRef, communityBuildingsData))
+          )
+        )
+
+      (claimsValidationConnectorMock
+        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
+        .expects("test-claim-id", connectedCharitiesRef, *)
+        .returns(
+          Future.successful(
+            Some(GetUploadResultValidatedConnectedCharities(connectedCharitiesRef, connectedCharitiesData))
+          )
+        )
+
+      val currentUser = TestCurrentUser(
+        affinityGroup = AffinityGroup.Organisation,
+        userId = "test-user-id",
+        enrolmentIdentifierValue = "test-enrolment-identifier-value",
+        enrolmentIdentifierKey = "test-enrolment-identifier-key"
+      )
+
+      val result = service.buildChRISSubmission(claim, currentUser).futureValue
+
+      result.Body.IRenvelope.R68.Claim.GiftAidSmallDonationsScheme.get.Charity shouldBe Some(
+        List(Charity(Name = "Charity One", HMRCref = "X95442"))
+      )
+
+      result.Body.IRenvelope.R68.Claim.GiftAidSmallDonationsScheme.get.Building shouldBe Some(
+        List(
+          Building(
+            BldgName = "Village Hall",
+            Address = "1 High Street",
+            Postcode = "AB1 2CD",
+            BldgClaim = List(BldgClaim(Year = "2024", Amount = BigDecimal("500.00")))
+          )
+        )
+      )
+    }
 
     "buildGiftAidSmallDonationsScheme" should {
 
-      "populate GASDS when claimingUnderGiftAidSmallDonationsScheme is true with all sections present" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      "populate GASDS with upload data from validation service" in {
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -738,24 +830,33 @@ class ChRISSubmissionServiceSpec
                 claims = Seq(
                   models
                     .GiftAidSmallDonationsSchemeClaim(taxYear = 2024, amountOfDonationsReceived = BigDecimal("67.09"))
-                ),
-                connectedCharitiesScheduleData = Seq(
-                  models.ConnectedCharity(charityItem = 1, charityName = "Charity One", charityReference = "X95442")
-                ),
-                communityBuildingsScheduleData = Seq(
-                  models.CommunityBuilding(
-                    buildingItem = 1,
-                    buildingName = "YMCA",
-                    firstLineOfAddress = "123 New Street",
-                    postcode = "AB12 3CD",
-                    taxYearOneEnd = 2024,
-                    taxYearOneAmount = BigDecimal("1257.21"),
-                    taxYearTwoEnd = 2023,
-                    taxYearTwoAmount = BigDecimal("500.00"),
-                    taxYearThreeEnd = 2022,
-                    taxYearThreeAmount = BigDecimal("0")
-                  )
                 )
+              )
+            )
+          )
+        )
+
+        val connectedCharitiesData = Some(
+          ConnectedCharitiesScheduleData(
+            charities = Seq(
+              ConnectedCharity(charityItem = 1, charityName = "Charity One", charityReference = "X95442")
+            )
+          )
+        )
+
+        val communityBuildingsData = Some(
+          CommunityBuildingsScheduleData(
+            totalOfAllAmounts = BigDecimal("1757.21"),
+            communityBuildings = Seq(
+              CommunityBuilding1(
+                communityBuildingItem = 1,
+                buildingName = "YMCA",
+                firstLineOfAddress = "123 New Street",
+                postcode = "AB12 3CD",
+                taxYear1 = 2024,
+                amountYear1 = BigDecimal("1257.21"),
+                taxYear2 = Some(2023),
+                amountYear2 = Some(BigDecimal("500.00"))
               )
             )
           )
@@ -768,7 +869,7 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val result = service.buildClaim(claim, currentUser)
+        val result = service.buildClaim(claim, currentUser, connectedCharitiesData, communityBuildingsData)
         result.GiftAidSmallDonationsScheme shouldBe Some(
           GiftAidSmallDonationsScheme(
             ConnectedCharities = true,
@@ -798,8 +899,9 @@ class ChRISSubmissionServiceSpec
       }
 
       "return None when claimingUnderGiftAidSmallDonationsScheme is false" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -819,9 +921,7 @@ class ChRISSubmissionServiceSpec
                 claims = Seq(
                   models
                     .GiftAidSmallDonationsSchemeClaim(taxYear = 2024, amountOfDonationsReceived = BigDecimal("50.00"))
-                ),
-                connectedCharitiesScheduleData = Seq.empty,
-                communityBuildingsScheduleData = Seq.empty
+                )
               )
             )
           )
@@ -834,13 +934,14 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val result = service.buildClaim(claim, currentUser)
+        val result = service.buildClaim(claim, currentUser, None, None)
         result.GiftAidSmallDonationsScheme shouldBe None
       }
 
       "return None when giftAidSmallDonationsSchemeDonationDetails is None" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -864,13 +965,14 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val result = service.buildClaim(claim, currentUser)
+        val result = service.buildClaim(claim, currentUser, None, None)
         result.GiftAidSmallDonationsScheme shouldBe None
       }
 
-      "map multiple connected charities correctly" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      "map multiple connected charities from upload data correctly" in {
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -888,13 +990,17 @@ class ChRISSubmissionServiceSpec
             giftAidSmallDonationsSchemeDonationDetails = Some(
               models.GiftAidSmallDonationsSchemeDonationDetails(
                 adjustmentForGiftAidOverClaimed = BigDecimal("0"),
-                claims = Seq.empty,
-                connectedCharitiesScheduleData = Seq(
-                  models.ConnectedCharity(charityItem = 1, charityName = "Charity One", charityReference = "X95442"),
-                  models.ConnectedCharity(charityItem = 2, charityName = "Charity Two", charityReference = "Y12345")
-                ),
-                communityBuildingsScheduleData = Seq.empty
+                claims = Seq.empty
               )
+            )
+          )
+        )
+
+        val connectedCharitiesData = Some(
+          ConnectedCharitiesScheduleData(
+            charities = Seq(
+              ConnectedCharity(charityItem = 1, charityName = "Charity One", charityReference = "X95442"),
+              ConnectedCharity(charityItem = 2, charityName = "Charity Two", charityReference = "Y12345")
             )
           )
         )
@@ -906,7 +1012,7 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val result = service.buildClaim(claim, currentUser)
+        val result = service.buildClaim(claim, currentUser, connectedCharitiesData, None)
         result.GiftAidSmallDonationsScheme.get.Charity shouldBe Some(
           List(
             Charity(Name = "Charity One", HMRCref = "X95442"),
@@ -915,9 +1021,10 @@ class ChRISSubmissionServiceSpec
         )
       }
 
-      "return Charity as None when no connected charities exist" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      "return Charity as None when no upload data for connected charities" in {
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -935,9 +1042,7 @@ class ChRISSubmissionServiceSpec
             giftAidSmallDonationsSchemeDonationDetails = Some(
               models.GiftAidSmallDonationsSchemeDonationDetails(
                 adjustmentForGiftAidOverClaimed = BigDecimal("0"),
-                claims = Seq.empty,
-                connectedCharitiesScheduleData = Seq.empty,
-                communityBuildingsScheduleData = Seq.empty
+                claims = Seq.empty
               )
             )
           )
@@ -950,13 +1055,14 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val result = service.buildClaim(claim, currentUser)
+        val result = service.buildClaim(claim, currentUser, None, None)
         result.GiftAidSmallDonationsScheme.get.Charity shouldBe None
       }
 
       "map GiftAidSmallDonationsSchemeClaim correctly" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -979,9 +1085,7 @@ class ChRISSubmissionServiceSpec
                     .GiftAidSmallDonationsSchemeClaim(taxYear = 2024, amountOfDonationsReceived = BigDecimal("67.09")),
                   models
                     .GiftAidSmallDonationsSchemeClaim(taxYear = 2023, amountOfDonationsReceived = BigDecimal("120.50"))
-                ),
-                connectedCharitiesScheduleData = Seq.empty,
-                communityBuildingsScheduleData = Seq.empty
+                )
               )
             )
           )
@@ -994,7 +1098,7 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val result = service.buildClaim(claim, currentUser)
+        val result = service.buildClaim(claim, currentUser, None, None)
         result.GiftAidSmallDonationsScheme.get.GiftAidSmallDonationsSchemeClaim shouldBe Some(
           List(
             GiftAidSmallDonationsSchemeClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
@@ -1003,9 +1107,10 @@ class ChRISSubmissionServiceSpec
         )
       }
 
-      "map Building with multiple BldgClaims filtering out zero amounts" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      "map CommunityBuilding1 with 2 years from upload data" in {
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1023,22 +1128,25 @@ class ChRISSubmissionServiceSpec
             giftAidSmallDonationsSchemeDonationDetails = Some(
               models.GiftAidSmallDonationsSchemeDonationDetails(
                 adjustmentForGiftAidOverClaimed = BigDecimal("0"),
-                claims = Seq.empty,
-                connectedCharitiesScheduleData = Seq.empty,
-                communityBuildingsScheduleData = Seq(
-                  models.CommunityBuilding(
-                    buildingItem = 1,
-                    buildingName = "YMCA",
-                    firstLineOfAddress = "123 New Street",
-                    postcode = "AB12 3CD",
-                    taxYearOneEnd = 2024,
-                    taxYearOneAmount = BigDecimal("1257.21"),
-                    taxYearTwoEnd = 2023,
-                    taxYearTwoAmount = BigDecimal("500.00"),
-                    taxYearThreeEnd = 2022,
-                    taxYearThreeAmount = BigDecimal("0")
-                  )
-                )
+                claims = Seq.empty
+              )
+            )
+          )
+        )
+
+        val communityBuildingsData = Some(
+          CommunityBuildingsScheduleData(
+            totalOfAllAmounts = BigDecimal("1757.21"),
+            communityBuildings = Seq(
+              CommunityBuilding1(
+                communityBuildingItem = 1,
+                buildingName = "YMCA",
+                firstLineOfAddress = "123 New Street",
+                postcode = "AB12 3CD",
+                taxYear1 = 2024,
+                amountYear1 = BigDecimal("1257.21"),
+                taxYear2 = Some(2023),
+                amountYear2 = Some(BigDecimal("500.00"))
               )
             )
           )
@@ -1051,7 +1159,7 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val result = service.buildClaim(claim, currentUser)
+        val result = service.buildClaim(claim, currentUser, None, communityBuildingsData)
         result.GiftAidSmallDonationsScheme.get.Building shouldBe Some(
           List(
             Building(
@@ -1067,9 +1175,75 @@ class ChRISSubmissionServiceSpec
         )
       }
 
-      "return Building as None when no community buildings exist" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+      "map CommunityBuilding1 with 1 year only from upload data" in {
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = false,
+              claimingUnderGiftAidSmallDonationsScheme = true,
+              connectedToAnyOtherCharities = Some(false),
+              claimingDonationsCollectedInCommunityBuildings = Some(true)
+            ),
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              models.GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+                claims = Seq.empty
+              )
+            )
+          )
+        )
+
+        val communityBuildingsData = Some(
+          CommunityBuildingsScheduleData(
+            totalOfAllAmounts = BigDecimal("500.00"),
+            communityBuildings = Seq(
+              CommunityBuilding1(
+                communityBuildingItem = 1,
+                buildingName = "Village Hall",
+                firstLineOfAddress = "1 High Street",
+                postcode = "AB1 2CD",
+                taxYear1 = 2024,
+                amountYear1 = BigDecimal("500.00")
+              )
+            )
+          )
+        )
+
+        val currentUser = TestCurrentUser(
+          affinityGroup = AffinityGroup.Organisation,
+          userId = "test-user-id",
+          enrolmentIdentifierValue = "test-enrolment-identifier-value",
+          enrolmentIdentifierKey = "test-enrolment-identifier-key"
+        )
+
+        val result = service.buildClaim(claim, currentUser, None, communityBuildingsData)
+        result.GiftAidSmallDonationsScheme.get.Building shouldBe Some(
+          List(
+            Building(
+              BldgName = "Village Hall",
+              Address = "1 High Street",
+              Postcode = "AB1 2CD",
+              BldgClaim = List(
+                BldgClaim(Year = "2024", Amount = BigDecimal("500.00"))
+              )
+            )
+          )
+        )
+      }
+
+      "return Building as None when no upload data for community buildings" in {
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1087,9 +1261,7 @@ class ChRISSubmissionServiceSpec
             giftAidSmallDonationsSchemeDonationDetails = Some(
               models.GiftAidSmallDonationsSchemeDonationDetails(
                 adjustmentForGiftAidOverClaimed = BigDecimal("0"),
-                claims = Seq.empty,
-                connectedCharitiesScheduleData = Seq.empty,
-                communityBuildingsScheduleData = Seq.empty
+                claims = Seq.empty
               )
             )
           )
@@ -1102,13 +1274,14 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val result = service.buildClaim(claim, currentUser)
+        val result = service.buildClaim(claim, currentUser, None, None)
         result.GiftAidSmallDonationsScheme.get.Building shouldBe None
       }
 
       "set Adj when adjustment > 0 and None when 0" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         val claimWithAdj = models.Claim(
           claimId = "test-claim-id",
@@ -1126,9 +1299,7 @@ class ChRISSubmissionServiceSpec
             giftAidSmallDonationsSchemeDonationDetails = Some(
               models.GiftAidSmallDonationsSchemeDonationDetails(
                 adjustmentForGiftAidOverClaimed = BigDecimal("56.89"),
-                claims = Seq.empty,
-                connectedCharitiesScheduleData = Seq.empty,
-                communityBuildingsScheduleData = Seq.empty
+                claims = Seq.empty
               )
             )
           )
@@ -1139,9 +1310,7 @@ class ChRISSubmissionServiceSpec
             giftAidSmallDonationsSchemeDonationDetails = Some(
               models.GiftAidSmallDonationsSchemeDonationDetails(
                 adjustmentForGiftAidOverClaimed = BigDecimal("0"),
-                claims = Seq.empty,
-                connectedCharitiesScheduleData = Seq.empty,
-                communityBuildingsScheduleData = Seq.empty
+                claims = Seq.empty
               )
             )
           )
@@ -1154,16 +1323,17 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val resultWithAdj = service.buildClaim(claimWithAdj, currentUser)
+        val resultWithAdj = service.buildClaim(claimWithAdj, currentUser, None, None)
         resultWithAdj.GiftAidSmallDonationsScheme.get.Adj shouldBe Some("56.89")
 
-        val resultWithZeroAdj = service.buildClaim(claimWithZeroAdj, currentUser)
+        val resultWithZeroAdj = service.buildClaim(claimWithZeroAdj, currentUser, None, None)
         resultWithZeroAdj.GiftAidSmallDonationsScheme.get.Adj shouldBe None
       }
 
       "map ConnectedCharities yes/no from repaymentClaimDetails" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         def buildClaimWithConnected(connected: Option[Boolean]): models.Claim =
           models.Claim(
@@ -1182,9 +1352,7 @@ class ChRISSubmissionServiceSpec
               giftAidSmallDonationsSchemeDonationDetails = Some(
                 models.GiftAidSmallDonationsSchemeDonationDetails(
                   adjustmentForGiftAidOverClaimed = BigDecimal("0"),
-                  claims = Seq.empty,
-                  connectedCharitiesScheduleData = Seq.empty,
-                  communityBuildingsScheduleData = Seq.empty
+                  claims = Seq.empty
                 )
               )
             )
@@ -1197,19 +1365,20 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val resultYes = service.buildClaim(buildClaimWithConnected(Some(true)), currentUser)
+        val resultYes = service.buildClaim(buildClaimWithConnected(Some(true)), currentUser, None, None)
         resultYes.GiftAidSmallDonationsScheme.get.ConnectedCharities shouldBe (true: YesNo)
 
-        val resultNo = service.buildClaim(buildClaimWithConnected(Some(false)), currentUser)
+        val resultNo = service.buildClaim(buildClaimWithConnected(Some(false)), currentUser, None, None)
         resultNo.GiftAidSmallDonationsScheme.get.ConnectedCharities shouldBe (false: YesNo)
 
-        val resultNone = service.buildClaim(buildClaimWithConnected(None), currentUser)
+        val resultNone = service.buildClaim(buildClaimWithConnected(None), currentUser, None, None)
         resultNone.GiftAidSmallDonationsScheme.get.ConnectedCharities shouldBe (false: YesNo)
       }
 
       "map CommBldgs yes/no from repaymentClaimDetails" in {
-        val rdsConnectorMock = mock[RdsDatacacheProxyConnector]
-        val service          = new ChRISSubmissionServiceImpl(rdsConnectorMock)
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
         def buildClaimWithCommBldgs(claiming: Option[Boolean]): models.Claim =
           models.Claim(
@@ -1228,9 +1397,7 @@ class ChRISSubmissionServiceSpec
               giftAidSmallDonationsSchemeDonationDetails = Some(
                 models.GiftAidSmallDonationsSchemeDonationDetails(
                   adjustmentForGiftAidOverClaimed = BigDecimal("0"),
-                  claims = Seq.empty,
-                  connectedCharitiesScheduleData = Seq.empty,
-                  communityBuildingsScheduleData = Seq.empty
+                  claims = Seq.empty
                 )
               )
             )
@@ -1243,13 +1410,13 @@ class ChRISSubmissionServiceSpec
           enrolmentIdentifierKey = "test-enrolment-identifier-key"
         )
 
-        val resultYes = service.buildClaim(buildClaimWithCommBldgs(Some(true)), currentUser)
+        val resultYes = service.buildClaim(buildClaimWithCommBldgs(Some(true)), currentUser, None, None)
         resultYes.GiftAidSmallDonationsScheme.get.CommBldgs shouldBe Some(true: YesNo)
 
-        val resultNo = service.buildClaim(buildClaimWithCommBldgs(Some(false)), currentUser)
+        val resultNo = service.buildClaim(buildClaimWithCommBldgs(Some(false)), currentUser, None, None)
         resultNo.GiftAidSmallDonationsScheme.get.CommBldgs shouldBe Some(false: YesNo)
 
-        val resultNone = service.buildClaim(buildClaimWithCommBldgs(None), currentUser)
+        val resultNone = service.buildClaim(buildClaimWithCommBldgs(None), currentUser, None, None)
         resultNone.GiftAidSmallDonationsScheme.get.CommBldgs shouldBe Some(false: YesNo)
       }
 

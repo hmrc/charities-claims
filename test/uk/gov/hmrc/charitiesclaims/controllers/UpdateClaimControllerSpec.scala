@@ -71,27 +71,6 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
           taxYear = 2024,
           amountOfDonationsReceived = 1.0
         )
-      ),
-      connectedCharitiesScheduleData = List(
-        ConnectedCharity(
-          charityItem = 1,
-          charityName = "test charity",
-          charityReference = "test reference"
-        )
-      ),
-      communityBuildingsScheduleData = List(
-        CommunityBuilding(
-          buildingItem = 1,
-          buildingName = "test building",
-          firstLineOfAddress = "test address",
-          postcode = "test postcode",
-          taxYearOneEnd = 2024,
-          taxYearOneAmount = 1.0,
-          taxYearTwoEnd = 2025,
-          taxYearTwoAmount = 1.0,
-          taxYearThreeEnd = 2026,
-          taxYearThreeAmount = 1.0
-        )
       )
     )
 

@@ -19,13 +19,18 @@ package uk.gov.hmrc.charitiesclaims.services
 import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.models
 import com.google.inject.ImplementedBy
-import uk.gov.hmrc.charitiesclaims.connectors.RdsDatacacheProxyConnector
+import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
 import uk.gov.hmrc.charitiesclaims.models.NameOfCharityRegulator
+import uk.gov.hmrc.charitiesclaims.models.{CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities}
 
 import scala.concurrent.Future
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext
+
+import cats.syntax.traverse.*
+import cats.instances.future.*
+import cats.instances.option.*
 
 @ImplementedBy(classOf[ChRISSubmissionServiceImpl])
 trait ChRISSubmissionService {
@@ -38,43 +43,67 @@ trait ChRISSubmissionService {
 
 @Singleton
 class ChRISSubmissionServiceImpl @Inject() (
-  rdsConnector: RdsDatacacheProxyConnector
+  rdsConnector: RdsDatacacheProxyConnector,
+  claimsValidationConnector: ClaimsValidationConnector
 )(using ExecutionContext)
     extends ChRISSubmissionService {
 
   def buildChRISSubmission(
     claim: models.Claim,
     currentUser: models.CurrentUser
-  )(using HeaderCarrier): Future[GovTalkMessage] = {
+  )(using HeaderCarrier): Future[GovTalkMessage] =
 
-    val orgNameFuture =
-      if currentUser.isAgent
-      then
-        rdsConnector
-          .getAgentName(currentUser.enrolmentIdentifierValue)
-          .flatMap {
-            case Some(agentName) => Future.successful(Some(agentName))
-            case None            =>
-              Future.failed(
-                new Exception(
-                  s"No agent name found for the given agent reference ${currentUser.enrolmentIdentifierValue}"
-                )
-              )
-          }
-      else Future.successful(None)
-
-    orgNameFuture.map(orgName =>
-      GovTalkMessage(
-        GovTalkDetails = buildGovTalkDetails(currentUser),
-        Body = Body(
-          IRenvelope = IRenvelope(
-            IRheader = buildIRheader(currentUser),
-            R68 = buildR68(claim, currentUser, orgName)
-          )
+    for
+      orgName                <- getOrganisationName(currentUser)
+      communityBuildingsData <- getCommunityBuildingsUploadData(claim)
+      connectedCharitiesData <- getConnectedCharitiesUploadData(claim)
+    yield GovTalkMessage(
+      GovTalkDetails = buildGovTalkDetails(currentUser),
+      Body = Body(
+        IRenvelope = IRenvelope(
+          IRheader = buildIRheader(currentUser),
+          R68 = buildR68(claim, currentUser, orgName, connectedCharitiesData, communityBuildingsData)
         )
-      ).withLiteIRmark
-    )
-  }
+      )
+    ).withLiteIRmark
+
+  def getOrganisationName(currentUser: models.CurrentUser)(using HeaderCarrier): Future[Option[String]] =
+    if currentUser.isAgent
+    then
+      rdsConnector
+        .getAgentName(currentUser.enrolmentIdentifierValue)
+        .flatMap {
+          case Some(agentName) => Future.successful(Some(agentName))
+          case None            =>
+            Future.failed(
+              new Exception(
+                s"No agent name found for the given agent reference ${currentUser.enrolmentIdentifierValue}"
+              )
+            )
+        }
+    else Future.successful(None)
+
+  def getCommunityBuildingsUploadData(
+    claim: models.Claim
+  )(using HeaderCarrier): Future[Option[CommunityBuildingsScheduleData]] =
+    claim.claimData.communityBuildingsScheduleFileUploadReference.flatTraverse { ref =>
+      claimsValidationConnector
+        .getUploadResult(claim.claimId, ref)
+        .map(_.collect { case GetUploadResultValidatedCommunityBuildings(_, data) =>
+          data
+        })
+    }
+
+  def getConnectedCharitiesUploadData(
+    claim: models.Claim
+  )(using HeaderCarrier): Future[Option[ConnectedCharitiesScheduleData]] =
+    claim.claimData.connectedCharitiesScheduleFileUploadReference.flatTraverse { ref =>
+      claimsValidationConnector
+        .getUploadResult(claim.claimId, ref)
+        .map(_.collect { case GetUploadResultValidatedConnectedCharities(_, data) =>
+          data
+        })
+    }
 
   def buildGovTalkDetails(currentUser: models.CurrentUser)(using hc: HeaderCarrier): GovTalkDetails =
     GovTalkDetails(
@@ -101,7 +130,9 @@ class ChRISSubmissionServiceImpl @Inject() (
   def buildR68(
     claim: models.Claim,
     currentUser: models.CurrentUser,
-    orgName: Option[String]
+    orgName: Option[String],
+    connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
+    communityBuildingsData: Option[CommunityBuildingsScheduleData]
   ): R68 =
     R68(
       AgtOrNom =
@@ -113,7 +144,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         then None
         else buildAuthOfficial(claim),
       Declaration = true,
-      Claim = buildClaim(claim, currentUser)
+      Claim = buildClaim(claim, currentUser, connectedCharitiesData, communityBuildingsData)
     )
 
   def buildAuthOfficial(claim: models.Claim): Option[AuthOfficial] =
@@ -189,7 +220,9 @@ class ChRISSubmissionServiceImpl @Inject() (
 
   def buildClaim(
     claim: models.Claim,
-    currentUser: models.CurrentUser
+    currentUser: models.CurrentUser,
+    connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
+    communityBuildingsData: Option[CommunityBuildingsScheduleData]
   ): Claim =
     Claim(
       // If user has an affinity group of "Agent", then set to the value of "Name of Charity or CASC"
@@ -206,7 +239,8 @@ class ChRISSubmissionServiceImpl @Inject() (
         else currentUser.enrolmentIdentifierValue,
       Regulator = buildRegulator(claim),
       Repayment = buildRepayment(claim),
-      GiftAidSmallDonationsScheme = buildGiftAidSmallDonationsScheme(claim),
+      GiftAidSmallDonationsScheme =
+        buildGiftAidSmallDonationsScheme(claim, connectedCharitiesData, communityBuildingsData),
       OtherInfo = None // ToDo
     )
 
@@ -231,7 +265,9 @@ class ChRISSubmissionServiceImpl @Inject() (
     None
 
   def buildGiftAidSmallDonationsScheme(
-    claim: models.Claim
+    claim: models.Claim,
+    connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
+    communityBuildingsData: Option[CommunityBuildingsScheduleData]
   ): Option[GiftAidSmallDonationsScheme] =
     if !claim.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme then None
     else
@@ -241,7 +277,9 @@ class ChRISSubmissionServiceImpl @Inject() (
         val connectedCharities: YesNo = repaymentDetails.connectedToAnyOtherCharities.getOrElse(false)
 
         val charities: Option[List[Charity]] =
-          gasdsDetails.connectedCharitiesScheduleData
+          connectedCharitiesData
+            .map(_.charities)
+            .getOrElse(Seq.empty)
             .map(c => Charity(Name = c.charityName, HMRCref = c.charityReference))
             .toList match
             case Nil  => None
@@ -263,22 +301,23 @@ class ChRISSubmissionServiceImpl @Inject() (
           Some(repaymentDetails.claimingDonationsCollectedInCommunityBuildings.getOrElse(false))
 
         val buildings: Option[List[Building]] =
-          gasdsDetails.communityBuildingsScheduleData.map { b =>
-            val bldgClaims = List(
-              (b.taxYearOneEnd, b.taxYearOneAmount),
-              (b.taxYearTwoEnd, b.taxYearTwoAmount),
-              (b.taxYearThreeEnd, b.taxYearThreeAmount)
-            ).filter(_._2 > 0).map { case (year, amount) =>
-              BldgClaim(Year = year.toString, Amount = amount)
-            }
+          communityBuildingsData
+            .map(_.communityBuildings)
+            .getOrElse(Seq.empty)
+            .map { b =>
+              val year1Claim = List(BldgClaim(Year = b.taxYear1.toString, Amount = b.amountYear1))
+              val year2Claim = (b.taxYear2, b.amountYear2) match
+                case (Some(year), Some(amount)) => List(BldgClaim(Year = year.toString, Amount = amount))
+                case _                          => Nil
 
-            Building(
-              BldgName = b.buildingName,
-              Address = b.firstLineOfAddress,
-              Postcode = b.postcode,
-              BldgClaim = bldgClaims
-            )
-          }.toList match
+              Building(
+                BldgName = b.buildingName,
+                Address = b.firstLineOfAddress,
+                Postcode = b.postcode,
+                BldgClaim = year1Claim ++ year2Claim
+              )
+            }
+            .toList match
             case Nil  => None
             case list => Some(list)
 

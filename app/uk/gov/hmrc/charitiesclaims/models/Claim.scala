@@ -225,3 +225,13 @@ case class ConnectedCharitiesScheduleData(
 object ConnectedCharitiesScheduleData {
   given Format[ConnectedCharitiesScheduleData] = Json.format[ConnectedCharitiesScheduleData]
 }
+
+final case class ScheduleData(
+  giftAid: Option[GiftAidScheduleData] = None,
+  connectedCharities: Option[ConnectedCharitiesScheduleData] = None,
+  communityBuildings: Option[CommunityBuildingsScheduleData] = None
+)
+
+object ScheduleData {
+  val empty: ScheduleData = ScheduleData()
+}

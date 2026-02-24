@@ -21,7 +21,7 @@ import uk.gov.hmrc.charitiesclaims.models
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
 import uk.gov.hmrc.charitiesclaims.models.NameOfCharityRegulator
-import uk.gov.hmrc.charitiesclaims.models.{CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities}
+import uk.gov.hmrc.charitiesclaims.models.{CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, Donation, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GiftAidScheduleData, ScheduleData}
 
 import scala.concurrent.Future
 import javax.inject.{Inject, Singleton}
@@ -55,17 +55,24 @@ class ChRISSubmissionServiceImpl @Inject() (
 
     for
       orgName                <- getOrganisationName(currentUser)
+      giftAidData            <- getGiftAidUploadData(claim)
       communityBuildingsData <- getCommunityBuildingsUploadData(claim)
       connectedCharitiesData <- getConnectedCharitiesUploadData(claim)
-    yield GovTalkMessage(
-      GovTalkDetails = buildGovTalkDetails(currentUser),
-      Body = Body(
-        IRenvelope = IRenvelope(
-          IRheader = buildIRheader(currentUser),
-          R68 = buildR68(claim, currentUser, orgName, connectedCharitiesData, communityBuildingsData)
-        )
+    yield
+      val scheduleData = ScheduleData(
+        giftAid = giftAidData,
+        connectedCharities = connectedCharitiesData,
+        communityBuildings = communityBuildingsData
       )
-    ).withLiteIRmark
+      GovTalkMessage(
+        GovTalkDetails = buildGovTalkDetails(currentUser),
+        Body = Body(
+          IRenvelope = IRenvelope(
+            IRheader = buildIRheader(currentUser),
+            R68 = buildR68(claim, currentUser, orgName, scheduleData)
+          )
+        )
+      ).withLiteIRmark
 
   def getOrganisationName(currentUser: models.CurrentUser)(using HeaderCarrier): Future[Option[String]] =
     if currentUser.isAgent
@@ -90,6 +97,17 @@ class ChRISSubmissionServiceImpl @Inject() (
       claimsValidationConnector
         .getUploadResult(claim.claimId, ref)
         .map(_.collect { case GetUploadResultValidatedCommunityBuildings(_, data) =>
+          data
+        })
+    }
+
+  def getGiftAidUploadData(
+    claim: models.Claim
+  )(using HeaderCarrier): Future[Option[GiftAidScheduleData]] =
+    claim.claimData.giftAidScheduleFileUploadReference.flatTraverse { ref =>
+      claimsValidationConnector
+        .getUploadResult(claim.claimId, ref)
+        .map(_.collect { case GetUploadResultValidatedGiftAid(_, data) =>
           data
         })
     }
@@ -131,8 +149,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     claim: models.Claim,
     currentUser: models.CurrentUser,
     orgName: Option[String],
-    connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
-    communityBuildingsData: Option[CommunityBuildingsScheduleData]
+    scheduleData: ScheduleData
   ): R68 =
     R68(
       AgtOrNom =
@@ -144,7 +161,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         then None
         else buildAuthOfficial(claim),
       Declaration = true,
-      Claim = buildClaim(claim, currentUser, connectedCharitiesData, communityBuildingsData)
+      Claim = buildClaim(claim, currentUser, scheduleData)
     )
 
   def buildAuthOfficial(claim: models.Claim): Option[AuthOfficial] =
@@ -221,8 +238,7 @@ class ChRISSubmissionServiceImpl @Inject() (
   def buildClaim(
     claim: models.Claim,
     currentUser: models.CurrentUser,
-    connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
-    communityBuildingsData: Option[CommunityBuildingsScheduleData]
+    scheduleData: ScheduleData
   ): Claim =
     Claim(
       // If user has an affinity group of "Agent", then set to the value of "Name of Charity or CASC"
@@ -238,9 +254,9 @@ class ChRISSubmissionServiceImpl @Inject() (
         then "FOO" // TODO
         else currentUser.enrolmentIdentifierValue,
       Regulator = buildRegulator(claim),
-      Repayment = buildRepayment(claim),
+      Repayment = buildRepayment(claim, scheduleData.giftAid),
       GiftAidSmallDonationsScheme =
-        buildGiftAidSmallDonationsScheme(claim, connectedCharitiesData, communityBuildingsData),
+        buildGiftAidSmallDonationsScheme(claim, scheduleData.connectedCharities, scheduleData.communityBuildings),
       OtherInfo = None // ToDo
     )
 
@@ -261,8 +277,43 @@ class ChRISSubmissionServiceImpl @Inject() (
       )
     )
 
-  def buildRepayment(claim: models.Claim): Option[Repayment] =
-    None
+  def buildRepayment(claim: models.Claim, giftAidData: Option[GiftAidScheduleData]): Option[Repayment] =
+    if !claim.claimData.repaymentClaimDetails.claimingGiftAid then None
+    else
+      giftAidData.map { data =>
+        val gads: Option[List[GAD]] =
+          data.donations.map(buildGAD).toList match
+            case Nil  => None
+            case list => Some(list)
+
+        Repayment(
+          GAD = gads,
+          EarliestGAdate = data.earliestDonationDate,
+          Adjustment = data.prevOverclaimedGiftAid
+        )
+      }
+
+  private def buildGAD(donation: Donation): GAD =
+    GAD(
+      AggDonation = donation.aggregatedDonations.filter(_.nonEmpty),
+      Donor =
+        if donation.aggregatedDonations.exists(_.nonEmpty) then None
+        else Some(buildDonor(donation)),
+      Sponsored = donation.sponsoredEvent.collect { case true => true },
+      Date = donation.donationDate,
+      Total = donation.donationAmount.toString
+    )
+
+  private def buildDonor(donation: Donation): Donor =
+    val isOverseas = donation.donorPostcode.contains("X")
+    Donor(
+      Ttl = donation.donorTitle,
+      Fore = donation.donorFirstName,
+      Sur = donation.donorLastName,
+      House = donation.donorHouse,
+      Overseas = if isOverseas then Some(true) else None,
+      Postcode = if isOverseas then None else donation.donorPostcode
+    )
 
   def buildGiftAidSmallDonationsScheme(
     claim: models.Claim,

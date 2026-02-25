@@ -20,14 +20,13 @@ import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.models
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
-import uk.gov.hmrc.charitiesclaims.models.NameOfCharityRegulator
-import uk.gov.hmrc.charitiesclaims.models.{CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, Donation, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GiftAidScheduleData, ScheduleData}
+import uk.gov.hmrc.charitiesclaims.models.{CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, Donation, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncomeScheduleData, ScheduleData}
 
 import scala.concurrent.Future
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
-import scala.concurrent.ExecutionContext
 
+import scala.concurrent.ExecutionContext
 import cats.syntax.traverse.*
 import cats.instances.future.*
 import cats.instances.option.*
@@ -58,11 +57,13 @@ class ChRISSubmissionServiceImpl @Inject() (
       giftAidData            <- getGiftAidUploadData(claim)
       communityBuildingsData <- getCommunityBuildingsUploadData(claim)
       connectedCharitiesData <- getConnectedCharitiesUploadData(claim)
+      otherIncomeData        <- getOtherIncomeUploadData(claim)
     yield
       val scheduleData = ScheduleData(
         giftAid = giftAidData,
         connectedCharities = connectedCharitiesData,
-        communityBuildings = communityBuildingsData
+        communityBuildings = communityBuildingsData,
+        otherIncome = otherIncomeData
       )
       GovTalkMessage(
         GovTalkDetails = buildGovTalkDetails(currentUser),
@@ -119,6 +120,17 @@ class ChRISSubmissionServiceImpl @Inject() (
       claimsValidationConnector
         .getUploadResult(claim.claimId, ref)
         .map(_.collect { case GetUploadResultValidatedConnectedCharities(_, data) =>
+          data
+        })
+    }
+
+  def getOtherIncomeUploadData(
+    claim: models.Claim
+  )(using HeaderCarrier): Future[Option[OtherIncomeScheduleData]] =
+    claim.claimData.otherIncomeScheduleFileUploadReference.flatTraverse { ref =>
+      claimsValidationConnector
+        .getUploadResult(claim.claimId, ref)
+        .map(_.collect { case GetUploadResultValidatedOtherIncome(_, data) =>
           data
         })
     }
@@ -254,7 +266,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         then "FOO" // TODO
         else currentUser.enrolmentIdentifierValue,
       Regulator = buildRegulator(claim),
-      Repayment = buildRepayment(claim, scheduleData.giftAid),
+      Repayment = buildRepayment(claim, scheduleData.giftAid, scheduleData.otherIncome),
       GiftAidSmallDonationsScheme =
         buildGiftAidSmallDonationsScheme(claim, scheduleData.connectedCharities, scheduleData.communityBuildings),
       OtherInfo = None // ToDo
@@ -277,21 +289,61 @@ class ChRISSubmissionServiceImpl @Inject() (
       )
     )
 
-  def buildRepayment(claim: models.Claim, giftAidData: Option[GiftAidScheduleData]): Option[Repayment] =
-    if !claim.claimData.repaymentClaimDetails.claimingGiftAid then None
-    else
+  def buildRepayment(
+    claim: models.Claim,
+    giftAidData: Option[GiftAidScheduleData],
+    otherIncomeData: Option[OtherIncomeScheduleData]
+  ): Option[Repayment] =
+    if !claim.claimData.repaymentClaimDetails.claimingGiftAid && !claim.claimData.repaymentClaimDetails.claimingTaxDeducted
+    then None
+    else {
+      // get the payments for other Income
+      val otherIncomeList: Option[List[OtherInc]] =
+        otherIncomeData
+          .map(_.otherIncomes)
+          .getOrElse(Seq.empty)
+          .map(p =>
+            OtherInc(
+              Payer = p.payerName,
+              OIDate = p.paymentDate,
+              Gross = p.grossPayment,
+              Tax = p.taxDeducted
+            )
+          )
+          .toList match
+          case Nil  => None
+          case list => Some(list)
+
+      // get prev overclaim adjustment for other income
+      val adjOtherIncome: Option[BigDecimal] =
+        otherIncomeData.map(data => data.adjustmentForOtherIncomePreviousOverClaimed)
+
       giftAidData.map { data =>
         val gads: Option[List[GAD]] =
           data.donations.map(buildGAD).toList match
             case Nil  => None
             case list => Some(list)
 
+        val adjForPrevOverClaim = (
+          if claim.claimData.repaymentClaimDetails.claimingTaxDeducted && adjOtherIncome > Some(0) then adjOtherIncome
+          else None,
+          if claim.claimData.repaymentClaimDetails.claimingGiftAid && data.prevOverclaimedGiftAid > Some(0) then
+            data.prevOverclaimedGiftAid
+          else None
+        ) match {
+          case (None, Some(giftAid))              => Some(giftAid)
+          case (Some(otherIncome), None)          => Some(otherIncome)
+          case (Some(otherIncome), Some(giftAid)) => Some(otherIncome + giftAid)
+          case (_, _)                             => None
+        }
         Repayment(
-          GAD = gads,
+          GAD = if claim.claimData.repaymentClaimDetails.claimingGiftAid then gads else None,
           EarliestGAdate = data.earliestDonationDate,
-          Adjustment = data.prevOverclaimedGiftAid
+          OtherInc = if claim.claimData.repaymentClaimDetails.claimingTaxDeducted then otherIncomeList else None,
+          Adjustment = adjForPrevOverClaim
         )
       }
+    }
 
   private def buildGAD(donation: Donation): GAD =
     GAD(

@@ -27,12 +27,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.SessionId
 import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent}
+
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
+
 import scala.concurrent.Future
-import uk.gov.hmrc.charitiesclaims.models.NameOfCharityRegulator
-import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding1, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, Donation, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GiftAidScheduleData, ScheduleData}
+import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding1, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, Donation, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncome, OtherIncomeScheduleData, ScheduleData}
 
 class ChRISSubmissionServiceSpec
     extends AnyWordSpec
@@ -681,6 +682,8 @@ class ChRISSubmissionServiceSpec
 
       val communityBuildingsRef = FileUploadReference("cb-ref-123")
       val connectedCharitiesRef = FileUploadReference("cc-ref-456")
+      val otherIncomeRef        = FileUploadReference("oi-ref-789")
+      val giftAidRef            = FileUploadReference("ga-ref-789")
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -689,8 +692,8 @@ class ChRISSubmissionServiceSpec
         lastUpdatedReference = UUID.randomUUID().toString,
         claimData = models.ClaimData(
           repaymentClaimDetails = models.RepaymentClaimDetails(
-            claimingGiftAid = false,
-            claimingTaxDeducted = false,
+            claimingGiftAid = true,
+            claimingTaxDeducted = true,
             claimingUnderGiftAidSmallDonationsScheme = true,
             connectedToAnyOtherCharities = Some(true),
             claimingDonationsCollectedInCommunityBuildings = Some(true)
@@ -705,10 +708,28 @@ class ChRISSubmissionServiceSpec
             )
           ),
           communityBuildingsScheduleFileUploadReference = Some(communityBuildingsRef),
-          connectedCharitiesScheduleFileUploadReference = Some(connectedCharitiesRef)
+          connectedCharitiesScheduleFileUploadReference = Some(connectedCharitiesRef),
+          otherIncomeScheduleFileUploadReference = Some(otherIncomeRef),
+          giftAidScheduleFileUploadReference = Some(giftAidRef)
         )
       )
 
+      val giftAidData            =
+        GiftAidScheduleData(
+          earliestDonationDate = "2024-01-15",
+          prevOverclaimedGiftAid = Some(BigDecimal("123.45")),
+          totalDonations = BigDecimal("200.00"),
+          donations = Seq(
+            Donation(
+              donationDate = "2024-02-01",
+              donationAmount = BigDecimal("200.00"),
+              donorTitle = Some("Mr"),
+              donorFirstName = Some("Test"),
+              donorLastName = Some("User"),
+              donorPostcode = Some("ZZ1 1ZZ")
+            )
+          )
+        )
       val communityBuildingsData = CommunityBuildingsScheduleData(
         totalOfAllAmounts = BigDecimal("500.00"),
         communityBuildings = Seq(
@@ -729,6 +750,22 @@ class ChRISSubmissionServiceSpec
         )
       )
 
+      val otherIncomeData =
+        OtherIncomeScheduleData(
+          totalOfGrossPayments = BigDecimal("240.01"),
+          totalOfTaxDeducted = BigDecimal("240.02"),
+          adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
+          otherIncomes = Seq(
+            OtherIncome(
+              otherIncomeItem = 1,
+              payerName = "John Smith",
+              paymentDate = "2024-03-01",
+              grossPayment = BigDecimal("240.00"),
+              taxDeducted = BigDecimal("15.00")
+            )
+          )
+        )
+
       (claimsValidationConnectorMock
         .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
         .expects("test-claim-id", communityBuildingsRef, *)
@@ -744,6 +781,24 @@ class ChRISSubmissionServiceSpec
         .returns(
           Future.successful(
             Some(GetUploadResultValidatedConnectedCharities(connectedCharitiesRef, connectedCharitiesData))
+          )
+        )
+
+      (claimsValidationConnectorMock
+        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
+        .expects("test-claim-id", otherIncomeRef, *)
+        .returns(
+          Future.successful(
+            Some(GetUploadResultValidatedOtherIncome(otherIncomeRef, otherIncomeData))
+          )
+        )
+
+      (claimsValidationConnectorMock
+        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
+        .expects("test-claim-id", giftAidRef, *)
+        .returns(
+          Future.successful(
+            Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidData))
           )
         )
 
@@ -765,6 +820,19 @@ class ChRISSubmissionServiceSpec
           )
         )
       )
+
+      result.Body.IRenvelope.R68.Claim.Repayment.get.OtherInc shouldBe
+        Some(
+          List(
+            OtherInc(
+              Payer = "John Smith",
+              OIDate = "2024-03-01",
+              Gross = BigDecimal("240.00"),
+              Tax = BigDecimal("15.00")
+            )
+          )
+        )
+
     }
 
     "buildChRISSubmission fetches gift aid upload data from validation service when gift aid upload reference is present" in {
@@ -1483,6 +1551,23 @@ class ChRISSubmissionServiceSpec
           )
         )
 
+        val otherIncomeData = Some(
+          OtherIncomeScheduleData(
+            totalOfGrossPayments = BigDecimal("240.01"),
+            totalOfTaxDeducted = BigDecimal("240.02"),
+            adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
+            otherIncomes = Seq(
+              OtherIncome(
+                otherIncomeItem = 1,
+                payerName = "John Smith",
+                paymentDate = "2024-03-01",
+                grossPayment = BigDecimal("240.00"),
+                taxDeducted = BigDecimal("15.00")
+              )
+            )
+          )
+        )
+
         val claim = models.Claim(
           claimId = "test-claim-id",
           userId = "test-user-id",
@@ -1491,13 +1576,13 @@ class ChRISSubmissionServiceSpec
           claimData = models.ClaimData(
             repaymentClaimDetails = models.RepaymentClaimDetails(
               claimingGiftAid = true,
-              claimingTaxDeducted = false,
+              claimingTaxDeducted = true,
               claimingUnderGiftAidSmallDonationsScheme = false
             )
           )
         )
 
-        val result = service.buildRepayment(claim, giftAidData)
+        val result = service.buildRepayment(claim, giftAidData, otherIncomeData)
 
         result shouldBe Some(
           Repayment(
@@ -1522,7 +1607,17 @@ class ChRISSubmissionServiceSpec
               )
             ),
             EarliestGAdate = "2024-01-15",
-            Adjustment = None
+            OtherInc = Some(
+              List(
+                OtherInc(
+                  Payer = "John Smith",
+                  OIDate = "2024-03-01",
+                  Gross = BigDecimal("240.00"),
+                  Tax = BigDecimal("15.00")
+                )
+              )
+            ),
+            Adjustment = Some(BigDecimal("240.03"))
           )
         )
       }
@@ -1532,7 +1627,7 @@ class ChRISSubmissionServiceSpec
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
         val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
-        val giftAidData = Some(
+        val giftAidData     = Some(
           GiftAidScheduleData(
             earliestDonationDate = "2024-01-15",
             totalDonations = BigDecimal("500.00"),
@@ -1541,6 +1636,22 @@ class ChRISSubmissionServiceSpec
                 donationDate = "2024-06-01",
                 donationAmount = BigDecimal("500.00"),
                 aggregatedDonations = Some("One off donations")
+              )
+            )
+          )
+        )
+        val otherIncomeData = Some(
+          OtherIncomeScheduleData(
+            totalOfGrossPayments = BigDecimal("240.01"),
+            totalOfTaxDeducted = BigDecimal("240.02"),
+            adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
+            otherIncomes = Seq(
+              OtherIncome(
+                otherIncomeItem = 1,
+                payerName = "John Smith",
+                paymentDate = "2024-03-01",
+                grossPayment = BigDecimal("240.00"),
+                taxDeducted = BigDecimal("15.00")
               )
             )
           )
@@ -1560,7 +1671,7 @@ class ChRISSubmissionServiceSpec
           )
         )
 
-        val result = service.buildRepayment(claim, giftAidData)
+        val result = service.buildRepayment(claim, giftAidData, otherIncomeData)
 
         result.get.GAD.get.head.AggDonation shouldBe Some("One off donations")
         result.get.GAD.get.head.Donor       shouldBe None
@@ -1571,7 +1682,7 @@ class ChRISSubmissionServiceSpec
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
         val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
-        val giftAidData = Some(
+        val giftAidData     = Some(
           GiftAidScheduleData(
             earliestDonationDate = "2024-01-15",
             totalDonations = BigDecimal("100.00"),
@@ -1588,6 +1699,22 @@ class ChRISSubmissionServiceSpec
             )
           )
         )
+        val otherIncomeData = Some(
+          OtherIncomeScheduleData(
+            totalOfGrossPayments = BigDecimal("240.01"),
+            totalOfTaxDeducted = BigDecimal("240.02"),
+            adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
+            otherIncomes = Seq(
+              OtherIncome(
+                otherIncomeItem = 1,
+                payerName = "John Smith",
+                paymentDate = "2024-03-01",
+                grossPayment = BigDecimal("240.00"),
+                taxDeducted = BigDecimal("15.00")
+              )
+            )
+          )
+        )
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1603,7 +1730,7 @@ class ChRISSubmissionServiceSpec
           )
         )
 
-        val result = service.buildRepayment(claim, giftAidData)
+        val result = service.buildRepayment(claim, giftAidData, otherIncomeData)
 
         val donor = result.get.GAD.get.head.Donor.get
         donor.Overseas shouldBe Some(true)
@@ -1634,6 +1761,23 @@ class ChRISSubmissionServiceSpec
           )
         )
 
+        val otherIncomeData = Some(
+          OtherIncomeScheduleData(
+            totalOfGrossPayments = BigDecimal("240.01"),
+            totalOfTaxDeducted = BigDecimal("240.02"),
+            adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
+            otherIncomes = Seq(
+              OtherIncome(
+                otherIncomeItem = 1,
+                payerName = "John Smith",
+                paymentDate = "2024-03-01",
+                grossPayment = BigDecimal("240.00"),
+                taxDeducted = BigDecimal("15.00")
+              )
+            )
+          )
+        )
+
         val claim = models.Claim(
           claimId = "test-claim-id",
           userId = "test-user-id",
@@ -1648,7 +1792,7 @@ class ChRISSubmissionServiceSpec
           )
         )
 
-        val result = service.buildRepayment(claim, giftAidData)
+        val result = service.buildRepayment(claim, giftAidData, otherIncomeData)
 
         result.get.GAD.get.head.Sponsored shouldBe Some(true)
       }
@@ -1675,6 +1819,23 @@ class ChRISSubmissionServiceSpec
           )
         )
 
+        val otherIncomeData = Some(
+          OtherIncomeScheduleData(
+            totalOfGrossPayments = BigDecimal("240.01"),
+            totalOfTaxDeducted = BigDecimal("240.02"),
+            adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
+            otherIncomes = Seq(
+              OtherIncome(
+                otherIncomeItem = 1,
+                payerName = "John Smith",
+                paymentDate = "2024-03-01",
+                grossPayment = BigDecimal("240.00"),
+                taxDeducted = BigDecimal("15.00")
+              )
+            )
+          )
+        )
+
         val claim = models.Claim(
           claimId = "test-claim-id",
           userId = "test-user-id",
@@ -1689,12 +1850,71 @@ class ChRISSubmissionServiceSpec
           )
         )
 
-        val result = service.buildRepayment(claim, giftAidData)
+        val result = service.buildRepayment(claim, giftAidData, otherIncomeData)
 
         result.get.EarliestGAdate shouldBe "2023-12-25"
       }
 
-      "populate Adjustment from prevOverclaimedGiftAid when present" in {
+      "populate Adjustment from prevOverclaimedGiftAid when overpayment and OtherIncome overpayment are both present" in {
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+
+        val giftAidData = Some(
+          GiftAidScheduleData(
+            earliestDonationDate = "2024-01-15",
+            prevOverclaimedGiftAid = Some(BigDecimal("123.45")),
+            totalDonations = BigDecimal("200.00"),
+            donations = Seq(
+              Donation(
+                donationDate = "2024-02-01",
+                donationAmount = BigDecimal("200.00"),
+                donorTitle = Some("Mr"),
+                donorFirstName = Some("Test"),
+                donorLastName = Some("User"),
+                donorPostcode = Some("ZZ1 1ZZ")
+              )
+            )
+          )
+        )
+
+        val otherIncomeData = Some(
+          OtherIncomeScheduleData(
+            totalOfGrossPayments = BigDecimal("240.01"),
+            totalOfTaxDeducted = BigDecimal("240.02"),
+            adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
+            otherIncomes = Seq(
+              OtherIncome(
+                otherIncomeItem = 1,
+                payerName = "John Smith",
+                paymentDate = "2024-03-01",
+                grossPayment = BigDecimal("240.00"),
+                taxDeducted = BigDecimal("15.00")
+              )
+            )
+          )
+        )
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = true,
+              claimingTaxDeducted = true,
+              claimingUnderGiftAidSmallDonationsScheme = false
+            )
+          )
+        )
+
+        val result = service.buildRepayment(claim, giftAidData, otherIncomeData)
+
+        result.get.Adjustment shouldBe Some(BigDecimal("363.48"))
+      }
+
+      "populate Adjustment from prevOverclaimedGiftAid when present and OtherIncome is not defined" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
         val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
@@ -1731,12 +1951,70 @@ class ChRISSubmissionServiceSpec
           )
         )
 
-        val result = service.buildRepayment(claim, giftAidData)
+        val result = service.buildRepayment(claim, giftAidData, None)
 
         result.get.Adjustment shouldBe Some(BigDecimal("123.45"))
       }
 
-      "omit Adjustment when prevOverclaimedGiftAid is None" in {
+      "populate Adjustment when prevOverclaimedGiftAid is None &  OtherIncome overpayment is present" in {
+        val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+        val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+
+        val giftAidData = Some(
+          GiftAidScheduleData(
+            earliestDonationDate = "2024-01-15",
+            totalDonations = BigDecimal("200.00"),
+            donations = Seq(
+              Donation(
+                donationDate = "2024-02-01",
+                donationAmount = BigDecimal("200.00"),
+                donorTitle = Some("Mr"),
+                donorFirstName = Some("Test"),
+                donorLastName = Some("User"),
+                donorPostcode = Some("ZZ1 1ZZ")
+              )
+            )
+          )
+        )
+
+        val otherIncomeData = Some(
+          OtherIncomeScheduleData(
+            totalOfGrossPayments = BigDecimal("240.01"),
+            totalOfTaxDeducted = BigDecimal("240.02"),
+            adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
+            otherIncomes = Seq(
+              OtherIncome(
+                otherIncomeItem = 1,
+                payerName = "John Smith",
+                paymentDate = "2024-03-01",
+                grossPayment = BigDecimal("240.00"),
+                taxDeducted = BigDecimal("15.00")
+              )
+            )
+          )
+        )
+
+        val claim = models.Claim(
+          claimId = "test-claim-id",
+          userId = "test-user-id",
+          claimSubmitted = false,
+          lastUpdatedReference = UUID.randomUUID().toString,
+          claimData = models.ClaimData(
+            repaymentClaimDetails = models.RepaymentClaimDetails(
+              claimingGiftAid = false,
+              claimingTaxDeducted = true,
+              claimingUnderGiftAidSmallDonationsScheme = false
+            )
+          )
+        )
+
+        val result = service.buildRepayment(claim, giftAidData, otherIncomeData)
+
+        result.get.Adjustment shouldBe Some(BigDecimal("240.03"))
+      }
+
+      "omit Adjustment when prevOverclaimedGiftAid is None &  there no OtherIncome" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
         val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
@@ -1772,7 +2050,7 @@ class ChRISSubmissionServiceSpec
           )
         )
 
-        val result = service.buildRepayment(claim, giftAidData)
+        val result = service.buildRepayment(claim, giftAidData, None)
 
         result.get.Adjustment shouldBe None
       }
@@ -1815,6 +2093,23 @@ class ChRISSubmissionServiceSpec
           )
         )
 
+        val otherIncomeData = Some(
+          OtherIncomeScheduleData(
+            totalOfGrossPayments = BigDecimal("240.01"),
+            totalOfTaxDeducted = BigDecimal("240.02"),
+            adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
+            otherIncomes = Seq(
+              OtherIncome(
+                otherIncomeItem = 1,
+                payerName = "John Smith",
+                paymentDate = "2024-03-01",
+                grossPayment = BigDecimal("240.00"),
+                taxDeducted = BigDecimal("15.00")
+              )
+            )
+          )
+        )
+
         val claim = models.Claim(
           claimId = "test-claim-id",
           userId = "test-user-id",
@@ -1829,7 +2124,7 @@ class ChRISSubmissionServiceSpec
           )
         )
 
-        val result = service.buildRepayment(claim, giftAidData)
+        val result = service.buildRepayment(claim, giftAidData, otherIncomeData)
 
         val gads = result.get.GAD.get
         gads should have size 3

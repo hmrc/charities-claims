@@ -20,14 +20,13 @@ import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.models
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
-import uk.gov.hmrc.charitiesclaims.models.NameOfCharityRegulator
-import uk.gov.hmrc.charitiesclaims.models.{CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities}
+import uk.gov.hmrc.charitiesclaims.models.{CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, Donation, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncomeScheduleData, ScheduleData}
 
 import scala.concurrent.Future
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
-import scala.concurrent.ExecutionContext
 
+import scala.concurrent.ExecutionContext
 import cats.syntax.traverse.*
 import cats.instances.future.*
 import cats.instances.option.*
@@ -55,17 +54,26 @@ class ChRISSubmissionServiceImpl @Inject() (
 
     for
       orgName                <- getOrganisationName(currentUser)
+      giftAidData            <- getGiftAidUploadData(claim)
       communityBuildingsData <- getCommunityBuildingsUploadData(claim)
       connectedCharitiesData <- getConnectedCharitiesUploadData(claim)
-    yield GovTalkMessage(
-      GovTalkDetails = buildGovTalkDetails(currentUser),
-      Body = Body(
-        IRenvelope = IRenvelope(
-          IRheader = buildIRheader(currentUser),
-          R68 = buildR68(claim, currentUser, orgName, connectedCharitiesData, communityBuildingsData)
-        )
+      otherIncomeData        <- getOtherIncomeUploadData(claim)
+    yield
+      val scheduleData = ScheduleData(
+        giftAid = giftAidData,
+        connectedCharities = connectedCharitiesData,
+        communityBuildings = communityBuildingsData,
+        otherIncome = otherIncomeData
       )
-    ).withLiteIRmark
+      GovTalkMessage(
+        GovTalkDetails = buildGovTalkDetails(currentUser),
+        Body = Body(
+          IRenvelope = IRenvelope(
+            IRheader = buildIRheader(currentUser),
+            R68 = buildR68(claim, currentUser, orgName, scheduleData)
+          )
+        )
+      ).withLiteIRmark
 
   def getOrganisationName(currentUser: models.CurrentUser)(using HeaderCarrier): Future[Option[String]] =
     if currentUser.isAgent
@@ -94,6 +102,17 @@ class ChRISSubmissionServiceImpl @Inject() (
         })
     }
 
+  def getGiftAidUploadData(
+    claim: models.Claim
+  )(using HeaderCarrier): Future[Option[GiftAidScheduleData]] =
+    claim.claimData.giftAidScheduleFileUploadReference.flatTraverse { ref =>
+      claimsValidationConnector
+        .getUploadResult(claim.claimId, ref)
+        .map(_.collect { case GetUploadResultValidatedGiftAid(_, data) =>
+          data
+        })
+    }
+
   def getConnectedCharitiesUploadData(
     claim: models.Claim
   )(using HeaderCarrier): Future[Option[ConnectedCharitiesScheduleData]] =
@@ -101,6 +120,17 @@ class ChRISSubmissionServiceImpl @Inject() (
       claimsValidationConnector
         .getUploadResult(claim.claimId, ref)
         .map(_.collect { case GetUploadResultValidatedConnectedCharities(_, data) =>
+          data
+        })
+    }
+
+  def getOtherIncomeUploadData(
+    claim: models.Claim
+  )(using HeaderCarrier): Future[Option[OtherIncomeScheduleData]] =
+    claim.claimData.otherIncomeScheduleFileUploadReference.flatTraverse { ref =>
+      claimsValidationConnector
+        .getUploadResult(claim.claimId, ref)
+        .map(_.collect { case GetUploadResultValidatedOtherIncome(_, data) =>
           data
         })
     }
@@ -131,8 +161,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     claim: models.Claim,
     currentUser: models.CurrentUser,
     orgName: Option[String],
-    connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
-    communityBuildingsData: Option[CommunityBuildingsScheduleData]
+    scheduleData: ScheduleData
   ): R68 =
     R68(
       AgtOrNom =
@@ -144,7 +173,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         then None
         else buildAuthOfficial(claim),
       Declaration = true,
-      Claim = buildClaim(claim, currentUser, connectedCharitiesData, communityBuildingsData)
+      Claim = buildClaim(claim, currentUser, scheduleData)
     )
 
   def buildAuthOfficial(claim: models.Claim): Option[AuthOfficial] =
@@ -221,8 +250,7 @@ class ChRISSubmissionServiceImpl @Inject() (
   def buildClaim(
     claim: models.Claim,
     currentUser: models.CurrentUser,
-    connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
-    communityBuildingsData: Option[CommunityBuildingsScheduleData]
+    scheduleData: ScheduleData
   ): Claim =
     Claim(
       // If user has an affinity group of "Agent", then set to the value of "Name of Charity or CASC"
@@ -238,9 +266,9 @@ class ChRISSubmissionServiceImpl @Inject() (
         then "FOO" // TODO
         else currentUser.enrolmentIdentifierValue,
       Regulator = buildRegulator(claim),
-      Repayment = buildRepayment(claim),
+      Repayment = buildRepayment(claim, scheduleData.giftAid, scheduleData.otherIncome),
       GiftAidSmallDonationsScheme =
-        buildGiftAidSmallDonationsScheme(claim, connectedCharitiesData, communityBuildingsData),
+        buildGiftAidSmallDonationsScheme(claim, scheduleData.connectedCharities, scheduleData.communityBuildings),
       OtherInfo = None // ToDo
     )
 
@@ -261,35 +289,83 @@ class ChRISSubmissionServiceImpl @Inject() (
       )
     )
 
-  def buildRepayment(claim: models.Claim,
-                     currentUser: models.CurrentUser
-                    ): Repayment = {
+  def buildRepayment(
+    claim: models.Claim,
+    giftAidData: Option[GiftAidScheduleData],
+    otherIncomeData: Option[OtherIncomeScheduleData]
+  ): Option[Repayment] =
+    if !claim.claimData.repaymentClaimDetails.claimingGiftAid && !claim.claimData.repaymentClaimDetails.claimingTaxDeducted
+    then None
+    else {
+      // get the payments for other Income
+      val otherIncomeList: Option[List[OtherInc]] =
+        otherIncomeData
+          .map(_.otherIncomes)
+          .getOrElse(Seq.empty)
+          .map(p =>
+            OtherInc(
+              Payer = p.payerName,
+              OIDate = p.paymentDate,
+              Gross = p.grossPayment,
+              Tax = p.taxDeducted
+            )
+          )
+          .toList match
+          case Nil  => None
+          case list => Some(list)
 
-    val paymentList: Option[List[OtherInc]] = claim.claimData.repaymentClaimDetails.OtherIncome.Payment.map(p => Charity(Payer = p.nameOfPayer,
-        OIDate = p.dateOfPayment,
-        Gross = p.grossPayment,
-        Tax = p.taxDeducted))
-      .toList match
-      case Nil => None
-      case list => Some(list)
+      // get prev overclaim adjustment for other income
+      val adjOtherIncome: Option[BigDecimal] =
+        otherIncomeData.map(data => data.adjustmentForOtherIncomePreviousOverClaimed)
 
-    val adjGiftAid=  Option.when(claim.claimData.giftAidSmallDonationsSchemeDonationDetails.adjustmentForGiftAidOverClaimed > 0)(
-      claim.claimData.giftAidSmallDonationsSchemeDonationDetails.adjustmentForGiftAidOverClaimed
+      giftAidData.map { data =>
+        val gads: Option[List[GAD]] =
+          data.donations.map(buildGAD).toList match
+            case Nil  => None
+            case list => Some(list)
+
+        val adjForPrevOverClaim = (
+          if claim.claimData.repaymentClaimDetails.claimingTaxDeducted && adjOtherIncome > Some(0) then adjOtherIncome
+          else None,
+          if claim.claimData.repaymentClaimDetails.claimingGiftAid && data.prevOverclaimedGiftAid > Some(0) then
+            data.prevOverclaimedGiftAid
+          else None
+        ) match {
+          case (None, Some(giftAid))              => Some(giftAid)
+          case (Some(otherIncome), None)          => Some(otherIncome)
+          case (Some(otherIncome), Some(giftAid)) => Some(otherIncome + giftAid)
+          case (_, _)                             => None
+        }
+        Repayment(
+          GAD = if claim.claimData.repaymentClaimDetails.claimingGiftAid then gads else None,
+          EarliestGAdate = data.earliestDonationDate,
+          OtherInc = if claim.claimData.repaymentClaimDetails.claimingTaxDeducted then otherIncomeList else None,
+          Adjustment = adjForPrevOverClaim
+        )
+      }
+    }
+
+  private def buildGAD(donation: Donation): GAD =
+    GAD(
+      AggDonation = donation.aggregatedDonations.filter(_.nonEmpty),
+      Donor =
+        if donation.aggregatedDonations.exists(_.nonEmpty) then None
+        else Some(buildDonor(donation)),
+      Sponsored = donation.sponsoredEvent.collect { case true => true },
+      Date = donation.donationDate,
+      Total = donation.donationAmount.toString
     )
-    val adjOtherIncome=
-      Option.when(models.OtherIncomeScheduleData.adjustmentForOtherIncomePreviousOverClaimed > 0)(
-        models.OtherIncomeScheduleData.adjustmentForOtherIncomePreviousOverClaimed
-      )
-    val adj: Option[String] = (Some(adjGiftAid) + Some(adjOtherIncome)).toString
 
-
-    Repayment(
-      GAD = None, // TODO - buildRepaymentGAD(claim)
-      EarliestGAdate = models.GiftAidScheduleData.earliestDonationDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), // TODO - earliestDonationDate (YYYY-MM-DD)
-      OtherInc = paymentList,
-      Adjustment = adj
+  private def buildDonor(donation: Donation): Donor =
+    val isOverseas = donation.donorPostcode.contains("X")
+    Donor(
+      Ttl = donation.donorTitle,
+      Fore = donation.donorFirstName,
+      Sur = donation.donorLastName,
+      House = donation.donorHouse,
+      Overseas = if isOverseas then Some(true) else None,
+      Postcode = if isOverseas then None else donation.donorPostcode
     )
-  }
 
   def buildGiftAidSmallDonationsScheme(
     claim: models.Claim,

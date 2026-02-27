@@ -34,6 +34,7 @@ import play.api.libs.ws.BodyWritable
 import play.api.libs.ws.InMemoryBody
 import org.apache.pekko.util.ByteString
 import uk.gov.hmrc.charitiesclaims.xml.XmlUtils
+import uk.gov.hmrc.charitiesclaims.validation.{SchematronValidationException, SchematronValidator}
 
 @ImplementedBy(classOf[ChRISConnectorImpl])
 trait ChRISConnector {
@@ -67,6 +68,11 @@ class ChRISConnectorImpl @Inject() (
     val xml = XmlWriter.writeCompact(govTalkMessage)
     Future
       .fromTry(XmlUtils.validateChRISSubmission(xml))
+      .flatMap { _ =>
+        SchematronValidator.validate(govTalkMessage) match
+          case Left(errors) => Future.failed(SchematronValidationException(errors))
+          case Right(_)     => Future.unit
+      }
       .flatMap { _ =>
         retry(retryIntervals*)(shouldRetry, retryReason)(
           http

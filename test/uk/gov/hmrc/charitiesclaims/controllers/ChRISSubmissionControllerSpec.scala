@@ -24,6 +24,7 @@ import uk.gov.hmrc.charitiesclaims.models.*
 import uk.gov.hmrc.charitiesclaims.models.chris.GovTalkMessage
 import uk.gov.hmrc.charitiesclaims.services.{ChRISSubmissionService, ClaimsService}
 import uk.gov.hmrc.charitiesclaims.util.{ChRISTestData, ControllerSpec, TestClaimsService, TestClaimsServiceHelper}
+import uk.gov.hmrc.charitiesclaims.validation.{SchematronValidationException, ValidationError}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -332,6 +333,69 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       json.as[JsObject].value.get("errorCode")    shouldBe Some(
         JsString("CLAIM_SERVICE_ERROR")
       )
+    }
+
+    "return 400 when Schematron validation fails" in new AuthorisedOrganisationFixture {
+
+      val claim = Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = false,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        claimData = ClaimData(
+          repaymentClaimDetails = RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          )
+        )
+      )
+
+      val claimsService              = new TestClaimsService(initialClaims = Seq(claim))
+      val chrisSubmissionServiceMock = mock[ChRISSubmissionService]
+      val chrisConnectorMock         = mock[ChRISConnector]
+
+      val controller = new ChRISSubmissionController(
+        Helpers.stubControllerComponents(),
+        authorisedAction,
+        claimsService,
+        chrisSubmissionServiceMock,
+        chrisConnectorMock
+      )
+
+      (chrisSubmissionServiceMock
+        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
+        .expects(*, *, *)
+        .returning(Future.successful(ChRISTestData.exampleMessage))
+
+      (chrisConnectorMock
+        .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
+        .expects(*, *)
+        .returning(
+          Future.failed(
+            SchematronValidationException(List(ValidationError.ClaimRule7028, ValidationError.ClaimRule7029))
+          )
+        )
+
+      val request = testRequest(
+        "POST",
+        "/chris",
+        ChRISSubmissionRequest(
+          claimId = "test-claim-id",
+          lastUpdatedReference = claim.lastUpdatedReference
+        )
+      )
+
+      val result = controller.submitClaim()(request)
+      val json   = contentAsJson(result)
+      status(result) shouldBe BAD_REQUEST
+
+      json.as[JsObject].value.get("errorCode")                     shouldBe Some(JsString("SCHEMATRON_VALIDATION_ERROR"))
+      json.as[JsObject].value.get("errorMessage")                  shouldBe Some(
+        JsString("Schematron validation failed with 2 error(s)")
+      )
+      (json \ "errors").as[List[play.api.libs.json.JsObject]].size shouldBe 2
     }
 
     "return 500 when ChRIS submission fails" in new AuthorisedOrganisationFixture {

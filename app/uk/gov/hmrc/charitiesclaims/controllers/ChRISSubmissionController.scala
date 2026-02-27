@@ -28,6 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.charitiesclaims.connectors.ChRISConnector
 import uk.gov.hmrc.charitiesclaims.models.ChRISSubmissionResponse
 import uk.gov.hmrc.charitiesclaims.models.SubmissionDetails
+import uk.gov.hmrc.charitiesclaims.validation.SchematronValidationException
 
 @Singleton()
 class ChRISSubmissionController @Inject() (
@@ -115,13 +116,22 @@ class ChRISSubmissionController @Inject() (
                           }
                       }
                   }
-                  .recover { case e =>
-                    InternalServerError(
-                      Json.obj(
-                        "errorMessage" -> e.getMessage,
-                        "errorCode"    -> "CHRIS_SUBMISSION_ERROR"
+                  .recover {
+                    case SchematronValidationException(errors) =>
+                      BadRequest(
+                        Json.obj(
+                          "errorMessage" -> s"Schematron validation failed with ${errors.size} error(s)",
+                          "errorCode"    -> "SCHEMATRON_VALIDATION_ERROR",
+                          "errors"       -> Json.toJson(errors)
+                        )
                       )
-                    )
+                    case e                                     =>
+                      InternalServerError(
+                        Json.obj(
+                          "errorMessage" -> e.getMessage,
+                          "errorCode"    -> "CHRIS_SUBMISSION_ERROR"
+                        )
+                      )
                   }
           }
           .recover { case e =>

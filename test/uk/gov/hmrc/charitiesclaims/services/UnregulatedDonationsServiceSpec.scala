@@ -324,7 +324,7 @@ class UnregulatedDonationsServiceSpec extends BaseSpec {
         result.futureValue shouldBe ()
       }
 
-      "should return a failed Future when no charity reference is available (agent, no hmrcCharitiesReference)" in {
+      "should throw an exception when no charity reference is available (agent, no hmrcCharitiesReference)" in {
         val formpProxyConnector       = mock[FormpProxyConnector]
         val claimsValidationConnector = mock[ClaimsValidationConnector]
         val service                   = new UnregulatedDonationsServiceImpl(formpProxyConnector, claimsValidationConnector)
@@ -336,8 +336,8 @@ class UnregulatedDonationsServiceSpec extends BaseSpec {
           hmrcCharitiesReference = None
         )
 
-        val result = service.recordUnregulatedDonation(claim, agentUser)
-        result.failed.futureValue.getMessage shouldBe "Cannot record unregulated donation: no charity reference available"
+        val thrown = the[Exception] thrownBy service.recordUnregulatedDonation(claim, agentUser)
+        thrown.getMessage shouldBe "Cannot record unregulated donation: no charity reference available"
       }
 
       "should be FormP error when saveUnregulatedDonation fails" in {

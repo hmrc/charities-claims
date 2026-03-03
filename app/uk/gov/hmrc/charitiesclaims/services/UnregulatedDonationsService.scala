@@ -90,11 +90,7 @@ class UnregulatedDonationsServiceImpl @Inject() (
     else
       resolveCharityReference(claim, currentUser) match {
         case None =>
-          // TODO: check if this should be a failed Future or just a no-op with a warning log instead
-          //  - Note: highly unlikely to get to this point without a charity reference
-          Future.failed(
-            Exception("Cannot record unregulated donation: no charity reference available")
-          )
+          throw Exception("Cannot record unregulated donation: no charity reference available")
 
         case Some(charityReference) =>
           for

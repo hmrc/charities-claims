@@ -21,7 +21,7 @@ import play.api.mvc.Results.*
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.charitiesclaims.models.ChRISSubmissionRequest
-import uk.gov.hmrc.charitiesclaims.services.{ChRISSubmissionService, ClaimsService}
+import uk.gov.hmrc.charitiesclaims.services.{ChRISSubmissionService, ClaimsService, UnregulatedDonationsService}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,7 +36,8 @@ class ChRISSubmissionController @Inject() (
   val authorisedAction: AuthorisedAction,
   claimsService: ClaimsService,
   chrisSubmissionService: ChRISSubmissionService,
-  chrisConnector: ChRISConnector
+  chrisConnector: ChRISConnector,
+  unregulatedDonationsService: UnregulatedDonationsService
 )(using ExecutionContext)
     extends BaseController {
 
@@ -82,35 +83,47 @@ class ChRISSubmissionController @Inject() (
                     chrisConnector
                       .submitClaim(govTalkMessage)
                       .flatMap { _ =>
-                        val submissionTimestamp = ISODateTime.timestampNow()
-                        claimsService
-                          .putClaim(
-                            claim.copy(
-                              claimSubmitted = true,
-                              submissionDetails = Some(
-                                SubmissionDetails(
-                                  submissionTimestamp = submissionTimestamp,
-                                  submissionReference = chrisSubmissionRequest.lastUpdatedReference
+                        unregulatedDonationsService
+                          .recordUnregulatedDonation(claim, currentUser)
+                          .flatMap { _ =>
+                            val submissionTimestamp = ISODateTime.timestampNow()
+                            claimsService
+                              .putClaim(
+                                claim.copy(
+                                  claimSubmitted = true,
+                                  submissionDetails = Some(
+                                    SubmissionDetails(
+                                      submissionTimestamp = submissionTimestamp,
+                                      submissionReference = chrisSubmissionRequest.lastUpdatedReference
+                                    )
+                                  )
                                 )
                               )
-                            )
-                          )
-                          .map { _ =>
-                            Ok(
-                              Json.toJson(
-                                ChRISSubmissionResponse(
-                                  success = true,
-                                  submissionTimestamp = submissionTimestamp,
-                                  submissionReference = chrisSubmissionRequest.lastUpdatedReference
+                              .map { _ =>
+                                Ok(
+                                  Json.toJson(
+                                    ChRISSubmissionResponse(
+                                      success = true,
+                                      submissionTimestamp = submissionTimestamp,
+                                      submissionReference = chrisSubmissionRequest.lastUpdatedReference
+                                    )
+                                  )
                                 )
-                              )
-                            )
+                              }
+                              .recover { case e =>
+                                InternalServerError(
+                                  Json.obj(
+                                    "errorMessage" -> s"ChRIS submission was successful but cannot update claim with claimId ${chrisSubmissionRequest.claimId} because of ${e.getClass.getName}: ${e.getMessage}",
+                                    "errorCode"    -> "CLAIM_SERVICE_ERROR"
+                                  )
+                                )
+                              }
                           }
                           .recover { case e =>
                             InternalServerError(
                               Json.obj(
-                                "errorMessage" -> s"ChRIS submission was successful but cannot update claim with claimId ${chrisSubmissionRequest.claimId} because of ${e.getClass.getName}: ${e.getMessage}",
-                                "errorCode"    -> "CLAIM_SERVICE_ERROR"
+                                "errorMessage" -> s"ChRIS submission was successful but cannot record unregulated donation for claimId ${chrisSubmissionRequest.claimId} because of ${e.getClass.getName}: ${e.getMessage}",
+                                "errorCode"    -> "UNREGULATED_DONATION_ERROR"
                               )
                             )
                           }
@@ -144,5 +157,4 @@ class ChRISSubmissionController @Inject() (
           }
       }
     }
-
 }

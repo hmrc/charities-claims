@@ -22,7 +22,7 @@ import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.connectors.ChRISConnector
 import uk.gov.hmrc.charitiesclaims.models.*
 import uk.gov.hmrc.charitiesclaims.models.chris.GovTalkMessage
-import uk.gov.hmrc.charitiesclaims.services.{ChRISSubmissionService, ClaimsService}
+import uk.gov.hmrc.charitiesclaims.services.{ChRISSubmissionService, ClaimsService, UnregulatedDonationsService}
 import uk.gov.hmrc.charitiesclaims.util.{ChRISTestData, ControllerSpec, TestClaimsService, TestClaimsServiceHelper}
 import uk.gov.hmrc.charitiesclaims.validation.{SchematronValidationException, ValidationError}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -52,16 +52,18 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         )
       )
 
-      val claimsService              = new TestClaimsService(initialClaims = Seq(claim))
-      val chrisSubmissionServiceMock = mock[ChRISSubmissionService]
-      val chrisConnectorMock         = mock[ChRISConnector]
+      val claimsService                   = new TestClaimsService(initialClaims = Seq(claim))
+      val chrisSubmissionServiceMock      = mock[ChRISSubmissionService]
+      val chrisConnectorMock              = mock[ChRISConnector]
+      val unregulatedDonationsServiceMock = mock[UnregulatedDonationsService]
 
       val controller = new ChRISSubmissionController(
         Helpers.stubControllerComponents(),
         authorisedAction,
         claimsService,
         chrisSubmissionServiceMock,
-        chrisConnectorMock
+        chrisConnectorMock,
+        unregulatedDonationsServiceMock
       )
 
       (chrisSubmissionServiceMock
@@ -72,6 +74,11 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       (chrisConnectorMock
         .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
         .expects(ChRISTestData.exampleMessage, *)
+        .returning(Future.successful(()))
+
+      (unregulatedDonationsServiceMock
+        .recordUnregulatedDonation(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
+        .expects(*, *, *)
         .returning(Future.successful(()))
 
       val request = testRequest(
@@ -98,16 +105,18 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
 
     "return 404 when claim does not exist" in new AuthorisedOrganisationFixture {
 
-      val claimsService              = new TestClaimsService(initialClaims = Seq.empty)
-      val chrisSubmissionServiceMock = mock[ChRISSubmissionService]
-      val chrisConnectorMock         = mock[ChRISConnector]
+      val claimsService                   = new TestClaimsService(initialClaims = Seq.empty)
+      val chrisSubmissionServiceMock      = mock[ChRISSubmissionService]
+      val chrisConnectorMock              = mock[ChRISConnector]
+      val unregulatedDonationsServiceMock = mock[UnregulatedDonationsService]
 
       val controller = new ChRISSubmissionController(
         Helpers.stubControllerComponents(),
         authorisedAction,
         claimsService,
         chrisSubmissionServiceMock,
-        chrisConnectorMock
+        chrisConnectorMock,
+        unregulatedDonationsServiceMock
       )
 
       val request = testRequest(
@@ -144,16 +153,18 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         )
       )
 
-      val claimsService              = new TestClaimsService(initialClaims = Seq(claim))
-      val chrisSubmissionServiceMock = mock[ChRISSubmissionService]
-      val chrisConnectorMock         = mock[ChRISConnector]
+      val claimsService                   = new TestClaimsService(initialClaims = Seq(claim))
+      val chrisSubmissionServiceMock      = mock[ChRISSubmissionService]
+      val chrisConnectorMock              = mock[ChRISConnector]
+      val unregulatedDonationsServiceMock = mock[UnregulatedDonationsService]
 
       val controller = new ChRISSubmissionController(
         Helpers.stubControllerComponents(),
         authorisedAction,
         claimsService,
         chrisSubmissionServiceMock,
-        chrisConnectorMock
+        chrisConnectorMock,
+        unregulatedDonationsServiceMock
       )
 
       val request = testRequest(
@@ -192,16 +203,18 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         )
       )
 
-      val claimsService              = new TestClaimsService(initialClaims = Seq(claim))
-      val chrisSubmissionServiceMock = mock[ChRISSubmissionService]
-      val chrisConnectorMock         = mock[ChRISConnector]
+      val claimsService                   = new TestClaimsService(initialClaims = Seq(claim))
+      val chrisSubmissionServiceMock      = mock[ChRISSubmissionService]
+      val chrisConnectorMock              = mock[ChRISConnector]
+      val unregulatedDonationsServiceMock = mock[UnregulatedDonationsService]
 
       val controller = new ChRISSubmissionController(
         Helpers.stubControllerComponents(),
         authorisedAction,
         claimsService,
         chrisSubmissionServiceMock,
-        chrisConnectorMock
+        chrisConnectorMock,
+        unregulatedDonationsServiceMock
       )
 
       val request = testRequest(
@@ -225,16 +238,18 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
 
     "return 500 when getting claim from claim service returns an error" in new AuthorisedOrganisationFixture {
 
-      val claimsService              = mock[ClaimsService]
-      val chrisSubmissionServiceMock = mock[ChRISSubmissionService]
-      val chrisConnectorMock         = mock[ChRISConnector]
+      val claimsService                   = mock[ClaimsService]
+      val chrisSubmissionServiceMock      = mock[ChRISSubmissionService]
+      val chrisConnectorMock              = mock[ChRISConnector]
+      val unregulatedDonationsServiceMock = mock[UnregulatedDonationsService]
 
       val controller = new ChRISSubmissionController(
         Helpers.stubControllerComponents(),
         authorisedAction,
         claimsService,
         chrisSubmissionServiceMock,
-        chrisConnectorMock
+        chrisConnectorMock,
+        unregulatedDonationsServiceMock
       )
 
       (claimsService
@@ -280,16 +295,18 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         )
       )
 
-      val claimsService              = mock[ClaimsService]
-      val chrisSubmissionServiceMock = mock[ChRISSubmissionService]
-      val chrisConnectorMock         = mock[ChRISConnector]
+      val claimsService                   = mock[ClaimsService]
+      val chrisSubmissionServiceMock      = mock[ChRISSubmissionService]
+      val chrisConnectorMock              = mock[ChRISConnector]
+      val unregulatedDonationsServiceMock = mock[UnregulatedDonationsService]
 
       val controller = new ChRISSubmissionController(
         Helpers.stubControllerComponents(),
         authorisedAction,
         claimsService,
         chrisSubmissionServiceMock,
-        chrisConnectorMock
+        chrisConnectorMock,
+        unregulatedDonationsServiceMock
       )
 
       (claimsService
@@ -310,6 +327,11 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       (chrisConnectorMock
         .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
         .expects(ChRISTestData.exampleMessage, *)
+        .returning(Future.successful(()))
+
+      (unregulatedDonationsServiceMock
+        .recordUnregulatedDonation(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
+        .expects(*, *, *)
         .returning(Future.successful(()))
 
       val request = testRequest(
@@ -352,16 +374,18 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         )
       )
 
-      val claimsService              = new TestClaimsService(initialClaims = Seq(claim))
-      val chrisSubmissionServiceMock = mock[ChRISSubmissionService]
-      val chrisConnectorMock         = mock[ChRISConnector]
+      val claimsService                   = new TestClaimsService(initialClaims = Seq(claim))
+      val chrisSubmissionServiceMock      = mock[ChRISSubmissionService]
+      val chrisConnectorMock              = mock[ChRISConnector]
+      val unregulatedDonationsServiceMock = mock[UnregulatedDonationsService]
 
       val controller = new ChRISSubmissionController(
         Helpers.stubControllerComponents(),
         authorisedAction,
         claimsService,
         chrisSubmissionServiceMock,
-        chrisConnectorMock
+        chrisConnectorMock,
+        unregulatedDonationsServiceMock
       )
 
       (chrisSubmissionServiceMock
@@ -398,6 +422,80 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       (json \ "errors").as[List[play.api.libs.json.JsObject]].size shouldBe 2
     }
 
+    "return 500 when recording unregulated donation fails" in new AuthorisedOrganisationFixture {
+
+      val claim = Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = false,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        claimData = ClaimData(
+          repaymentClaimDetails = RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          )
+        )
+      )
+
+      val claimsService                   = mock[ClaimsService]
+      val chrisSubmissionServiceMock      = mock[ChRISSubmissionService]
+      val chrisConnectorMock              = mock[ChRISConnector]
+      val unregulatedDonationsServiceMock = mock[UnregulatedDonationsService]
+
+      val controller = new ChRISSubmissionController(
+        Helpers.stubControllerComponents(),
+        authorisedAction,
+        claimsService,
+        chrisSubmissionServiceMock,
+        chrisConnectorMock,
+        unregulatedDonationsServiceMock
+      )
+
+      (claimsService
+        .getClaim(_: String))
+        .expects("test-claim-id")
+        .returning(Future.successful(Some((claim, Instant.now()))))
+
+      (chrisSubmissionServiceMock
+        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
+        .expects(*, *, *)
+        .returning(Future.successful(ChRISTestData.exampleMessage))
+
+      (chrisConnectorMock
+        .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
+        .expects(ChRISTestData.exampleMessage, *)
+        .returning(Future.successful(()))
+
+      (unregulatedDonationsServiceMock
+        .recordUnregulatedDonation(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
+        .expects(*, *, *)
+        .returning(Future.failed(new RuntimeException("Error message")))
+
+      val request = testRequest(
+        "POST",
+        "/chris",
+        ChRISSubmissionRequest(
+          claimId = "test-claim-id",
+          lastUpdatedReference = claim.lastUpdatedReference
+        )
+      )
+
+      val result = controller.submitClaim()(request)
+      val json   = contentAsJson(result)
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+
+      json.as[JsObject].value.get("errorMessage") shouldBe Some(
+        JsString(
+          "ChRIS submission was successful but cannot record unregulated donation for claimId test-claim-id because of java.lang.RuntimeException: Error message"
+        )
+      )
+      json.as[JsObject].value.get("errorCode")    shouldBe Some(
+        JsString("UNREGULATED_DONATION_ERROR")
+      )
+    }
+
     "return 500 when ChRIS submission fails" in new AuthorisedOrganisationFixture {
 
       val claim = Claim(
@@ -415,16 +513,18 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         )
       )
 
-      val claimsService              = new TestClaimsService(initialClaims = Seq(claim))
-      val chrisSubmissionServiceMock = mock[ChRISSubmissionService]
-      val chrisConnectorMock         = mock[ChRISConnector]
+      val claimsService                   = new TestClaimsService(initialClaims = Seq(claim))
+      val chrisSubmissionServiceMock      = mock[ChRISSubmissionService]
+      val chrisConnectorMock              = mock[ChRISConnector]
+      val unregulatedDonationsServiceMock = mock[UnregulatedDonationsService]
 
       val controller = new ChRISSubmissionController(
         Helpers.stubControllerComponents(),
         authorisedAction,
         claimsService,
         chrisSubmissionServiceMock,
-        chrisConnectorMock
+        chrisConnectorMock,
+        unregulatedDonationsServiceMock
       )
 
       (chrisSubmissionServiceMock

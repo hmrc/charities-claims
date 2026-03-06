@@ -25,7 +25,9 @@ final case class Claim(
   claimSubmitted: Boolean,
   lastUpdatedReference: String,
   claimData: ClaimData,
-  submissionDetails: Option[SubmissionDetails] = None
+  submissionDetails: Option[SubmissionDetails] = None,
+  adjustmentForOtherIncomePreviousOverClaimed: Option[BigDecimal] = None,
+  prevOverclaimedGiftAid: Option[BigDecimal] = None
 )
 
 object Claim {

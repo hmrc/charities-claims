@@ -267,8 +267,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         else currentUser.enrolmentIdentifierValue,
       Regulator = buildRegulator(claim),
       Repayment = buildRepayment(claim, scheduleData.giftAid, scheduleData.otherIncome),
-      GiftAidSmallDonationsScheme =
-        buildGiftAidSmallDonationsScheme(claim, scheduleData.connectedCharities, scheduleData.communityBuildings),
+      GASDS = buildGiftAidSmallDonationsScheme(claim, scheduleData.connectedCharities, scheduleData.communityBuildings),
       OtherInfo = None // ToDo
     )
 
@@ -371,7 +370,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     claim: models.Claim,
     connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
     communityBuildingsData: Option[CommunityBuildingsScheduleData]
-  ): Option[GiftAidSmallDonationsScheme] =
+  ): Option[GASDS] =
     if !claim.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme then None
     else
       claim.claimData.giftAidSmallDonationsSchemeDonationDetails.map { gasdsDetails =>
@@ -388,10 +387,10 @@ class ChRISSubmissionServiceImpl @Inject() (
             case Nil  => None
             case list => Some(list)
 
-        val gasdsClaims: Option[List[GiftAidSmallDonationsSchemeClaim]] =
+        val gasdsClaims: Option[List[GASDSClaim]] =
           gasdsDetails.claims
             .map(c =>
-              GiftAidSmallDonationsSchemeClaim(
+              GASDSClaim(
                 Year = Some(c.taxYear.toString),
                 Amount = Some(c.amountOfDonationsReceived)
               )
@@ -429,10 +428,10 @@ class ChRISSubmissionServiceImpl @Inject() (
             gasdsDetails.adjustmentForGiftAidOverClaimed.toString
           )
 
-        GiftAidSmallDonationsScheme(
+        GASDS(
           ConnectedCharities = connectedCharities,
           Charity = charities,
-          GiftAidSmallDonationsSchemeClaim = gasdsClaims,
+          GASDSClaim = gasdsClaims,
           CommBldgs = commBldgs,
           Building = buildings,
           Adj = adj

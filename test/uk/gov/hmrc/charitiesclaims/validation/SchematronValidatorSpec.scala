@@ -45,8 +45,8 @@ class SchematronValidatorSpec extends BaseSpec {
 
   private def withGasds(
     message: GovTalkMessage
-  )(f: Option[GiftAidSmallDonationsScheme] => Option[GiftAidSmallDonationsScheme]): GovTalkMessage =
-    withClaim(message)(c => c.copy(GiftAidSmallDonationsScheme = f(c.GiftAidSmallDonationsScheme)))
+  )(f: Option[GASDS] => Option[GASDS]): GovTalkMessage =
+    withClaim(message)(c => c.copy(GASDS = f(c.GASDS)))
 
   private def currentTaxYear: Int =
     val now = LocalDate.now()
@@ -71,8 +71,8 @@ class SchematronValidatorSpec extends BaseSpec {
         val msg = withClaim(validMessage) { c =>
           c.copy(
             Repayment = None,
-            GiftAidSmallDonationsScheme = Some(
-              GiftAidSmallDonationsScheme(ConnectedCharities = false, Adj = None)
+            GASDS = Some(
+              GASDS(ConnectedCharities = false, Adj = None)
             )
           )
         }
@@ -80,7 +80,7 @@ class SchematronValidatorSpec extends BaseSpec {
       }
 
       "should fail 7028 when neither Repayment nor GASDS is present" in {
-        val msg = withClaim(validMessage)(_.copy(Repayment = None, GiftAidSmallDonationsScheme = None))
+        val msg = withClaim(validMessage)(_.copy(Repayment = None, GASDS = None))
         SchematronValidator.validateClaimRule(msg) should contain(ValidationError.ClaimRule7028)
       }
 
@@ -421,8 +421,7 @@ class SchematronValidatorSpec extends BaseSpec {
       "should pass when GASDS Adj present with OtherInfo" in {
         val msg = withClaim(validMessage) { c =>
           c.copy(
-            GiftAidSmallDonationsScheme =
-              Some(GiftAidSmallDonationsScheme(ConnectedCharities = false, Adj = Some("100"))),
+            GASDS = Some(GASDS(ConnectedCharities = false, Adj = Some("100"))),
             OtherInfo = Some("Adjustment details")
           )
         }
@@ -432,8 +431,7 @@ class SchematronValidatorSpec extends BaseSpec {
       "should fail when GASDS Adj present without OtherInfo" in {
         val msg = withClaim(validMessage) { c =>
           c.copy(
-            GiftAidSmallDonationsScheme =
-              Some(GiftAidSmallDonationsScheme(ConnectedCharities = false, Adj = Some("100"))),
+            GASDS = Some(GASDS(ConnectedCharities = false, Adj = Some("100"))),
             OtherInfo = None
           )
         }
@@ -450,7 +448,7 @@ class SchematronValidatorSpec extends BaseSpec {
       "should pass when indicator=yes and charities present" in {
         val msg = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = true,
               Charity = Some(List(Charity(Name = "Test", HMRCref = "XR1234"))),
               Adj = None
@@ -461,25 +459,21 @@ class SchematronValidatorSpec extends BaseSpec {
       }
 
       "should fail 7047 when indicator=yes but no charities" in {
-        val msg = withGasds(validMessage)(_ =>
-          Some(GiftAidSmallDonationsScheme(ConnectedCharities = true, Charity = None, Adj = None))
-        )
+        val msg = withGasds(validMessage)(_ => Some(GASDS(ConnectedCharities = true, Charity = None, Adj = None)))
         SchematronValidator.validateConnectedCharitiesRule(msg) should contain(
           ValidationError.ConnectedCharitiesRule7047
         )
       }
 
       "should pass when indicator=no and no charities" in {
-        val msg = withGasds(validMessage)(_ =>
-          Some(GiftAidSmallDonationsScheme(ConnectedCharities = false, Charity = None, Adj = None))
-        )
+        val msg = withGasds(validMessage)(_ => Some(GASDS(ConnectedCharities = false, Charity = None, Adj = None)))
         SchematronValidator.validateConnectedCharitiesRule(msg) shouldBe Nil
       }
 
       "should fail 7048 when indicator=no but charities present" in {
         val msg = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
               Charity = Some(List(Charity(Name = "Test", HMRCref = "XR1234"))),
               Adj = None
@@ -501,7 +495,7 @@ class SchematronValidatorSpec extends BaseSpec {
       "should pass when indicator=yes and buildings present" in {
         val msg = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
               CommBldgs = Some(true),
               Building = Some(
@@ -524,7 +518,7 @@ class SchematronValidatorSpec extends BaseSpec {
       "should fail 7052 when indicator=yes but no buildings" in {
         val msg = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
               CommBldgs = Some(true),
               Building = None,
@@ -538,7 +532,7 @@ class SchematronValidatorSpec extends BaseSpec {
       "should pass when indicator=no and no buildings" in {
         val msg = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
               CommBldgs = Some(false),
               Building = None,
@@ -552,7 +546,7 @@ class SchematronValidatorSpec extends BaseSpec {
       "should fail 7053 when indicator=no but buildings present" in {
         val msg = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
               CommBldgs = Some(false),
               Building = Some(
@@ -576,8 +570,8 @@ class SchematronValidatorSpec extends BaseSpec {
         val msg = withClaim(validMessage) { c =>
           c.copy(
             HMRCref = "CH1234",
-            GiftAidSmallDonationsScheme = Some(
-              GiftAidSmallDonationsScheme(
+            GASDS = Some(
+              GASDS(
                 ConnectedCharities = false,
                 CommBldgs = Some(true),
                 Building = Some(
@@ -609,7 +603,7 @@ class SchematronValidatorSpec extends BaseSpec {
         val charities = List.fill(1000)(Charity(Name = "Test", HMRCref = "XR1234"))
         val msg       = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(ConnectedCharities = true, Charity = Some(charities), Adj = None)
+            GASDS(ConnectedCharities = true, Charity = Some(charities), Adj = None)
           )
         )
         SchematronValidator.validateGASDSRule(msg) shouldBe Nil
@@ -619,7 +613,7 @@ class SchematronValidatorSpec extends BaseSpec {
         val charities = List.fill(1001)(Charity(Name = "Test", HMRCref = "XR1234"))
         val msg       = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(ConnectedCharities = true, Charity = Some(charities), Adj = None)
+            GASDS(ConnectedCharities = true, Charity = Some(charities), Adj = None)
           )
         )
         SchematronValidator.validateGASDSRule(msg) should contain(ValidationError.GASDSRule7045)
@@ -636,7 +630,7 @@ class SchematronValidatorSpec extends BaseSpec {
         )
         val msg       = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
               CommBldgs = Some(true),
               Building = Some(buildings),
@@ -697,12 +691,12 @@ class SchematronValidatorSpec extends BaseSpec {
         val taxYear = currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
-              GiftAidSmallDonationsSchemeClaim = Some(
+              GASDSClaim = Some(
                 List(
-                  GiftAidSmallDonationsSchemeClaim(Year = Some(taxYear.toString), Amount = Some(100)),
-                  GiftAidSmallDonationsSchemeClaim(Year = Some((taxYear - 1).toString), Amount = Some(200))
+                  GASDSClaim(Year = Some(taxYear.toString), Amount = Some(100)),
+                  GASDSClaim(Year = Some((taxYear - 1).toString), Amount = Some(200))
                 )
               ),
               Adj = None
@@ -716,10 +710,10 @@ class SchematronValidatorSpec extends BaseSpec {
         val taxYear = currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
-              GiftAidSmallDonationsSchemeClaim = Some(
-                List(GiftAidSmallDonationsSchemeClaim(Year = Some((taxYear + 1).toString), Amount = Some(100)))
+              GASDSClaim = Some(
+                List(GASDSClaim(Year = Some((taxYear + 1).toString), Amount = Some(100)))
               ),
               Adj = None
             )
@@ -732,10 +726,10 @@ class SchematronValidatorSpec extends BaseSpec {
         val taxYear = currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
-              GiftAidSmallDonationsSchemeClaim = Some(
-                List(GiftAidSmallDonationsSchemeClaim(Year = Some((taxYear - 4).toString), Amount = Some(100)))
+              GASDSClaim = Some(
+                List(GASDSClaim(Year = Some((taxYear - 4).toString), Amount = Some(100)))
               ),
               Adj = None
             )
@@ -748,12 +742,12 @@ class SchematronValidatorSpec extends BaseSpec {
         val taxYear = currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
-              GiftAidSmallDonationsSchemeClaim = Some(
+              GASDSClaim = Some(
                 List(
-                  GiftAidSmallDonationsSchemeClaim(Year = Some(taxYear.toString), Amount = Some(100)),
-                  GiftAidSmallDonationsSchemeClaim(Year = Some(taxYear.toString), Amount = Some(200))
+                  GASDSClaim(Year = Some(taxYear.toString), Amount = Some(100)),
+                  GASDSClaim(Year = Some(taxYear.toString), Amount = Some(200))
                 )
               ),
               Adj = None
@@ -774,7 +768,7 @@ class SchematronValidatorSpec extends BaseSpec {
         val taxYear = currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
               CommBldgs = Some(true),
               Building = Some(
@@ -801,7 +795,7 @@ class SchematronValidatorSpec extends BaseSpec {
         val taxYear = currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
               CommBldgs = Some(true),
               Building = Some(
@@ -825,7 +819,7 @@ class SchematronValidatorSpec extends BaseSpec {
         val taxYear = currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
               CommBldgs = Some(true),
               Building = Some(
@@ -849,7 +843,7 @@ class SchematronValidatorSpec extends BaseSpec {
         val taxYear = currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
-            GiftAidSmallDonationsScheme(
+            GASDS(
               ConnectedCharities = false,
               CommBldgs = Some(true),
               Building = Some(
@@ -882,7 +876,7 @@ class SchematronValidatorSpec extends BaseSpec {
         val msg    = withClaim(validMessage) { c =>
           c.copy(
             Repayment = None,
-            GiftAidSmallDonationsScheme = None,
+            GASDS = None,
             Regulator = None
           )
         }

@@ -79,7 +79,7 @@ object SchematronValidator:
   def validateClaimRule(message: GovTalkMessage): List[ValidationError] =
     val c          = claim(message)
     val errors7028 =
-      if c.Repayment.isEmpty && c.GiftAidSmallDonationsScheme.isEmpty
+      if c.Repayment.isEmpty && c.GASDS.isEmpty
       then List(ValidationError.ClaimRule7028)
       else Nil
 
@@ -197,13 +197,13 @@ object SchematronValidator:
 
   def validateAdjRule(message: GovTalkMessage): List[ValidationError] =
     val c = claim(message)
-    c.GiftAidSmallDonationsScheme match
+    c.GASDS match
       case Some(gasds) if gasds.Adj.isDefined && c.OtherInfo.isEmpty =>
         List(ValidationError.AdjRule)
       case _                                                         => Nil
 
   def validateConnectedCharitiesRule(message: GovTalkMessage): List[ValidationError] =
-    claim(message).GiftAidSmallDonationsScheme match
+    claim(message).GASDS match
       case None        => Nil
       case Some(gasds) =>
         val charities = gasds.Charity.getOrElse(Nil)
@@ -219,7 +219,7 @@ object SchematronValidator:
 
   def validateCommBldgsRule(message: GovTalkMessage): List[ValidationError] =
     val c = claim(message)
-    c.GiftAidSmallDonationsScheme match
+    c.GASDS match
       case None        => Nil
       case Some(gasds) =>
         val buildings = gasds.Building.getOrElse(Nil)
@@ -238,7 +238,7 @@ object SchematronValidator:
         err7052 ++ err7053 ++ err7060
 
   def validateGASDSRule(message: GovTalkMessage): List[ValidationError] =
-    claim(message).GiftAidSmallDonationsScheme match
+    claim(message).GASDS match
       case None        => Nil
       case Some(gasds) =>
         val err7045 =
@@ -267,8 +267,8 @@ object SchematronValidator:
         err7031 ++ err7033
 
   def validateYearRule1(message: GovTalkMessage): List[ValidationError] =
-    val years = claim(message).GiftAidSmallDonationsScheme
-      .flatMap(_.GiftAidSmallDonationsSchemeClaim)
+    val years = claim(message).GASDS
+      .flatMap(_.GASDSClaim)
       .getOrElse(Nil)
       .flatMap(_.Year)
     years match
@@ -286,7 +286,7 @@ object SchematronValidator:
         err7049 ++ err7050 ++ err7051
 
   def validateYearRule2(message: GovTalkMessage): List[ValidationError] =
-    val years = claim(message).GiftAidSmallDonationsScheme
+    val years = claim(message).GASDS
       .flatMap(_.Building)
       .getOrElse(Nil)
       .flatMap(_.BldgClaim)

@@ -806,11 +806,11 @@ class ChRISSubmissionServiceSpec
 
       val result = service.buildChRISSubmission(claim, currentUser).futureValue
 
-      result.Body.IRenvelope.R68.Claim.GiftAidSmallDonationsScheme.get.Charity shouldBe Some(
+      result.Body.IRenvelope.R68.Claim.GASDS.get.Charity shouldBe Some(
         List(Charity(Name = "Charity One", HMRCref = "X95442"))
       )
 
-      result.Body.IRenvelope.R68.Claim.GiftAidSmallDonationsScheme.get.Building shouldBe Some(
+      result.Body.IRenvelope.R68.Claim.GASDS.get.Building shouldBe Some(
         List(
           Building(
             BldgName = "Village Hall",
@@ -979,13 +979,13 @@ class ChRISSubmissionServiceSpec
           currentUser,
           ScheduleData(connectedCharities = connectedCharitiesData, communityBuildings = communityBuildingsData)
         )
-        result.GiftAidSmallDonationsScheme shouldBe Some(
-          GiftAidSmallDonationsScheme(
+        result.GASDS shouldBe Some(
+          GASDS(
             ConnectedCharities = true,
             Charity = Some(List(Charity(Name = "Charity One", HMRCref = "X95442"))),
-            GiftAidSmallDonationsSchemeClaim = Some(
+            GASDSClaim = Some(
               List(
-                GiftAidSmallDonationsSchemeClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09")))
+                GASDSClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09")))
               )
             ),
             CommBldgs = Some(true),
@@ -1039,7 +1039,7 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
-        result.GiftAidSmallDonationsScheme shouldBe None
+        result.GASDS shouldBe None
       }
 
       "return None when giftAidSmallDonationsSchemeDonationDetails is None" in {
@@ -1065,7 +1065,7 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
-        result.GiftAidSmallDonationsScheme shouldBe None
+        result.GASDS shouldBe None
       }
 
       "map multiple connected charities from upload data correctly" in {
@@ -1107,7 +1107,7 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val result = service.buildClaim(claim, currentUser, ScheduleData(connectedCharities = connectedCharitiesData))
-        result.GiftAidSmallDonationsScheme.get.Charity shouldBe Some(
+        result.GASDS.get.Charity shouldBe Some(
           List(
             Charity(Name = "Charity One", HMRCref = "X95442"),
             Charity(Name = "Charity Two", HMRCref = "Y12345")
@@ -1145,7 +1145,7 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
-        result.GiftAidSmallDonationsScheme.get.Charity shouldBe None
+        result.GASDS.get.Charity shouldBe None
       }
 
       "map GiftAidSmallDonationsSchemeClaim correctly" in {
@@ -1183,10 +1183,10 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
-        result.GiftAidSmallDonationsScheme.get.GiftAidSmallDonationsSchemeClaim shouldBe Some(
+        result.GASDS.get.GASDSClaim shouldBe Some(
           List(
-            GiftAidSmallDonationsSchemeClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
-            GiftAidSmallDonationsSchemeClaim(Year = Some("2023"), Amount = Some(BigDecimal("120.50")))
+            GASDSClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
+            GASDSClaim(Year = Some("2023"), Amount = Some(BigDecimal("120.50")))
           )
         )
       }
@@ -1239,7 +1239,7 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val result = service.buildClaim(claim, currentUser, ScheduleData(communityBuildings = communityBuildingsData))
-        result.GiftAidSmallDonationsScheme.get.Building shouldBe Some(
+        result.GASDS.get.Building shouldBe Some(
           List(
             Building(
               BldgName = "YMCA",
@@ -1300,7 +1300,7 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val result = service.buildClaim(claim, currentUser, ScheduleData(communityBuildings = communityBuildingsData))
-        result.GiftAidSmallDonationsScheme.get.Building shouldBe Some(
+        result.GASDS.get.Building shouldBe Some(
           List(
             Building(
               BldgName = "Village Hall",
@@ -1344,7 +1344,7 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
-        result.GiftAidSmallDonationsScheme.get.Building shouldBe None
+        result.GASDS.get.Building shouldBe None
       }
 
       "set Adj when adjustment > 0 and None when 0" in {
@@ -1388,10 +1388,10 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val resultWithAdj = service.buildClaim(claimWithAdj, currentUser, ScheduleData.empty)
-        resultWithAdj.GiftAidSmallDonationsScheme.get.Adj shouldBe Some("56.89")
+        resultWithAdj.GASDS.get.Adj shouldBe Some("56.89")
 
         val resultWithZeroAdj = service.buildClaim(claimWithZeroAdj, currentUser, ScheduleData.empty)
-        resultWithZeroAdj.GiftAidSmallDonationsScheme.get.Adj shouldBe None
+        resultWithZeroAdj.GASDS.get.Adj shouldBe None
       }
 
       "map ConnectedCharities yes/no from repaymentClaimDetails" in {
@@ -1425,13 +1425,13 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val resultYes = service.buildClaim(buildClaimWithConnected(Some(true)), currentUser, ScheduleData.empty)
-        resultYes.GiftAidSmallDonationsScheme.get.ConnectedCharities shouldBe (true: YesNo)
+        resultYes.GASDS.get.ConnectedCharities shouldBe (true: YesNo)
 
         val resultNo = service.buildClaim(buildClaimWithConnected(Some(false)), currentUser, ScheduleData.empty)
-        resultNo.GiftAidSmallDonationsScheme.get.ConnectedCharities shouldBe (false: YesNo)
+        resultNo.GASDS.get.ConnectedCharities shouldBe (false: YesNo)
 
         val resultNone = service.buildClaim(buildClaimWithConnected(None), currentUser, ScheduleData.empty)
-        resultNone.GiftAidSmallDonationsScheme.get.ConnectedCharities shouldBe (false: YesNo)
+        resultNone.GASDS.get.ConnectedCharities shouldBe (false: YesNo)
       }
 
       "map CommBldgs yes/no from repaymentClaimDetails" in {
@@ -1465,13 +1465,13 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val resultYes = service.buildClaim(buildClaimWithCommBldgs(Some(true)), currentUser, ScheduleData.empty)
-        resultYes.GiftAidSmallDonationsScheme.get.CommBldgs shouldBe Some(true: YesNo)
+        resultYes.GASDS.get.CommBldgs shouldBe Some(true: YesNo)
 
         val resultNo = service.buildClaim(buildClaimWithCommBldgs(Some(false)), currentUser, ScheduleData.empty)
-        resultNo.GiftAidSmallDonationsScheme.get.CommBldgs shouldBe Some(false: YesNo)
+        resultNo.GASDS.get.CommBldgs shouldBe Some(false: YesNo)
 
         val resultNone = service.buildClaim(buildClaimWithCommBldgs(None), currentUser, ScheduleData.empty)
-        resultNone.GiftAidSmallDonationsScheme.get.CommBldgs shouldBe Some(false: YesNo)
+        resultNone.GASDS.get.CommBldgs shouldBe Some(false: YesNo)
       }
 
     }

@@ -28,7 +28,6 @@ import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
 import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
 import uk.gov.hmrc.charitiesclaims.util.TestClaimsServiceHelper
 
-import java.time.Instant
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

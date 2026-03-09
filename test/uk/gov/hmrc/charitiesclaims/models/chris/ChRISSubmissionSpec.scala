@@ -150,7 +150,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                 Key(Type = "CHARID", Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
-              IRmark = Some(IRmark(Type = "generic", Content = "ecYRGN8K5yfiZSK5RDXoskrwbJE=")),
+              IRmark = Some(IRmark(Type = "generic", Content = "HgZyqg72ReQKRBo4sTvTn5HZD5w=")),
               Sender = "Other"
             ),
             R68 = R68(
@@ -253,8 +253,8 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                     EarliestGAdate = "2025-01-01"
                   )
                 ),
-                GiftAidSmallDonationsScheme = Some(
-                  GiftAidSmallDonationsScheme(
+                GASDS = Some(
+                  GASDS(
                     ConnectedCharities = true,
                     Charity = Some(
                       List(
@@ -265,10 +265,10 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                         Charity(Name = "Charity Five", HMRCref = "X95446")
                       )
                     ),
-                    GiftAidSmallDonationsSchemeClaim = Some(
+                    GASDSClaim = Some(
                       List(
-                        GiftAidSmallDonationsSchemeClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
-                        GiftAidSmallDonationsSchemeClaim(Year = Some("2023"), Amount = Some(BigDecimal("460.34")))
+                        GASDSClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
+                        GASDSClaim(Year = Some("2023"), Amount = Some(BigDecimal("460.34")))
                       )
                     ),
                     CommBldgs = Some(true),
@@ -316,7 +316,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
 
       XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
 
-      xml shouldBe scala.io.Source
+      xml shouldEqual scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-2.xml"))
         .getLines()
         .mkString("\n")

@@ -23,6 +23,7 @@ import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.charitiesclaims.models.DeleteUploadResponse
 
 import java.net.URL
 import javax.inject.Inject
@@ -36,6 +37,8 @@ trait ClaimsValidationConnector {
   type UserId = String
 
   def deleteClaim(claimId: UserId)(using hc: HeaderCarrier): Future[Unit]
+
+  def deleteUpload(claimId: UserId, reference: FileUploadReference)(using hc: HeaderCarrier): Future[Boolean]
 
   def getUploadResult(claimId: String, reference: FileUploadReference)(using
     hc: HeaderCarrier
@@ -59,7 +62,7 @@ class ClaimsValidationConnectorImpl @Inject() (
   val contextPath: String = servicesConfig
     .getConfString("charities-claims-validation.context-path", "charities-claims-validation")
 
-  final def deleteClaim(claimId: UserId)(using
+  final override def deleteClaim(claimId: UserId)(using
     hc: HeaderCarrier
   ): Future[Unit] =
     retry(retryIntervals*)(shouldRetry, retryReason)(
@@ -77,7 +80,28 @@ class ClaimsValidationConnectorImpl @Inject() (
         )
     )
 
-  final def getUploadResult(claimId: String, reference: FileUploadReference)(using
+  final override def deleteUpload(claimId: UserId, reference: FileUploadReference)(using
+    hc: HeaderCarrier
+  ): Future[Boolean] =
+    retry(retryIntervals*)(shouldRetry, retryReason)(
+      http
+        .delete(URL(s"$baseUrl$contextPath/$claimId/upload-results/$reference"))
+        .execute[HttpResponse]
+    ).flatMap(response =>
+      if response.status == 200
+      then
+        Future.successful(
+          response.json.as[DeleteUploadResponse].success
+        )
+      else
+        Future.failed(
+          Exception(
+            s"Request to DELETE $baseUrl$contextPath/$claimId/upload-results/$reference failed because of $response ${response.body}"
+          )
+        )
+    )
+
+  final override def getUploadResult(claimId: String, reference: FileUploadReference)(using
     hc: HeaderCarrier
   ): Future[Option[GetUploadResultResponse]] =
     retry(retryIntervals*)(shouldRetry, retryReason)(

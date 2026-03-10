@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.io.Source
 
 trait TestClaimsServiceHelper extends TestUsers {
@@ -50,7 +50,7 @@ trait TestClaimsServiceHelper extends TestUsers {
 
 }
 
-class TestClaimsService(initialClaims: Seq[Claim])(using ec: ExecutionContext) extends ClaimsService {
+class TestClaimsService(initialClaims: Seq[Claim]) extends ClaimsService {
 
   private val claims: ListBuffer[(Claim, Instant)] =
     ListBuffer.from(initialClaims.map(_ -> Instant.now()))

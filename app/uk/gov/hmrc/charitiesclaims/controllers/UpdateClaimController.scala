@@ -26,12 +26,16 @@ import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import java.util.UUID
+import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.charitiesclaims.models.FileUploadReference
 
 @Singleton()
 class UpdateClaimController @Inject() (
   val cc: ControllerComponents,
   val authorisedAction: AuthorisedAction,
-  claimsService: ClaimsService
+  claimsService: ClaimsService,
+  claimsValidationConnector: ClaimsValidationConnector
 )(using ExecutionContext)
     extends BaseController {
 
@@ -41,7 +45,7 @@ class UpdateClaimController @Inject() (
         claimsService
           .getClaim(claimId)
           .flatMap {
-            case None           =>
+            case None                   =>
               Future.successful(
                 NotFound(
                   Json.obj(
@@ -50,8 +54,8 @@ class UpdateClaimController @Inject() (
                   )
                 )
               )
-            case Some(claim, _) =>
-              if claim.submissionDetails.isDefined || claim.claimSubmitted
+            case Some(existingClaim, _) =>
+              if existingClaim.submissionDetails.isDefined || existingClaim.claimSubmitted
               then {
                 Future.successful(
                   BadRequest(
@@ -61,7 +65,7 @@ class UpdateClaimController @Inject() (
                     )
                   )
                 )
-              } else if claim.lastUpdatedReference != updateClaimsRequest.lastUpdatedReference
+              } else if existingClaim.lastUpdatedReference != updateClaimsRequest.lastUpdatedReference
               then {
                 Future.successful(
                   BadRequest(
@@ -72,19 +76,19 @@ class UpdateClaimController @Inject() (
                   )
                 )
               } else {
-                val updatedClaim = update(claim, updateClaimsRequest)
-                claimsService
-                  .putClaim(updatedClaim)
-                  .map(_ =>
-                    Ok(
-                      Json.toJson(
-                        UpdateClaimResponse(
-                          success = true,
-                          lastUpdatedReference = updatedClaim.lastUpdatedReference
-                        )
-                      )
+                val updatedClaim = update(existingClaim, updateClaimsRequest)
+                for {
+                  _ <- claimsService.putClaim(updatedClaim)
+                  _ <- deleteUploadResults(existingClaim, updatedClaim)
+                } yield Ok(
+                  Json.toJson(
+                    UpdateClaimResponse(
+                      success = true,
+                      lastUpdatedReference = updatedClaim.lastUpdatedReference
                     )
                   )
+                )
+
               }
           }
           .recover { case e =>
@@ -97,6 +101,20 @@ class UpdateClaimController @Inject() (
           }
       }
     }
+
+  private def deleteUploadResults(claim: Claim, updatedClaim: Claim)(using
+    HeaderCarrier,
+    ExecutionContext
+  ): Future[Seq[Boolean]] =
+    Future.sequence(
+      findUploadsToDelete(claim, updatedClaim)
+        .map { uploadReference =>
+          claimsValidationConnector.deleteUpload(claim.claimId, uploadReference)
+        }
+    )
+
+  private def findUploadsToDelete(existingClaim: Claim, updatedClaim: Claim): Seq[FileUploadReference] =
+    (existingClaim.uploadReferences -- updatedClaim.uploadReferences).toSeq
 
   private def update(claim: Claim, update: UpdateClaimRequest): Claim = {
     val newClaimData = ClaimData(

@@ -60,4 +60,48 @@ class ClaimSpec extends AnyWordSpec with Matchers {
         .flatMap(_.corporateTrusteeDaytimeTelephoneNumber)                           shouldBe Some("071234567890")
     }
   }
+
+  "uploadReferences" should {
+    "return the upload references for the claim" in {
+      val claim = Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = false,
+        lastUpdatedReference = "test-last-updated-ref",
+        claimData = ClaimData(
+          repaymentClaimDetails = RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = true,
+            claimingUnderGiftAidSmallDonationsScheme = false
+          ),
+          giftAidScheduleFileUploadReference = Some(FileUploadReference("test-upload-reference-1")),
+          otherIncomeScheduleFileUploadReference = Some(FileUploadReference("test-upload-reference-2")),
+          communityBuildingsScheduleFileUploadReference = None,
+          connectedCharitiesScheduleFileUploadReference = Some(FileUploadReference("test-upload-reference-4"))
+        )
+      )
+      claim.uploadReferences shouldBe Set(
+        FileUploadReference("test-upload-reference-1"),
+        FileUploadReference("test-upload-reference-2"),
+        FileUploadReference("test-upload-reference-4")
+      )
+    }
+
+    "return an empty set if there are no upload references" in {
+      val claim = Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = false,
+        lastUpdatedReference = "test-last-updated-ref",
+        claimData = ClaimData(repaymentClaimDetails =
+          RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = true,
+            claimingUnderGiftAidSmallDonationsScheme = false
+          )
+        )
+      )
+      claim.uploadReferences shouldBe Set.empty
+    }
+  }
 }

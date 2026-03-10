@@ -72,6 +72,12 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
       response = response
     )
 
+  def givenDeleteUploadEndpointReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
+    givenDeleteReturns(
+      expectedUrl = "http://foo.bar.com:1234/foo-claims/12345/upload-results/test-ref-123",
+      response = response
+    )
+
   def givenGetUploadResultEndpointReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
     mockHttpGetSuccess(URL("http://foo.bar.com:1234/foo-claims/12345/upload-results/test-ref-123"))(
       response = response
@@ -203,6 +209,30 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
         givenGetUploadResultEndpointReturns(HttpResponse(500, "")).once()
         givenGetUploadResultEndpointReturns(HttpResponse(200, testGetUploadResultValidatedConnectedCharities)).once()
         await(connector.getUploadResult("12345", FileUploadReference("test-ref-123"))) shouldBe Some(expectedResponse)
+      }
+    }
+
+    "deleteUpload" - {
+      "should return true if the service returns 200 status with success true" in {
+        givenDeleteUploadEndpointReturns(HttpResponse(200, body = "{\"success\":true}")).once()
+        await(connector.deleteUpload("12345", FileUploadReference("test-ref-123"))) shouldBe true
+      }
+
+      "should return false if the service returns 200 status with success false" in {
+        givenDeleteUploadEndpointReturns(HttpResponse(200, body = "{\"success\":false}")).once()
+        await(connector.deleteUpload("12345", FileUploadReference("test-ref-123"))) shouldBe false
+      }
+
+      "should throw an exception if the service returns 500 status" in {
+        givenDeleteUploadEndpointReturns(HttpResponse(500, ""))
+        a[Exception] should be thrownBy
+          await(connector.deleteUpload("12345", FileUploadReference("test-ref-123")))
+      }
+
+      "should throw an exception if the service returns 404 status" in {
+        givenDeleteUploadEndpointReturns(HttpResponse(404, "")).once()
+        a[Exception] should be thrownBy
+          await(connector.deleteUpload("12345", FileUploadReference("test-ref-123")))
       }
     }
   }

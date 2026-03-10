@@ -63,7 +63,7 @@ class ClaimsServiceImpl @Inject() (
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit] =
     claimsValidationConnector
       .deleteClaim(claimId)
-      .flatMap(_ => repository.delete(claimId)(ClaimsRepository.claimDataKey))
+      .flatMap(_ => repository.deleteEntity(claimId))
 
   def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]] =
     repository.collection

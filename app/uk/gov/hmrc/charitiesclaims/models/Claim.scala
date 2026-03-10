@@ -28,7 +28,15 @@ final case class Claim(
   submissionDetails: Option[SubmissionDetails] = None,
   adjustmentForOtherIncomePreviousOverClaimed: Option[BigDecimal] = None,
   prevOverclaimedGiftAid: Option[BigDecimal] = None
-)
+) {
+
+  def uploadReferences: Set[FileUploadReference] = Set(
+    claimData.giftAidScheduleFileUploadReference,
+    claimData.otherIncomeScheduleFileUploadReference,
+    claimData.communityBuildingsScheduleFileUploadReference,
+    claimData.connectedCharitiesScheduleFileUploadReference
+  ).collect { case Some(reference) => reference }
+}
 
 object Claim {
   given Format[Claim] = Json.format[Claim]

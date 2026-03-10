@@ -231,8 +231,7 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
 
       "should throw an exception if the service returns 404 status" in {
         givenDeleteUploadEndpointReturns(HttpResponse(404, "")).once()
-        a[Exception] should be thrownBy
-          await(connector.deleteUpload("12345", FileUploadReference("test-ref-123")))
+        await(connector.deleteUpload("12345", FileUploadReference("test-ref-123"))) shouldBe false
       }
     }
   }

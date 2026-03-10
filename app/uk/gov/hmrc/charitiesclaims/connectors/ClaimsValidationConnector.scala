@@ -93,6 +93,8 @@ class ClaimsValidationConnectorImpl @Inject() (
         Future.successful(
           response.json.as[DeleteUploadResponse].success
         )
+      else if response.status == 404
+      then Future.successful(false)
       else
         Future.failed(
           Exception(

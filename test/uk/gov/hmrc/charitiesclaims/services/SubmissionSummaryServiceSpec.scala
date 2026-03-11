@@ -102,6 +102,14 @@ class SubmissionSummaryServiceSpec extends AnyWordSpec with Matchers with Mockit
     when(mockValidationConnector.getUploadResult(eqTo("test-claim-id"), eqTo(ref))(using any[HeaderCarrier]))
       .thenReturn(Future.successful(Some(GetUploadResultValidatedOtherIncome(ref, data))))
 
+  private def mockCommunityBuildingValidation(ref: FileUploadReference, data: CommunityBuildingsScheduleData) =
+    when(mockValidationConnector.getUploadResult(eqTo("test-claim-id"), eqTo(ref))(using any[HeaderCarrier]))
+      .thenReturn(Future.successful(Some(GetUploadResultValidatedCommunityBuildings(ref, data))))
+
+  private def mockConnectedCharitiesValidation(ref: FileUploadReference, data: ConnectedCharitiesScheduleData) =
+    when(mockValidationConnector.getUploadResult(eqTo("test-claim-id"), eqTo(ref))(using any[HeaderCarrier]))
+      .thenReturn(Future.successful(Some(GetUploadResultValidatedConnectedCharities(ref, data))))
+
   "SubmissionSummaryServiceImpl" should {
 
     "return a summary response successfully for the claim submitted by corporate trustee" in {
@@ -220,24 +228,8 @@ class SubmissionSummaryServiceSpec extends AnyWordSpec with Matchers with Mockit
           )
         )
       mockOrganisationName()
-      when(
-        mockValidationConnector.getUploadResult(eqTo("test-claim-id"), eqTo(communityBuildingsRef))(using
-          any[HeaderCarrier]
-        )
-      ).thenReturn(
-        Future.successful(
-          Some(GetUploadResultValidatedCommunityBuildings(communityBuildingsRef, communityBuildingsData))
-        )
-      )
-      when(
-        mockValidationConnector.getUploadResult(eqTo("test-claim-id"), eqTo(connectedCharitiesRef))(using
-          any[HeaderCarrier]
-        )
-      ).thenReturn(
-        Future.successful(
-          Some(GetUploadResultValidatedConnectedCharities(connectedCharitiesRef, connectedCharitiesData))
-        )
-      )
+      mockCommunityBuildingValidation(communityBuildingsRef, communityBuildingsData)
+      mockConnectedCharitiesValidation(connectedCharitiesRef, connectedCharitiesData)
 
       val result = service.getSummary(claim, organisationUser).futureValue
 
@@ -268,15 +260,7 @@ class SubmissionSummaryServiceSpec extends AnyWordSpec with Matchers with Mockit
           )
         )
       mockOrganisationName()
-      when(
-        mockValidationConnector.getUploadResult(eqTo("test-claim-id"), eqTo(communityBuildingsRef))(using
-          any[HeaderCarrier]
-        )
-      ).thenReturn(
-        Future.successful(
-          Some(GetUploadResultValidatedCommunityBuildings(communityBuildingsRef, communityBuildingsData))
-        )
-      )
+      mockCommunityBuildingValidation(communityBuildingsRef, communityBuildingsData)
 
       val result = service.getSummary(claim, organisationUser).futureValue
 
@@ -303,15 +287,7 @@ class SubmissionSummaryServiceSpec extends AnyWordSpec with Matchers with Mockit
             connectedCharitiesScheduleFileUploadReference = Some(connectedCharitiesRef)
           )
         )
-      when(
-        mockValidationConnector.getUploadResult(eqTo("test-claim-id"), eqTo(connectedCharitiesRef))(using
-          any[HeaderCarrier]
-        )
-      ).thenReturn(
-        Future.successful(
-          Some(GetUploadResultValidatedConnectedCharities(connectedCharitiesRef, connectedCharitiesData))
-        )
-      )
+      mockConnectedCharitiesValidation(connectedCharitiesRef, connectedCharitiesData)
 
       val result = service.getSummary(claim, organisationUser).futureValue
 

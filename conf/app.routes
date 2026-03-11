@@ -13,3 +13,6 @@ POST        /chris                   uk.gov.hmrc.charitiesclaims.controllers.ChR
 
 GET        /charities/agents/:agentRef                    uk.gov.hmrc.charitiesclaims.controllers.GetRdsDatacacheController.getAgentName(agentRef: String)
 GET        /charities/organisations/:charityRef           uk.gov.hmrc.charitiesclaims.controllers.GetRdsDatacacheController.getOrganisationName(charityRef: String)
+
+
+GET        /submission-summary/:claimId           uk.gov.hmrc.charitiesclaims.controllers.GetSubmissionSummaryController.getSummary(claimId: String)

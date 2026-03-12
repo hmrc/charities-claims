@@ -20,7 +20,7 @@ import org.w3c.dom.traversal.{DocumentTraversal, NodeFilter, NodeIterator}
 import org.w3c.dom.{Document, Node}
 
 import java.io.ByteArrayInputStream
-import java.net.URL
+import java.net.{URI, URL}
 import java.util.Iterator
 import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec
 import javax.xml.crypto.dsig.{CanonicalizationMethod, XMLSignatureFactory}
@@ -36,9 +36,9 @@ import scala.util.Try
 object XmlUtils {
 
   val chrisSubmissionSchemaSourceMap = List(
-    ("/xsd/xmldsig-core-schema.xsd", new URL("http://www.w3.org/2000/09/xmldsig#")),
-    ("/xsd/r68-v0-3.xsd", new URL("http://www.govtalk.gov.uk/taxation/charities/r68/1")),
-    ("/xsd/envelope-v2-0-HMRC.xsd", new URL("http://www.govtalk.gov.uk/CM/envelope"))
+    ("/xsd/xmldsig-core-schema.xsd", new URI("http://www.w3.org/2000/09/xmldsig#").toURL),
+    ("/xsd/r68-v0-3.xsd", new URI("http://www.govtalk.gov.uk/taxation/charities/r68/1").toURL),
+    ("/xsd/envelope-v2-0-HMRC.xsd", new URI("http://www.govtalk.gov.uk/CM/envelope").toURL)
   )
 
   lazy val chrisSubmissionSchema: Schema = loadSchema(chrisSubmissionSchemaSourceMap).get
@@ -46,7 +46,7 @@ object XmlUtils {
   def validateChRISSubmission(xml: String): Try[Document] =
     validateXml(xml, chrisSubmissionSchema)
 
-  def validateXml(xml: String, schema: Schema): Try[Document] =
+  private def validateXml(xml: String, schema: Schema): Try[Document] =
     parseDocument(xml)
       .flatMap { document =>
         Try {
@@ -61,14 +61,15 @@ object XmlUtils {
       }
 
   def parseDocument(document: String): Try[Document] = Try {
-    val documentBuilderFactory: DocumentBuilderFactory = DocumentBuilderFactory.newInstance()
-    documentBuilderFactory.setNamespaceAware(true)
+    val documentBuilderFactory: DocumentBuilderFactory = secureDocumentBuilderFactory()
+
     documentBuilderFactory
       .newDocumentBuilder()
       .parse(new ByteArrayInputStream(document.getBytes("utf-8")))
   }
 
-  class XMLErrorHandler extends org.xml.sax.helpers.DefaultHandler {
+  private class XMLErrorHandler extends org.xml.sax.helpers.DefaultHandler {
+
     import org.xml.sax.SAXParseException
 
     private val log = scala.collection.mutable.ListBuffer[String]()
@@ -77,7 +78,8 @@ object XmlUtils {
       log += ("ERROR: " + e.getMessage())
 
     def hasError: Boolean = log.nonEmpty
-    def getLog: String    = log.mkString(" ")
+
+    def getLog: String = log.mkString(" ")
   }
 
   def loadSchema(schemaSourceMap: List[(String, URL)]): Try[Schema] = Try {
@@ -90,9 +92,8 @@ object XmlUtils {
     )
   }
 
-  def canonicalizeXml(xml: String) = {
-    val dbf: DocumentBuilderFactory = DocumentBuilderFactory.newInstance()
-    dbf.setNamespaceAware(true)
+  def canonicalizeXml(xml: String): String = {
+    val dbf: DocumentBuilderFactory = secureDocumentBuilderFactory()
 
     val doc: Document = dbf.newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("utf-8")))
 
@@ -105,6 +106,15 @@ object XmlUtils {
 
     val transformedData: OctetStreamData = canonicalizationMethod.transform(data, null).asInstanceOf[OctetStreamData]
     scala.io.Source.fromInputStream(transformedData.getOctetStream())(using Codec.UTF8).mkString
+  }
+
+  private def secureDocumentBuilderFactory(): DocumentBuilderFactory = {
+    val dbf = DocumentBuilderFactory.newInstance()
+    dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+    dbf.setFeature("http://xml.org/sax/features/external-general-entities", false)
+    dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+    dbf.setNamespaceAware(true)
+    dbf
   }
 
   private def getRootNodeFilter(): NodeFilter =

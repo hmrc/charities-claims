@@ -230,9 +230,16 @@ def uploadScheduleFile(scheduleFile: String, validationType: String): FileUpload
     fields = upscanInitiateResponse.uploadRequest.fields, 
     path = scheduleFilePath
   )
-  Thread.sleep(5000)
   FileUploadReference(upscanInitiateResponse.reference)
 }
+
+def getUploadSummary(claimId: String)(using authorization: Authorization) = 
+  basicRequest
+  .response(asStringAlways)
+  .headers(Map("Authorization" -> authorization.bearerToken, "X-Session-ID" -> authorization.sessionId))
+  .get(uri"http://localhost:8032/charities-claims-validation/${claimId}/upload-results")
+  .send(s"get upload summary")
+  .body
 
 extension (string: String) {  
     inline def readPlayJsonAs[T: Format]: T =
@@ -296,6 +303,9 @@ val connectedCharitiesScheduleFileUploadReference =
     .map { scheduleFile => uploadScheduleFile(scheduleFile, "ConnectedCharities") }
   else None
 
+Thread.sleep(10000)
+getUploadSummary(saveClaimResponse.claimId)
+
 val updateClaimResponse: UpdateClaimResponse = 
   updateClaim(saveClaimResponse.claimId, UpdateClaimRequest(
   lastUpdatedReference = saveClaimResponse.lastUpdatedReference,
@@ -308,8 +318,8 @@ val updateClaimResponse: UpdateClaimResponse =
   otherIncomeScheduleFileUploadReference = otherIncomeScheduleFileUploadReference,
   communityBuildingsScheduleFileUploadReference = communityBuildingsScheduleFileUploadReference,
   connectedCharitiesScheduleFileUploadReference = connectedCharitiesScheduleFileUploadReference,
-  adjustmentForOtherIncomePreviousOverClaimed = claim.adjustmentForOtherIncomePreviousOverClaimed,
-  prevOverclaimedGiftAid = claim.prevOverclaimedGiftAid
+  adjustmentForOtherIncomePreviousOverClaimed = claim.claimData.adjustmentForOtherIncomePreviousOverClaimed,
+  prevOverclaimedGiftAid = claim.claimData.prevOverclaimedGiftAid
   ))
 
 submitClaim(ChRISSubmissionRequest(

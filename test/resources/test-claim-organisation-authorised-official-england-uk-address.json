@@ -6,9 +6,15 @@
   "claimData": {
     "repaymentClaimDetails": {
       "claimingGiftAid": true,
-      "claimingTaxDeducted": false,
-      "claimingUnderGiftAidSmallDonationsScheme": false,
-      "claimReferenceNumber": "test-claim-reference-number"
+      "claimingTaxDeducted": true,
+      "claimingUnderGiftAidSmallDonationsScheme": true,
+      "claimReferenceNumber": "test-claim-reference-number",
+      "claimingDonationsNotFromCommunityBuilding": true,
+      "claimingDonationsCollectedInCommunityBuildings": true,
+      "connectedToAnyOtherCharities": true,
+      "makingAdjustmentToPreviousClaim": true,
+      "hmrcCharitiesReference": "test-hmrc-charities-reference",
+      "nameOfCharity": "test-name-of-charity"
     },
     "organisationDetails": {
       "nameOfCharityRegulator": "EnglandAndWales",

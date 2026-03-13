@@ -302,11 +302,14 @@ val updateClaimResponse: UpdateClaimResponse =
   repaymentClaimDetails = claim.claimData.repaymentClaimDetails,
   organisationDetails = claim.claimData.organisationDetails,
   giftAidSmallDonationsSchemeDonationDetails = claim.claimData.giftAidSmallDonationsSchemeDonationDetails,
-  declarationDetails = claim.claimData.declarationDetails,
+  understandFalseStatements = claim.claimData.understandFalseStatements,
+  includedAnyAdjustmentsInClaimPrompt = claim.claimData.includedAnyAdjustmentsInClaimPrompt,
   giftAidScheduleFileUploadReference = giftAidScheduleFileUploadReference,
   otherIncomeScheduleFileUploadReference = otherIncomeScheduleFileUploadReference,
   communityBuildingsScheduleFileUploadReference = communityBuildingsScheduleFileUploadReference,
-  connectedCharitiesScheduleFileUploadReference = connectedCharitiesScheduleFileUploadReference
+  connectedCharitiesScheduleFileUploadReference = connectedCharitiesScheduleFileUploadReference,
+  adjustmentForOtherIncomePreviousOverClaimed = claim.adjustmentForOtherIncomePreviousOverClaimed,
+  prevOverclaimedGiftAid = claim.prevOverclaimedGiftAid
   ))
 
 submitClaim(ChRISSubmissionRequest(

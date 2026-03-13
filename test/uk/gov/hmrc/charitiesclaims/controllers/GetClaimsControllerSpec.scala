@@ -17,20 +17,15 @@
 package uk.gov.hmrc.charitiesclaims.controllers
 
 import play.api.http.Status
-import play.api.libs.json.JsArray
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsString
+import play.api.libs.json.{JsArray, JsObject, JsString}
 import play.api.test.Helpers
 import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.models.Claim
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
-import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
-import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
-import uk.gov.hmrc.charitiesclaims.util.TestClaimsServiceHelper
+import uk.gov.hmrc.charitiesclaims.util.{ControllerSpec, TestClaimsService, TestClaimsServiceHelper}
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
   given ExecutionContext = global
@@ -167,7 +162,8 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       claim.claimData.repaymentClaimDetails.claimingTaxDeducted                      shouldBe false
       claim.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme shouldBe false
       claim.claimData.organisationDetails.isDefined                                  shouldBe true
-      claim.claimData.declarationDetails.isDefined                                   shouldBe true
+      claim.claimData.includedAnyAdjustmentsInClaimPrompt.isDefined                  shouldBe true
+      claim.claimData.understandFalseStatements.isDefined                            shouldBe true
       claim.claimData.giftAidSmallDonationsSchemeDonationDetails.isDefined           shouldBe false
       claim.submissionDetails.isDefined                                              shouldBe true
     }

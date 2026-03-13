@@ -96,10 +96,8 @@
                         }
                     ]
                 },
-                "declarationDetails": {
-                    "understandFalseStatements": true,
-                    "includedAnyAdjustmentsInClaimPrompt": "More information"
-                }
+                "understandFalseStatements": true,
+                "includedAnyAdjustmentsInClaimPrompt": "More information"
             },
             "submissionDetails": {
                 "submissionTimestamp": "2025-11-10T13:55:31.168Z",

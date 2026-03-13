@@ -16,6 +16,12 @@
 //> using file ../app/uk/gov/hmrc/charitiesclaims/models/NameOfCharityRegulator.scala
 //> using file ../app/uk/gov/hmrc/charitiesclaims/models/ReasonNotRegisteredWithRegulator.scala
 
+import java.io.File
+import sttp.client4.InputStreamBody
+import sttp.client4.RequestOptions
+import sttp.client4.StringBody
+import sttp.client4.internal.SttpFile
+import sttp.client4.FileBody
 import scala.util.Random
 import sttp.model.*
 import sttp.client4.quick.*
@@ -28,6 +34,10 @@ import upickle.default.*
 import uk.gov.hmrc.charitiesclaims.models.*
 import play.api.libs.json.Json
 import play.api.libs.json.Format
+import sttp.client4.MultipartBody
+import java.time.format.DateTimeFormatter
+import java.time.ZoneOffset
+import java.time.Instant
 
 // This test assumes that:
 // - CHARITIES_CLAIMS microservice is running on port 8031 
@@ -100,7 +110,6 @@ def createClaim(request: SaveClaimRequest)(using authorization: Authorization) =
   .body
   .readPlayJsonAs[SaveClaimResponse]
 
-
 def updateClaim(claimId: String, request: UpdateClaimRequest)(using authorization: Authorization) = 
   basicRequest
   .response(asStringAlways)
@@ -122,6 +131,108 @@ def submitClaim(request: ChRISSubmissionRequest)(using authorization: Authorizat
   .send(s"submit a claim to ChRIS")
   .body
   .readPlayJsonAs[ChRISSubmissionResponse]
+
+case class UploadRequest(href: String, fields: Map[String, String])
+
+object UploadRequest {
+  given Format[UploadRequest] = Json.format[UploadRequest]
+}
+
+case class UpscanInitiateResponse(
+  reference: String,
+  uploadRequest: UploadRequest
+)
+
+object UpscanInitiateResponse {
+  given Format[UpscanInitiateResponse] = Json.format[UpscanInitiateResponse]
+}
+
+def initiateUpscanUpload(claimId: String) = 
+  basicRequest
+  .response(asStringAlways)
+  .post(uri"http://localhost:9570/upscan/v2/initiate")
+  .body(s"""|{
+           |  "successRedirect" : "http://localhost:8030/charities-claims/upload-gift-aid-schedule/success",
+           |  "errorRedirect" : "http://localhost:8030/charities-claims/upload-gift-aid-schedule/error",
+           |  "callbackUrl" : "http://localhost:8032/charities-claims-validation/${claimId}/upscan-callback",
+           |  "minimumFileSize" : 1,
+           |  "maximumFileSize" : 256000,
+           |  "consumingService" : "charities-claims-frontend"
+           |}""".stripMargin)
+  .contentType("application/json")
+  .send(s"initiate an upscan upload")
+  .body
+  .readPlayJsonAs[UpscanInitiateResponse]
+
+final case class CreateUploadTrackingRequest(
+  reference: String,
+  validationType: String,
+  uploadUrl: String,
+  initiateTimestamp: String,
+  fields: Map[String, String]
+)
+
+object CreateUploadTrackingRequest {
+  given Format[CreateUploadTrackingRequest] = Json.format[CreateUploadTrackingRequest]
+}
+
+object ISODateTime {
+  val formatter = DateTimeFormatter
+    .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    .withZone(ZoneOffset.UTC)
+
+  def timestampNow(): String = formatter.format(Instant.now())
+}
+
+def createUploadTracking(claimId: String, request: CreateUploadTrackingRequest)(using authorization: Authorization) = 
+  basicRequest
+  .response(asStringAlways)
+  .headers(Map("Authorization" -> authorization.bearerToken, "X-Session-ID" -> authorization.sessionId))
+  .post(uri"http://localhost:8032/charities-claims-validation/${claimId}/create-upload-tracking")
+  .body(Json.toJson(request).toString)
+  .contentType("application/json")
+  .send(s"create an upload tracking")
+  .body
+
+def uploadFile(url: String, reference: String, fields: Map[String, String], path: os.Path)(using authorization: Authorization) = 
+  val absolutePath = new File(path.toString).toPath
+  basicRequest
+  .response(asStringAlways) 
+  .post(uri"$url")
+  .multipartBody(
+    fields.toSeq.map((key, value) => Part(name = key, body = StringBody(value, encoding = "UTF-8")))
+    :+ multipartFile(name = "file", data = absolutePath)
+  )
+  .followRedirects(false)
+  .send(s"upload a file")
+  .body
+
+def uploadScheduleFile(scheduleFile: String, validationType: String): FileUploadReference = {
+  val scheduleFilePath: os.Path =
+        if scheduleFile.startsWith("/") then os.Path(scheduleFile)
+        else os.pwd / os.RelPath(scheduleFile)
+
+  if(!os.exists(scheduleFilePath)) {
+    printlnErrorMessage(s"Schedule file $scheduleFilePath not found")
+    sys.exit(1)
+  }
+  val upscanInitiateResponse = initiateUpscanUpload(saveClaimResponse.claimId)
+  createUploadTracking(saveClaimResponse.claimId, CreateUploadTrackingRequest(
+    reference = upscanInitiateResponse.reference,
+    validationType = validationType,
+    uploadUrl = upscanInitiateResponse.uploadRequest.href,
+    initiateTimestamp = ISODateTime.timestampNow(),
+    fields = upscanInitiateResponse.uploadRequest.fields
+  ))
+  uploadFile(
+    url = upscanInitiateResponse.uploadRequest.href, 
+    reference = upscanInitiateResponse.reference, 
+    fields = upscanInitiateResponse.uploadRequest.fields, 
+    path = scheduleFilePath
+  )
+  Thread.sleep(5000)
+  FileUploadReference(upscanInitiateResponse.reference)
+}
 
 extension (string: String) {  
     inline def readPlayJsonAs[T: Format]: T =
@@ -157,13 +268,45 @@ val saveClaimResponse: SaveClaimResponse =
   makingAdjustmentToPreviousClaim = claim.claimData.repaymentClaimDetails.makingAdjustmentToPreviousClaim
   ))
 
+val giftAidScheduleFileUploadReference = 
+  if claim.claimData.repaymentClaimDetails.claimingGiftAid 
+  then
+    optionalScriptParameter('g',"gift-aid-schedule")(args)
+    .map { scheduleFile => uploadScheduleFile(scheduleFile, "GiftAid") }
+  else None
+
+val otherIncomeScheduleFileUploadReference = 
+  if claim.claimData.repaymentClaimDetails.claimingTaxDeducted 
+  then
+    optionalScriptParameter('o',"other-income-schedule")(args)
+    .map { scheduleFile => uploadScheduleFile(scheduleFile, "OtherIncome") }
+  else None
+
+val communityBuildingsScheduleFileUploadReference = 
+  if claim.claimData.repaymentClaimDetails.claimingDonationsCollectedInCommunityBuildings.contains(true) 
+  then
+    optionalScriptParameter('c',"community-buildings-schedule")(args)
+    .map { scheduleFile => uploadScheduleFile(scheduleFile, "CommunityBuildings") }
+  else None
+
+val connectedCharitiesScheduleFileUploadReference = 
+  if claim.claimData.repaymentClaimDetails.connectedToAnyOtherCharities.contains(true)
+  then
+    optionalScriptParameter('c',"connected-charities-schedule")(args)
+    .map { scheduleFile => uploadScheduleFile(scheduleFile, "ConnectedCharities") }
+  else None
+
 val updateClaimResponse: UpdateClaimResponse = 
   updateClaim(saveClaimResponse.claimId, UpdateClaimRequest(
   lastUpdatedReference = saveClaimResponse.lastUpdatedReference,
   repaymentClaimDetails = claim.claimData.repaymentClaimDetails,
   organisationDetails = claim.claimData.organisationDetails,
   giftAidSmallDonationsSchemeDonationDetails = claim.claimData.giftAidSmallDonationsSchemeDonationDetails,
-  declarationDetails = claim.claimData.declarationDetails
+  declarationDetails = claim.claimData.declarationDetails,
+  giftAidScheduleFileUploadReference = giftAidScheduleFileUploadReference,
+  otherIncomeScheduleFileUploadReference = otherIncomeScheduleFileUploadReference,
+  communityBuildingsScheduleFileUploadReference = communityBuildingsScheduleFileUploadReference,
+  connectedCharitiesScheduleFileUploadReference = connectedCharitiesScheduleFileUploadReference
   ))
 
 submitClaim(ChRISSubmissionRequest(

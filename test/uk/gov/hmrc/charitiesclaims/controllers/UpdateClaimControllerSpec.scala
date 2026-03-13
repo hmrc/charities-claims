@@ -558,18 +558,14 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       captured.value.claimData.giftAidSmallDonationsSchemeDonationDetails shouldBe None
     }
 
-    "remove declarationDetails when omitted from PUT request" in new AuthorisedOrganisationFixture {
+    "remove includedAnyAdjustmentsInClaimPrompt and understandFalseStatements when omitted from PUT request" in new AuthorisedOrganisationFixture {
       val mockClaimsService: ClaimsService                         = mock[ClaimsService]
       val mockClaimsValidationConnector: ClaimsValidationConnector = mock[ClaimsValidationConnector]
 
-      val declarationDetails = DeclarationDetails(
-        understandFalseStatements = true,
-        includedAnyAdjustmentsInClaimPrompt = "Yes"
-      )
-
       val existingClaimWithDeclaration = existingClaim.copy(
         claimData = existingClaim.claimData.copy(
-          declarationDetails = Some(declarationDetails)
+          understandFalseStatements = Some(true),
+          includedAnyAdjustmentsInClaimPrompt = Some("Yes")
         )
       )
 
@@ -602,7 +598,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
       status(result) shouldBe Status.OK
 
-      captured.value.claimData.declarationDetails shouldBe None
+      captured.value.claimData.includedAnyAdjustmentsInClaimPrompt shouldBe None
+      captured.value.claimData.understandFalseStatements           shouldBe None
     }
   }
 }

@@ -42,10 +42,8 @@
     "connectedCharitiesScheduleFileUploadReference": "cc-ref-456",
     "otherIncomeScheduleFileUploadReference": "oi-ref-789",
     "giftAidScheduleFileUploadReference": "ga-ref-789",
-    "declarationDetails": {
-      "understandFalseStatements": true,
-      "includedAnyAdjustmentsInClaimPrompt": "Yes"
-    },
+    "understandFalseStatements": true,
+    "includedAnyAdjustmentsInClaimPrompt": "Yes",
     "otherIncomeData": {
       "adjustmentForOtherIncomePreviousOverClaimed": 240.03,
       "totalOfGrossPayments": 240.01,

@@ -126,7 +126,9 @@ class UpdateClaimController @Inject() (
       giftAidScheduleFileUploadReference = update.giftAidScheduleFileUploadReference,
       otherIncomeScheduleFileUploadReference = update.otherIncomeScheduleFileUploadReference,
       communityBuildingsScheduleFileUploadReference = update.communityBuildingsScheduleFileUploadReference,
-      connectedCharitiesScheduleFileUploadReference = update.connectedCharitiesScheduleFileUploadReference
+      connectedCharitiesScheduleFileUploadReference = update.connectedCharitiesScheduleFileUploadReference,
+      adjustmentForOtherIncomePreviousOverClaimed = update.adjustmentForOtherIncomePreviousOverClaimed,
+      prevOverclaimedGiftAid = update.prevOverclaimedGiftAid
     )
 
     claim.copy(claimData = newClaimData, lastUpdatedReference = UUID.randomUUID().toString)

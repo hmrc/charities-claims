@@ -149,7 +149,7 @@ class ChRISSubmissionServiceSpec
         AuthOfficial(
           Trustee = Some("Test-Corporate-Trustee"),
           OffName = None,
-          ClaimNo = None,
+          ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
               Postcode = Some("post-code"),
@@ -225,7 +225,7 @@ class ChRISSubmissionServiceSpec
         AuthOfficial(
           Trustee = Some("Test-Corporate-Trustee"),
           OffName = None,
-          ClaimNo = None,
+          ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
               Postcode = None,
@@ -299,7 +299,7 @@ class ChRISSubmissionServiceSpec
               Sur = Some("Jones")
             )
           ),
-          ClaimNo = None,
+          ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
               Postcode = Some("post-code"),
@@ -371,7 +371,7 @@ class ChRISSubmissionServiceSpec
               Sur = Some("Jones")
             )
           ),
-          ClaimNo = None,
+          ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
               Postcode = None,
@@ -436,7 +436,7 @@ class ChRISSubmissionServiceSpec
               Sur = Some("Jones")
             )
           ),
-          ClaimNo = None,
+          ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
               Postcode = Some("post-code"),
@@ -509,7 +509,7 @@ class ChRISSubmissionServiceSpec
               Sur = Some("Jones")
             )
           ),
-          ClaimNo = None,
+          ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
               Postcode = Some("post-code"),
@@ -582,7 +582,7 @@ class ChRISSubmissionServiceSpec
               Sur = Some("Jones")
             )
           ),
-          ClaimNo = None,
+          ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
               Postcode = Some("post-code"),

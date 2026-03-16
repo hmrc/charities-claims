@@ -182,7 +182,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         Trustee =
           if organisationDetails.areYouACorporateTrustee then organisationDetails.nameOfCorporateTrustee else None,
         OffName = buildOffName(claim),
-        ClaimNo = None, // TODO
+        ClaimNo = claim.claimData.repaymentClaimDetails.claimReferenceNumber,
         OffID = buildOffId(claim),
         Phone =
           if (organisationDetails.areYouACorporateTrustee)

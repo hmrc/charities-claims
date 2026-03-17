@@ -23,4 +23,5 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30" % hmrcMongoVersion    % Test,
     "com.vladsch.flexmark"    % "flexmark-all"            % "0.64.8"            % Test
   )
+  val it: Seq[ModuleID] = Seq.empty
 }

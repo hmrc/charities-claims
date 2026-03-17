@@ -27,12 +27,11 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
 import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
+import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
 import uk.gov.hmrc.http.HeaderCarrier
-import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.util.UUID
 import scala.concurrent.Future
-import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
 
 class ClaimsServiceSpec
     extends AnyWordSpec

@@ -21,3 +21,10 @@ lazy val microservice = Project("charities-claims", file("."))
   .settings(CodeCoverageSettings.settings: _*)
   .settings(ScoverageKeys.coverageFailOnMinimum := false)
   .settings(ScoverageKeys.coverageMinimumStmtTotal := 90)
+
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test")
+  .settings(DefaultBuildSettings.itSettings())
+  .settings(libraryDependencies ++= AppDependencies.it)
+

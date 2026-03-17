@@ -18,7 +18,7 @@ package uk.gov.hmrc.charitiesclaims.validation
 
 import uk.gov.hmrc.charitiesclaims.models.chris.*
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZoneId}
 import java.time.format.DateTimeFormatter
 import scala.util.Try
 
@@ -70,10 +70,9 @@ object SchematronValidator:
       .orElse(Try(LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
       .toOption
 
-  private def today: LocalDate = LocalDate.now()
+  private def now: LocalDate = LocalDate.now(ZoneId.of("Europe/London"))
 
   def currentTaxYear: Int =
-    val now = LocalDate.now()
     if now.isAfter(LocalDate.of(now.getYear, 4, 5)) then now.getYear + 1 else now.getYear
 
   def validateClaimRule(message: GovTalkMessage): List[ValidationError] =
@@ -118,7 +117,7 @@ object SchematronValidator:
       .flatMap(_.OtherInc)
       .getOrElse(Nil)
       .flatMap { oi =>
-        parseDate(oi.OIDate).filter(_.isAfter(today)).map(_ => ValidationError.OIDateRule)
+        parseDate(oi.OIDate).filter(_.isAfter(now)).map(_ => ValidationError.OIDateRule)
       }
 
   def validateKeyRule(message: GovTalkMessage): List[ValidationError] =

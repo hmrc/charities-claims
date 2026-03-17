@@ -19,7 +19,7 @@
     <ChannelRouting>
       <Channel>
         <URI>9998</URI>
-        <Product>Charities portal</Product>
+        <Product>Charities Portal</Product>
         <Version>1.0</Version>
       </Channel>
     </ChannelRouting>

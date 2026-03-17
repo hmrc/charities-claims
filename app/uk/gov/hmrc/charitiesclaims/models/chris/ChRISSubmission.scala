@@ -95,7 +95,7 @@ final case class ChannelRouting(
 
 final case class Channel(
   URI: String = "9998",
-  Product: String = "Charities portal",
+  Product: String = "Charities Portal",
   Version: String = "1.0"
 ) derives XmlWriter
 

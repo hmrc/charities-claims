@@ -48,10 +48,6 @@ class SchematronValidatorSpec extends BaseSpec {
   )(f: Option[GASDS] => Option[GASDS]): GovTalkMessage =
     withClaim(message)(c => c.copy(GASDS = f(c.GASDS)))
 
-  private def currentTaxYear: Int =
-    val now = LocalDate.now()
-    if now.isAfter(LocalDate.of(now.getYear, 4, 5)) then now.getYear else now.getYear - 1
-
   "SchematronValidator" - {
 
     "validate" - {
@@ -504,7 +500,7 @@ class SchematronValidatorSpec extends BaseSpec {
                     BldgName = "Hall",
                     Address = "1 Main St",
                     Postcode = "AB1 2CD",
-                    BldgClaim = List(BldgClaim(Year = currentTaxYear.toString, Amount = 100))
+                    BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
                   )
                 )
               ),
@@ -555,7 +551,7 @@ class SchematronValidatorSpec extends BaseSpec {
                     BldgName = "Hall",
                     Address = "1 Main St",
                     Postcode = "AB1 2CD",
-                    BldgClaim = List(BldgClaim(Year = currentTaxYear.toString, Amount = 100))
+                    BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
                   )
                 )
               ),
@@ -580,7 +576,7 @@ class SchematronValidatorSpec extends BaseSpec {
                       BldgName = "Hall",
                       Address = "1 Main St",
                       Postcode = "AB1 2CD",
-                      BldgClaim = List(BldgClaim(Year = currentTaxYear.toString, Amount = 100))
+                      BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
                     )
                   )
                 ),
@@ -625,7 +621,7 @@ class SchematronValidatorSpec extends BaseSpec {
             BldgName = "Hall",
             Address = "1 Main St",
             Postcode = "AB1 2CD",
-            BldgClaim = List(BldgClaim(Year = currentTaxYear.toString, Amount = 100))
+            BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
           )
         )
         val msg       = withGasds(validMessage)(_ =>
@@ -688,7 +684,7 @@ class SchematronValidatorSpec extends BaseSpec {
       }
 
       "should pass when all years in valid range" in {
-        val taxYear = currentTaxYear
+        val taxYear = SchematronValidator.currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
             GASDS(
@@ -707,7 +703,7 @@ class SchematronValidatorSpec extends BaseSpec {
       }
 
       "should fail 7049 when year > current tax year" in {
-        val taxYear = currentTaxYear
+        val taxYear = SchematronValidator.currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
             GASDS(
@@ -723,7 +719,7 @@ class SchematronValidatorSpec extends BaseSpec {
       }
 
       "should fail 7050 when year < current tax year - 3" in {
-        val taxYear = currentTaxYear
+        val taxYear = SchematronValidator.currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
             GASDS(
@@ -739,7 +735,7 @@ class SchematronValidatorSpec extends BaseSpec {
       }
 
       "should fail 7051 when duplicate years" in {
-        val taxYear = currentTaxYear
+        val taxYear = SchematronValidator.currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
             GASDS(
@@ -765,7 +761,7 @@ class SchematronValidatorSpec extends BaseSpec {
       }
 
       "should pass when all building years in valid range" in {
-        val taxYear = currentTaxYear
+        val taxYear = SchematronValidator.currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
             GASDS(
@@ -791,8 +787,98 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateYearRule2(msg) shouldBe Nil
       }
 
+      "should pass when duplicate years across buildings with different BldgName" in {
+        val taxYear = SchematronValidator.currentTaxYear
+        val msg     = withGasds(validMessage)(_ =>
+          Some(
+            GASDS(
+              ConnectedCharities = false,
+              CommBldgs = Some(true),
+              Building = Some(
+                List(
+                  Building(
+                    BldgName = "Hall1",
+                    Address = "1 Main St",
+                    Postcode = "AB1 2CD",
+                    BldgClaim = List(BldgClaim(Year = taxYear.toString, Amount = 100))
+                  ),
+                  Building(
+                    BldgName = "Hall2",
+                    Address = "1 Main St",
+                    Postcode = "AB1 2CD",
+                    BldgClaim = List(BldgClaim(Year = taxYear.toString, Amount = 200))
+                  )
+                )
+              ),
+              Adj = None
+            )
+          )
+        )
+        SchematronValidator.validateYearRule2(msg) shouldBe Nil
+      }
+
+      "should pass when duplicate years across buildings with different Address" in {
+        val taxYear = SchematronValidator.currentTaxYear
+        val msg     = withGasds(validMessage)(_ =>
+          Some(
+            GASDS(
+              ConnectedCharities = false,
+              CommBldgs = Some(true),
+              Building = Some(
+                List(
+                  Building(
+                    BldgName = "Hall1",
+                    Address = "1 Main St",
+                    Postcode = "AB1 2CD",
+                    BldgClaim = List(BldgClaim(Year = taxYear.toString, Amount = 100))
+                  ),
+                  Building(
+                    BldgName = "Hall1",
+                    Address = "2 Main St",
+                    Postcode = "AB1 2CD",
+                    BldgClaim = List(BldgClaim(Year = taxYear.toString, Amount = 200))
+                  )
+                )
+              ),
+              Adj = None
+            )
+          )
+        )
+        SchematronValidator.validateYearRule2(msg) shouldBe Nil
+      }
+
+      "should pass when duplicate years across buildings with different Postcode" in {
+        val taxYear = SchematronValidator.currentTaxYear
+        val msg     = withGasds(validMessage)(_ =>
+          Some(
+            GASDS(
+              ConnectedCharities = false,
+              CommBldgs = Some(true),
+              Building = Some(
+                List(
+                  Building(
+                    BldgName = "Hall1",
+                    Address = "1 Main St",
+                    Postcode = "AB1 2CD",
+                    BldgClaim = List(BldgClaim(Year = taxYear.toString, Amount = 100))
+                  ),
+                  Building(
+                    BldgName = "Hall1",
+                    Address = "1 Main St",
+                    Postcode = "EF1 2GH",
+                    BldgClaim = List(BldgClaim(Year = taxYear.toString, Amount = 200))
+                  )
+                )
+              ),
+              Adj = None
+            )
+          )
+        )
+        SchematronValidator.validateYearRule2(msg) shouldBe Nil
+      }
+
       "should fail 7054 when year > current tax year" in {
-        val taxYear = currentTaxYear
+        val taxYear = SchematronValidator.currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
             GASDS(
@@ -816,7 +902,7 @@ class SchematronValidatorSpec extends BaseSpec {
       }
 
       "should fail 7055 when year < current tax year - 3" in {
-        val taxYear = currentTaxYear
+        val taxYear = SchematronValidator.currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
             GASDS(
@@ -839,8 +925,8 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateYearRule2(msg) should contain(ValidationError.YearRule2_7055)
       }
 
-      "should fail 7056 when duplicate years across buildings" in {
-        val taxYear = currentTaxYear
+      "should fail 7056 when duplicate years across buildings with same BldgName, Address and Postcode" in {
+        val taxYear = SchematronValidator.currentTaxYear
         val msg     = withGasds(validMessage)(_ =>
           Some(
             GASDS(
@@ -855,8 +941,8 @@ class SchematronValidatorSpec extends BaseSpec {
                     BldgClaim = List(BldgClaim(Year = taxYear.toString, Amount = 100))
                   ),
                   Building(
-                    BldgName = "Hall2",
-                    Address = "2 Main St",
+                    BldgName = "Hall1",
+                    Address = "1 Main St",
                     Postcode = "AB1 2CD",
                     BldgClaim = List(BldgClaim(Year = taxYear.toString, Amount = 200))
                   )

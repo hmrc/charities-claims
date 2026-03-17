@@ -27,7 +27,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.helpers.IntegrationTestSupport
-import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimData, RepaymentClaimDetails, SaveClaimRequest, UpdateClaimRequest, UpdateClaimResponse}
+import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimData, RepaymentClaimDetails, UpdateClaimRequest, UpdateClaimResponse}
 import uk.gov.hmrc.charitiesclaims.repositories.ClaimsRepository
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}

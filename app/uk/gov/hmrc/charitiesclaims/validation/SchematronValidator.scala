@@ -72,9 +72,9 @@ object SchematronValidator:
 
   private def today: LocalDate = LocalDate.now()
 
-  private def currentTaxYear: Int =
+  def currentTaxYear: Int =
     val now = LocalDate.now()
-    if now.isAfter(LocalDate.of(now.getYear, 4, 5)) then now.getYear else now.getYear - 1
+    if now.isAfter(LocalDate.of(now.getYear, 4, 5)) then now.getYear + 1 else now.getYear
 
   def validateClaimRule(message: GovTalkMessage): List[ValidationError] =
     val c          = claim(message)
@@ -285,13 +285,36 @@ object SchematronValidator:
           else Nil
         err7049 ++ err7050 ++ err7051
 
-  def validateYearRule2(message: GovTalkMessage): List[ValidationError] =
-    val years = claim(message).GASDS
+  def validateYearRule2(message: GovTalkMessage): List[ValidationError] = {
+    val buildings = claim(message).GASDS
       .flatMap(_.Building)
       .getOrElse(Nil)
-      .flatMap(_.BldgClaim)
-      .map(_.Year)
-    years match
+
+    val duplicateYearErrors = findDuplicateYearsInSameBuilding(buildings)
+    val yearRangeErrors     = validateYearRange(extractAllYears(buildings))
+
+    duplicateYearErrors ++ yearRangeErrors
+  }
+
+  private def extractAllYears(buildings: List[Building]): List[String] =
+    buildings.flatMap(_.BldgClaim.map(_.Year))
+
+  private def findDuplicateYearsInSameBuilding(buildings: List[Building]): List[ValidationError] =
+    buildings
+      .groupBy(b => (b.BldgName, b.Address, b.Postcode))
+      .values
+      .flatMap { sameBuildings =>
+        val years = sameBuildings
+          .flatMap(_.BldgClaim)
+          .map(_.Year)
+          .flatMap(y => Try(y.toInt).toOption)
+
+        Option.when(years.size != years.distinct.size)(ValidationError.YearRule2_7056)
+      }
+      .toList
+
+  private def validateYearRange(years: List[String]): List[ValidationError] =
+    years match {
       case Nil => Nil
       case _   =>
         val taxYear  = currentTaxYear
@@ -299,8 +322,6 @@ object SchematronValidator:
 
         val err7054 = yearInts.filter(_ > taxYear).map(_ => ValidationError.YearRule2_7054)
         val err7055 = yearInts.filter(_ < taxYear - YearLookbackWindow).map(_ => ValidationError.YearRule2_7055)
-        val err7056 =
-          if yearInts.size != yearInts.distinct.size
-          then List(ValidationError.YearRule2_7056)
-          else Nil
-        err7054 ++ err7055 ++ err7056
+
+        err7054 ++ err7055
+    }

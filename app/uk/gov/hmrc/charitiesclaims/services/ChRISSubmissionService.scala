@@ -280,7 +280,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       Regulator = buildRegulator(claim),
       Repayment = buildRepayment(claim, scheduleData.giftAid, scheduleData.otherIncome),
       GASDS = buildGiftAidSmallDonationsScheme(claim, scheduleData.connectedCharities, scheduleData.communityBuildings),
-      OtherInfo = None // ToDo
+      OtherInfo = claim.claimData.includedAnyAdjustmentsInClaimPrompt
     )
 
   def buildRegulator(claim: models.Claim): Option[Regulator] =

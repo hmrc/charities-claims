@@ -6,7 +6,7 @@
   "claimData": {
     "repaymentClaimDetails": {
       "claimingGiftAid": true,
-      "claimingTaxDeducted": false,
+      "claimingTaxDeducted": true,
       "claimingUnderGiftAidSmallDonationsScheme": true,
       "claimReferenceNumber": "test-claim-reference-number",
       "claimingDonationsNotFromCommunityBuilding": true,
@@ -43,7 +43,7 @@
     "otherIncomeScheduleFileUploadReference": "oi-ref-789",
     "giftAidScheduleFileUploadReference": "ga-ref-789",
     "understandFalseStatements": true,
-    "includedAnyAdjustmentsInClaimPrompt": "Yes",
+    "includedAnyAdjustmentsInClaimPrompt": "some details goes here regarding why ...",
     "otherIncomeData": {
       "adjustmentForOtherIncomePreviousOverClaimed": 240.03,
       "totalOfGrossPayments": 240.01,

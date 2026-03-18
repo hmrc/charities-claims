@@ -59,6 +59,8 @@ class ChRISSubmissionServiceSpec
     enrolmentIdentifierKey = "test-enrolment-identifier-key"
   )
 
+  val orgName: Option[String] = Some("test-session-id")
+
   val agentUser: models.CurrentUser = TestCurrentUser(
     affinityGroup = AffinityGroup.Agent,
     userId = "test-user-id",
@@ -88,6 +90,8 @@ class ChRISSubmissionServiceSpec
       )
 
       val currentUser = organisationUser
+
+      println("******************** :::::::::::: " + service.getOrganisationName(currentUser))
 
       val submision = service.buildChRISSubmission(claim, currentUser).futureValue
 
@@ -140,7 +144,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, None, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
       val submissionOffId     = service.buildOffId(claim)
       val submissionOffName   = service.buildOffName(claim)
       val submissionRegulator = service.buildRegulator(claim)
@@ -218,7 +222,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, None, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -286,7 +290,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, None, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -359,7 +363,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68 = service.buildR68(claim, currentUser, None, ScheduleData.empty)
+      val submissionR68 = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
 
       submissionR68.AuthOfficial shouldBe Some(
         AuthOfficial(
@@ -423,7 +427,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, None, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -496,7 +500,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, None, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -569,7 +573,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, None, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -975,6 +979,7 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val result = service.buildClaim(
+          orgName,
           claim,
           currentUser,
           ScheduleData(connectedCharities = connectedCharitiesData, communityBuildings = communityBuildingsData)
@@ -1038,7 +1043,7 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
+        val result = service.buildClaim(orgName, claim, currentUser, ScheduleData.empty)
         result.GASDS shouldBe None
       }
 
@@ -1064,7 +1069,7 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
+        val result = service.buildClaim(orgName, claim, currentUser, ScheduleData.empty)
         result.GASDS shouldBe None
       }
 
@@ -1106,7 +1111,8 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val result = service.buildClaim(claim, currentUser, ScheduleData(connectedCharities = connectedCharitiesData))
+        val result =
+          service.buildClaim(orgName, claim, currentUser, ScheduleData(connectedCharities = connectedCharitiesData))
         result.GASDS.get.Charity shouldBe Some(
           List(
             Charity(Name = "Charity One", HMRCref = "X95442"),
@@ -1144,7 +1150,7 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
+        val result = service.buildClaim(orgName, claim, currentUser, ScheduleData.empty)
         result.GASDS.get.Charity shouldBe None
       }
 
@@ -1182,7 +1188,7 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
+        val result = service.buildClaim(orgName, claim, currentUser, ScheduleData.empty)
         result.GASDS.get.GASDSClaim shouldBe Some(
           List(
             GASDSClaim(Year = Some("2024"), Amount = Some(BigDecimal("67.09"))),
@@ -1238,7 +1244,8 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val result = service.buildClaim(claim, currentUser, ScheduleData(communityBuildings = communityBuildingsData))
+        val result =
+          service.buildClaim(orgName, claim, currentUser, ScheduleData(communityBuildings = communityBuildingsData))
         result.GASDS.get.Building shouldBe Some(
           List(
             Building(
@@ -1299,7 +1306,8 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val result = service.buildClaim(claim, currentUser, ScheduleData(communityBuildings = communityBuildingsData))
+        val result =
+          service.buildClaim(orgName, claim, currentUser, ScheduleData(communityBuildings = communityBuildingsData))
         result.GASDS.get.Building shouldBe Some(
           List(
             Building(
@@ -1343,7 +1351,7 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
+        val result = service.buildClaim(orgName, claim, currentUser, ScheduleData.empty)
         result.GASDS.get.Building shouldBe None
       }
 
@@ -1387,10 +1395,10 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val resultWithAdj = service.buildClaim(claimWithAdj, currentUser, ScheduleData.empty)
+        val resultWithAdj = service.buildClaim(orgName, claimWithAdj, currentUser, ScheduleData.empty)
         resultWithAdj.GASDS.get.Adj shouldBe Some("56.89")
 
-        val resultWithZeroAdj = service.buildClaim(claimWithZeroAdj, currentUser, ScheduleData.empty)
+        val resultWithZeroAdj = service.buildClaim(orgName, claimWithZeroAdj, currentUser, ScheduleData.empty)
         resultWithZeroAdj.GASDS.get.Adj shouldBe None
       }
 
@@ -1424,13 +1432,15 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val resultYes = service.buildClaim(buildClaimWithConnected(Some(true)), currentUser, ScheduleData.empty)
+        val resultYes =
+          service.buildClaim(orgName, buildClaimWithConnected(Some(true)), currentUser, ScheduleData.empty)
         resultYes.GASDS.get.ConnectedCharities shouldBe (true: YesNo)
 
-        val resultNo = service.buildClaim(buildClaimWithConnected(Some(false)), currentUser, ScheduleData.empty)
+        val resultNo =
+          service.buildClaim(orgName, buildClaimWithConnected(Some(false)), currentUser, ScheduleData.empty)
         resultNo.GASDS.get.ConnectedCharities shouldBe (false: YesNo)
 
-        val resultNone = service.buildClaim(buildClaimWithConnected(None), currentUser, ScheduleData.empty)
+        val resultNone = service.buildClaim(orgName, buildClaimWithConnected(None), currentUser, ScheduleData.empty)
         resultNone.GASDS.get.ConnectedCharities shouldBe (false: YesNo)
       }
 
@@ -1464,13 +1474,15 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val resultYes = service.buildClaim(buildClaimWithCommBldgs(Some(true)), currentUser, ScheduleData.empty)
+        val resultYes =
+          service.buildClaim(orgName, buildClaimWithCommBldgs(Some(true)), currentUser, ScheduleData.empty)
         resultYes.GASDS.get.CommBldgs shouldBe Some(true: YesNo)
 
-        val resultNo = service.buildClaim(buildClaimWithCommBldgs(Some(false)), currentUser, ScheduleData.empty)
+        val resultNo =
+          service.buildClaim(orgName, buildClaimWithCommBldgs(Some(false)), currentUser, ScheduleData.empty)
         resultNo.GASDS.get.CommBldgs shouldBe Some(false: YesNo)
 
-        val resultNone = service.buildClaim(buildClaimWithCommBldgs(None), currentUser, ScheduleData.empty)
+        val resultNone = service.buildClaim(orgName, buildClaimWithCommBldgs(None), currentUser, ScheduleData.empty)
         resultNone.GASDS.get.CommBldgs shouldBe Some(false: YesNo)
       }
 
@@ -1499,7 +1511,7 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
+        val result = service.buildClaim(orgName, claim, currentUser, ScheduleData.empty)
         result.Repayment shouldBe None
       }
 
@@ -1524,7 +1536,7 @@ class ChRISSubmissionServiceSpec
 
         val currentUser = organisationUser
 
-        val result = service.buildClaim(claim, currentUser, ScheduleData.empty)
+        val result = service.buildClaim(orgName, claim, currentUser, ScheduleData.empty)
         result.Repayment shouldBe None
       }
 

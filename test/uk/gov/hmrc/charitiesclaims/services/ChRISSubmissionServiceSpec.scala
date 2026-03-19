@@ -889,7 +889,7 @@ class ChRISSubmissionServiceSpec
 
       val repayment = result.Body.IRenvelope.R68.Claim.Repayment
       repayment                    shouldBe defined
-      repayment.get.EarliestGAdate shouldBe "2024-01-15"
+      repayment.get.EarliestGAdate shouldBe Some("2024-01-15")
       repayment.get.Adjustment     shouldBe Some(BigDecimal("50.00"))
       repayment.get.GAD            shouldBe Some(
         List(
@@ -1606,7 +1606,7 @@ class ChRISSubmissionServiceSpec
                 )
               )
             ),
-            EarliestGAdate = "2024-01-15",
+            EarliestGAdate = Some("2024-01-15"),
             OtherInc = Some(
               List(
                 OtherInc(
@@ -1852,7 +1852,7 @@ class ChRISSubmissionServiceSpec
 
         val result = service.buildRepayment(claim, giftAidData, otherIncomeData)
 
-        result.get.EarliestGAdate shouldBe "2023-12-25"
+        result.get.EarliestGAdate shouldBe Some("2023-12-25")
       }
 
       "populate Adjustment from prevOverclaimedGiftAid when overpayment and OtherIncome overpayment are both present" in {

@@ -159,7 +159,7 @@ object SchematronValidator:
         val otherIncList = repayment.OtherInc.getOrElse(Nil)
 
         val err7034 =
-          if gadList.nonEmpty && repayment.EarliestGAdate.trim.isEmpty
+          if gadList.nonEmpty && repayment.EarliestGAdate.isEmpty
           then List(ValidationError.RepaymentRule7034)
           else Nil
         val err7035 =

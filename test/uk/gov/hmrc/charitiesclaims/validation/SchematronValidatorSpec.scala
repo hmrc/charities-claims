@@ -150,7 +150,7 @@ class SchematronValidatorSpec extends BaseSpec {
           Some(
             Repayment(
               GAD = Some(List(GAD(Date = todayStr, Total = "100.00"))),
-              EarliestGAdate = todayStr
+              EarliestGAdate = Some(todayStr)
             )
           )
         )
@@ -169,7 +169,7 @@ class SchematronValidatorSpec extends BaseSpec {
           Some(
             Repayment(
               GAD = Some(List(GAD(Date = futureDate, Total = "100.00"))),
-              EarliestGAdate = todayStr
+              EarliestGAdate = Some(todayStr)
             )
           )
         )
@@ -257,7 +257,7 @@ class SchematronValidatorSpec extends BaseSpec {
           Some(
             Repayment(
               GAD = Some(List(GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "999.99"))),
-              EarliestGAdate = "2025-01-01"
+              EarliestGAdate = Some("2025-01-01")
             )
           )
         )
@@ -269,7 +269,7 @@ class SchematronValidatorSpec extends BaseSpec {
           Some(
             Repayment(
               GAD = Some(List(GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "1000.01"))),
-              EarliestGAdate = "2025-01-01"
+              EarliestGAdate = Some("2025-01-01")
             )
           )
         )
@@ -288,7 +288,7 @@ class SchematronValidatorSpec extends BaseSpec {
           Some(
             Repayment(
               GAD = Some(List(GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "500.00"))),
-              EarliestGAdate = "2025-01-01"
+              EarliestGAdate = Some("2025-01-01")
             )
           )
         )
@@ -301,7 +301,7 @@ class SchematronValidatorSpec extends BaseSpec {
             Repayment(
               GAD =
                 Some(List(GAD(AggDonation = Some("3"), Sponsored = Some(true), Date = "2025-01-01", Total = "500.00"))),
-              EarliestGAdate = "2025-01-01"
+              EarliestGAdate = Some("2025-01-01")
             )
           )
         )
@@ -325,7 +325,7 @@ class SchematronValidatorSpec extends BaseSpec {
           Some(
             Repayment(
               GAD = Some(List(GAD(Date = "2025-01-01", Total = "100.00"))),
-              EarliestGAdate = "  "
+              EarliestGAdate = None
             )
           )
         )
@@ -334,14 +334,16 @@ class SchematronValidatorSpec extends BaseSpec {
 
       "should fail 7035 when Repayment has neither GAD nor OtherInc" in {
         val msg =
-          withRepayment(validMessage)(_ => Some(Repayment(GAD = None, OtherInc = None, EarliestGAdate = "2025-01-01")))
+          withRepayment(validMessage)(_ =>
+            Some(Repayment(GAD = None, OtherInc = None, EarliestGAdate = Some("2025-01-01")))
+          )
         SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7035)
       }
 
       "should fail 7036 when GAD count exceeds 500000" in {
         val bigGadList = List.fill(500001)(GAD(Date = "2025-01-01", Total = "10.00"))
         val msg        =
-          withRepayment(validMessage)(_ => Some(Repayment(GAD = Some(bigGadList), EarliestGAdate = "2025-01-01")))
+          withRepayment(validMessage)(_ => Some(Repayment(GAD = Some(bigGadList), EarliestGAdate = Some("2025-01-01"))))
         SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7036)
       }
 

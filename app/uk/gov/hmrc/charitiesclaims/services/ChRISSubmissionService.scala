@@ -329,7 +329,8 @@ class ChRISSubmissionServiceImpl @Inject() (
       val adjOtherIncome: Option[BigDecimal] =
         otherIncomeData.map(data => data.adjustmentForOtherIncomePreviousOverClaimed)
 
-      if !claim.claimData.repaymentClaimDetails.claimingGiftAid then
+      if claim.claimData.repaymentClaimDetails.claimingTaxDeducted then {
+        // only OtherIncome
         Some(
           Repayment(
             GAD = None,
@@ -338,7 +339,8 @@ class ChRISSubmissionServiceImpl @Inject() (
             Adjustment = adjOtherIncome
           )
         )
-      else
+      } else {
+        // either GiftAid or/and OtherIncome
         giftAidData.map { data =>
           val gads: Option[List[GAD]] =
             data.donations.map(buildGAD).toList match
@@ -364,6 +366,7 @@ class ChRISSubmissionServiceImpl @Inject() (
             Adjustment = adjForPrevOverClaim
           )
         }
+      }
     }
 
   private def buildGAD(donation: Donation): GAD =

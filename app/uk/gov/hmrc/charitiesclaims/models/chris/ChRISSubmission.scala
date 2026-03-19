@@ -209,7 +209,7 @@ final case class Regulator(
 final case class Repayment(
   GAD: Option[List[GAD]] = None,
   // If a "Adjustments Detail" is given, then set to this value   Else omit this element.
-  EarliestGAdate: String,
+  EarliestGAdate: Option[String] = None,
   OtherInc: Option[List[OtherInc]] = None,
   Adjustment: Option[BigDecimal] = None
 ) derives XmlWriter

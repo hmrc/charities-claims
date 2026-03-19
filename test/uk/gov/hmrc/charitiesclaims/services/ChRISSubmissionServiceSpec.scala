@@ -22,25 +22,17 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import uk.gov.hmrc.charitiesclaims.models
-import play.api.Configuration
-import com.typesafe.config.ConfigFactory
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.SessionId
 import uk.gov.hmrc.charitiesclaims.models.chris.*
-import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent}
-import uk.gov.hmrc.http.HttpResponse
-import play.api.test.Helpers.*
-import org.scalamock.handlers.CallHandler
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
 
 import scala.concurrent.Future
-import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding1, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, Donation, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncome, OtherIncomeScheduleData, ScheduleData}
-import uk.gov.hmrc.charitiesclaims.util.HttpV2Support
-import java.net.URL
+import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding1, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, Donation, FileUploadReference, GiftAidScheduleData, NameOfCharityRegulator, OtherIncome, OtherIncomeScheduleData, ScheduleData}
 
 class ChRISSubmissionServiceSpec
     extends AnyWordSpec
@@ -48,11 +40,7 @@ class ChRISSubmissionServiceSpec
     with ScalaFutures
     with IntegrationPatience
     with GuiceOneServerPerSuite
-//    with HttpV2Support
     with MockFactory {
-
-//  def givenGetOrganisationNameByCharityReferenceReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
-//    mockHttpGetSuccess(URL("http://foo.bar.com:1234/foo-proxy/charities/organisations/abc-123"))(response)
 
   case class TestCurrentUser(
     affinityGroup: AffinityGroup,
@@ -81,41 +69,41 @@ class ChRISSubmissionServiceSpec
 
   "ChRISSubmissionService" should {
     // TODO
-//    "build a ChRISSubmission correctly for an organisation user claiming gift aid" in {
-//      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
-//      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-//      val service                       =
-//        new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
-//
-//      val claim = models.Claim(
-//        claimId = "test-claim-id",
-//        userId = "test-user-id",
-//        claimSubmitted = true,
-//        lastUpdatedReference = UUID.randomUUID().toString,
-//        claimData = models.ClaimData(
-//          repaymentClaimDetails = models.RepaymentClaimDetails(
-//            claimingGiftAid = true,
-//            claimingTaxDeducted = false,
-//            claimingUnderGiftAidSmallDonationsScheme = false,
-//            claimReferenceNumber = Some("test-claim-reference-number")
-//          )
-//        )
-//      )
-//
-//      val currentUser = organisationUser
-//
-//      println("******************** :::::::::::: " + service.getOrganisationName(currentUser))
-//
-//      val submision = service.buildChRISSubmission(claim, currentUser).futureValue
-//
-//      submision.GovTalkDetails shouldBe GovTalkDetails(
-//        Keys = List(
-//          Key(Type = "CredentialID", Value = "test-user-id"),
-//          Key(Type = "test-enrolment-identifier-key", Value = "test-enrolment-identifier-value"),
-//          Key(Type = "SessionID", Value = "test-session-id")
-//        )
-//      )
-//    }
+    "build a ChRISSubmission correctly for an organisation user claiming gift aid" in {
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       =
+        new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          )
+        )
+      )
+
+      val currentUser = organisationUser
+
+      println("******************** :::::::::::: " + service.getOrganisationName(currentUser))
+
+      val submision = service.buildChRISSubmission(claim, currentUser).futureValue
+
+      submision.GovTalkDetails shouldBe GovTalkDetails(
+        Keys = List(
+          Key(Type = "CredentialID", Value = "test-user-id"),
+          Key(Type = "test-enrolment-identifier-key", Value = "test-enrolment-identifier-value"),
+          Key(Type = "SessionID", Value = "test-session-id")
+        )
+      )
+    }
 
     "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = true and address in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]

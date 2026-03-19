@@ -306,6 +306,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     otherIncomeData: Option[OtherIncomeScheduleData]
   ): Option[Repayment] =
     if !claim.claimData.repaymentClaimDetails.claimingGiftAid && !claim.claimData.repaymentClaimDetails.claimingTaxDeducted
+    // both are false
     then None
     else {
       // get the payments for other Income
@@ -329,7 +330,8 @@ class ChRISSubmissionServiceImpl @Inject() (
       val adjOtherIncome: Option[BigDecimal] =
         otherIncomeData.map(data => data.adjustmentForOtherIncomePreviousOverClaimed)
 
-      if claim.claimData.repaymentClaimDetails.claimingTaxDeducted then {
+      if claim.claimData.repaymentClaimDetails.claimingTaxDeducted && !claim.claimData.repaymentClaimDetails.claimingGiftAid
+      then {
         // only OtherIncome
         Some(
           Repayment(

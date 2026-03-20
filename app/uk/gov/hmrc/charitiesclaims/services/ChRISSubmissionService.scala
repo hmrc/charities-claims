@@ -304,7 +304,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     claim: models.Claim,
     giftAidData: Option[GiftAidScheduleData],
     otherIncomeData: Option[OtherIncomeScheduleData]
-  ): Option[Repayment] =
+  ): Option[Repayment]                          =
     if !claim.claimData.repaymentClaimDetails.claimingGiftAid && !claim.claimData.repaymentClaimDetails.claimingTaxDeducted
     // both are false
     then None
@@ -370,7 +370,6 @@ class ChRISSubmissionServiceImpl @Inject() (
         }
       }
     }
-
   private def buildGAD(donation: Donation): GAD =
     GAD(
       AggDonation = donation.aggregatedDonations.filter(_.nonEmpty),

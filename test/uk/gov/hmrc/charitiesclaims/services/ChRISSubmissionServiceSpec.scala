@@ -32,7 +32,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
 
 import scala.concurrent.Future
-import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding1, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, Donation, FileUploadReference, GiftAidScheduleData, NameOfCharityRegulator, OtherIncome, OtherIncomeScheduleData, ScheduleData}
+import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding1, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, Donation, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncome, OtherIncomeScheduleData, ScheduleData}
 
 class ChRISSubmissionServiceSpec
     extends AnyWordSpec
@@ -68,7 +68,6 @@ class ChRISSubmissionServiceSpec
   )
 
   "ChRISSubmissionService" should {
-    // TODO
     "build a ChRISSubmission correctly for an organisation user claiming gift aid" in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
@@ -92,11 +91,16 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      println("******************** :::::::::::: " + service.getOrganisationName(currentUser))
+      (rdsConnectorMock
+        .getOrganisationName(_: String)(using _: HeaderCarrier))
+        .expects(currentUser.enrolmentIdentifierValue, *)
+        .returns(
+          Future.successful(orgName)
+        )
 
-      val submision = service.buildChRISSubmission(claim, currentUser).futureValue
+      val submission = service.buildChRISSubmission(claim, currentUser).futureValue
 
-      submision.GovTalkDetails shouldBe GovTalkDetails(
+      submission.GovTalkDetails shouldBe GovTalkDetails(
         Keys = List(
           Key(Type = "CredentialID", Value = "test-user-id"),
           Key(Type = "test-enrolment-identifier-key", Value = "test-enrolment-identifier-value"),
@@ -682,245 +686,342 @@ class ChRISSubmissionServiceSpec
       )
     }
 
-    // TODO - need to fix the unit testcases
+    "buildChRISSubmission fetches upload data from validation service when GASDS upload references are present" in {
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
 
-//    "buildChRISSubmission fetches upload data from validation service when GASDS upload references are present" in {
-//      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
-//      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-//      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
-//
-//      val communityBuildingsRef = FileUploadReference("cb-ref-123")
-//      val connectedCharitiesRef = FileUploadReference("cc-ref-456")
-//      val otherIncomeRef        = FileUploadReference("oi-ref-789")
-//      val giftAidRef            = FileUploadReference("ga-ref-789")
-//
-//      val claim = models.Claim(
-//        claimId = "test-claim-id",
-//        userId = "test-user-id",
-//        claimSubmitted = false,
-//        lastUpdatedReference = UUID.randomUUID().toString,
-//        claimData = models.ClaimData(
-//          repaymentClaimDetails = models.RepaymentClaimDetails(
-//            claimingGiftAid = true,
-//            claimingTaxDeducted = true,
-//            claimingUnderGiftAidSmallDonationsScheme = true,
-//            connectedToAnyOtherCharities = Some(true),
-//            claimingDonationsCollectedInCommunityBuildings = Some(true)
-//          ),
-//          giftAidSmallDonationsSchemeDonationDetails = Some(
-//            models.GiftAidSmallDonationsSchemeDonationDetails(
-//              adjustmentForGiftAidOverClaimed = BigDecimal("0"),
-//              claims = Seq(
-//                models
-//                  .GiftAidSmallDonationsSchemeClaim(taxYear = 2024, amountOfDonationsReceived = BigDecimal("100.00"))
-//              )
-//            )
-//          ),
-//          communityBuildingsScheduleFileUploadReference = Some(communityBuildingsRef),
-//          connectedCharitiesScheduleFileUploadReference = Some(connectedCharitiesRef),
-//          otherIncomeScheduleFileUploadReference = Some(otherIncomeRef),
-//          giftAidScheduleFileUploadReference = Some(giftAidRef)
-//        )
-//      )
-//
-//      val giftAidData            =
-//        GiftAidScheduleData(
-//          earliestDonationDate = "2024-01-15",
-//          prevOverclaimedGiftAid = Some(BigDecimal("123.45")),
-//          totalDonations = BigDecimal("200.00"),
-//          donations = Seq(
-//            Donation(
-//              donationDate = "2024-02-01",
-//              donationAmount = BigDecimal("200.00"),
-//              donorTitle = Some("Mr"),
-//              donorFirstName = Some("Test"),
-//              donorLastName = Some("User"),
-//              donorPostcode = Some("ZZ1 1ZZ")
-//            )
-//          )
-//        )
-//      val communityBuildingsData = CommunityBuildingsScheduleData(
-//        totalOfAllAmounts = BigDecimal("500.00"),
-//        communityBuildings = Seq(
-//          CommunityBuilding1(
-//            communityBuildingItem = 1,
-//            buildingName = "Village Hall",
-//            firstLineOfAddress = "1 High Street",
-//            postcode = "AB1 2CD",
-//            taxYear1 = 2024,
-//            amountYear1 = BigDecimal("500.00")
-//          )
-//        )
-//      )
-//
-//      val connectedCharitiesData = ConnectedCharitiesScheduleData(
-//        charities = Seq(
-//          ConnectedCharity(charityItem = 1, charityName = "Charity One", charityReference = "X95442")
-//        )
-//      )
-//
-//      val otherIncomeData =
-//        OtherIncomeScheduleData(
-//          totalOfGrossPayments = BigDecimal("240.01"),
-//          totalOfTaxDeducted = BigDecimal("240.02"),
-//          adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
-//          otherIncomes = Seq(
-//            OtherIncome(
-//              otherIncomeItem = 1,
-//              payerName = "John Smith",
-//              paymentDate = "2024-03-01",
-//              grossPayment = BigDecimal("240.00"),
-//              taxDeducted = BigDecimal("15.00")
-//            )
-//          )
-//        )
-//
-//      (claimsValidationConnectorMock
-//        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-//        .expects("test-claim-id", communityBuildingsRef, *)
-//        .returns(
-//          Future.successful(
-//            Some(GetUploadResultValidatedCommunityBuildings(communityBuildingsRef, communityBuildingsData))
-//          )
-//        )
-//
-//      (claimsValidationConnectorMock
-//        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-//        .expects("test-claim-id", connectedCharitiesRef, *)
-//        .returns(
-//          Future.successful(
-//            Some(GetUploadResultValidatedConnectedCharities(connectedCharitiesRef, connectedCharitiesData))
-//          )
-//        )
-//
-//      (claimsValidationConnectorMock
-//        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-//        .expects("test-claim-id", otherIncomeRef, *)
-//        .returns(
-//          Future.successful(
-//            Some(GetUploadResultValidatedOtherIncome(otherIncomeRef, otherIncomeData))
-//          )
-//        )
-//
-//      (claimsValidationConnectorMock
-//        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-//        .expects("test-claim-id", giftAidRef, *)
-//        .returns(
-//          Future.successful(
-//            Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidData))
-//          )
-//        )
-//
-//      val currentUser = organisationUser
-//
-//      val result = service.buildChRISSubmission(claim, currentUser).futureValue
-//
-//      result.Body.IRenvelope.R68.Claim.GASDS.get.Charity shouldBe Some(
-//        List(Charity(Name = "Charity One", HMRCref = "X95442"))
-//      )
-//
-//      result.Body.IRenvelope.R68.Claim.GASDS.get.Building shouldBe Some(
-//        List(
-//          Building(
-//            BldgName = "Village Hall",
-//            Address = "1 High Street",
-//            Postcode = "AB1 2CD",
-//            BldgClaim = List(BldgClaim(Year = "2024", Amount = BigDecimal("500.00")))
-//          )
-//        )
-//      )
-//
-//      result.Body.IRenvelope.R68.Claim.Repayment.get.OtherInc shouldBe
-//        Some(
-//          List(
-//            OtherInc(
-//              Payer = "John Smith",
-//              OIDate = "2024-03-01",
-//              Gross = BigDecimal("240.00"),
-//              Tax = BigDecimal("15.00")
-//            )
-//          )
-//        )
-//
-//    }
+      val communityBuildingsRef = FileUploadReference("cb-ref-123")
+      val connectedCharitiesRef = FileUploadReference("cc-ref-456")
+      val otherIncomeRef        = FileUploadReference("oi-ref-789")
+      val giftAidRef            = FileUploadReference("ga-ref-789")
 
-//    "buildChRISSubmission fetches gift aid upload data from validation service when gift aid upload reference is present" in {
-//      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
-//      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-//      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
-//
-//      val giftAidRef = FileUploadReference("ga-ref-123")
-//
-//      val claim = models.Claim(
-//        claimId = "test-claim-id",
-//        userId = "test-user-id",
-//        claimSubmitted = false,
-//        lastUpdatedReference = UUID.randomUUID().toString,
-//        claimData = models.ClaimData(
-//          repaymentClaimDetails = models.RepaymentClaimDetails(
-//            claimingGiftAid = true,
-//            claimingTaxDeducted = false,
-//            claimingUnderGiftAidSmallDonationsScheme = false
-//          ),
-//          giftAidScheduleFileUploadReference = Some(giftAidRef)
-//        )
-//      )
-//
-//      val giftAidScheduleData = GiftAidScheduleData(
-//        earliestDonationDate = "2024-01-15",
-//        prevOverclaimedGiftAid = Some(BigDecimal("50.00")),
-//        totalDonations = BigDecimal("240.00"),
-//        donations = Seq(
-//          Donation(
-//            donationDate = "2024-03-01",
-//            donationAmount = BigDecimal("240.00"),
-//            donorTitle = Some("Mr"),
-//            donorFirstName = Some("John"),
-//            donorLastName = Some("Smith"),
-//            donorHouse = Some("10"),
-//            donorPostcode = Some("AB1 2CD")
-//          )
-//        )
-//      )
-//
-//      (claimsValidationConnectorMock
-//        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-//        .expects("test-claim-id", giftAidRef, *)
-//        .returns(
-//          Future.successful(
-//            Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))
-//          )
-//        )
-//
-//      val currentUser = organisationUser
-//
-//      val result = service.buildChRISSubmission(claim, currentUser).futureValue
-//
-//      val repayment = result.Body.IRenvelope.R68.Claim.Repayment
-//      repayment                    shouldBe defined
-//      repayment.get.EarliestGAdate shouldBe Some("2024-01-15")
-//      repayment.get.Adjustment     shouldBe Some(BigDecimal("50.00"))
-//      repayment.get.GAD            shouldBe Some(
-//        List(
-//          GAD(
-//            AggDonation = None,
-//            Donor = Some(
-//              Donor(
-//                Ttl = Some("Mr"),
-//                Fore = Some("John"),
-//                Sur = Some("Smith"),
-//                House = Some("10"),
-//                Overseas = None,
-//                Postcode = Some("AB1 2CD")
-//              )
-//            ),
-//            Sponsored = None,
-//            Date = "2024-03-01",
-//            Total = "240.00"
-//          )
-//        )
-//      )
-//    }
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = false,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = true,
+            claimingUnderGiftAidSmallDonationsScheme = true,
+            connectedToAnyOtherCharities = Some(true),
+            claimingDonationsCollectedInCommunityBuildings = Some(true)
+          ),
+          giftAidSmallDonationsSchemeDonationDetails = Some(
+            models.GiftAidSmallDonationsSchemeDonationDetails(
+              adjustmentForGiftAidOverClaimed = BigDecimal("0"),
+              claims = Seq(
+                models
+                  .GiftAidSmallDonationsSchemeClaim(taxYear = 2024, amountOfDonationsReceived = BigDecimal("100.00"))
+              )
+            )
+          ),
+          communityBuildingsScheduleFileUploadReference = Some(communityBuildingsRef),
+          connectedCharitiesScheduleFileUploadReference = Some(connectedCharitiesRef),
+          otherIncomeScheduleFileUploadReference = Some(otherIncomeRef),
+          giftAidScheduleFileUploadReference = Some(giftAidRef)
+        )
+      )
+
+      val giftAidData            =
+        GiftAidScheduleData(
+          earliestDonationDate = "2024-01-15",
+          prevOverclaimedGiftAid = Some(BigDecimal("123.45")),
+          totalDonations = BigDecimal("200.00"),
+          donations = Seq(
+            Donation(
+              donationDate = "2024-02-01",
+              donationAmount = BigDecimal("200.00"),
+              donorTitle = Some("Mr"),
+              donorFirstName = Some("Test"),
+              donorLastName = Some("User"),
+              donorPostcode = Some("ZZ1 1ZZ")
+            )
+          )
+        )
+      val communityBuildingsData = CommunityBuildingsScheduleData(
+        totalOfAllAmounts = BigDecimal("500.00"),
+        communityBuildings = Seq(
+          CommunityBuilding1(
+            communityBuildingItem = 1,
+            buildingName = "Village Hall",
+            firstLineOfAddress = "1 High Street",
+            postcode = "AB1 2CD",
+            taxYear1 = 2024,
+            amountYear1 = BigDecimal("500.00")
+          )
+        )
+      )
+
+      val connectedCharitiesData = ConnectedCharitiesScheduleData(
+        charities = Seq(
+          ConnectedCharity(charityItem = 1, charityName = "Charity One", charityReference = "X95442")
+        )
+      )
+
+      val otherIncomeData =
+        OtherIncomeScheduleData(
+          totalOfGrossPayments = BigDecimal("240.01"),
+          totalOfTaxDeducted = BigDecimal("240.02"),
+          adjustmentForOtherIncomePreviousOverClaimed = BigDecimal("240.03"),
+          otherIncomes = Seq(
+            OtherIncome(
+              otherIncomeItem = 1,
+              payerName = "John Smith",
+              paymentDate = "2024-03-01",
+              grossPayment = BigDecimal("240.00"),
+              taxDeducted = BigDecimal("15.00")
+            )
+          )
+        )
+
+      (claimsValidationConnectorMock
+        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
+        .expects("test-claim-id", communityBuildingsRef, *)
+        .returns(
+          Future.successful(
+            Some(GetUploadResultValidatedCommunityBuildings(communityBuildingsRef, communityBuildingsData))
+          )
+        )
+
+      (claimsValidationConnectorMock
+        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
+        .expects("test-claim-id", connectedCharitiesRef, *)
+        .returns(
+          Future.successful(
+            Some(GetUploadResultValidatedConnectedCharities(connectedCharitiesRef, connectedCharitiesData))
+          )
+        )
+
+      (claimsValidationConnectorMock
+        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
+        .expects("test-claim-id", otherIncomeRef, *)
+        .returns(
+          Future.successful(
+            Some(GetUploadResultValidatedOtherIncome(otherIncomeRef, otherIncomeData))
+          )
+        )
+
+      (claimsValidationConnectorMock
+        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
+        .expects("test-claim-id", giftAidRef, *)
+        .returns(
+          Future.successful(
+            Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidData))
+          )
+        )
+
+      val currentUser = organisationUser
+
+      (rdsConnectorMock
+        .getOrganisationName(_: String)(using _: HeaderCarrier))
+        .expects(currentUser.enrolmentIdentifierValue, *)
+        .returns(
+          Future.successful(orgName)
+        )
+
+      val result = service.buildChRISSubmission(claim, currentUser).futureValue
+
+      result.Body.IRenvelope.R68.Claim.GASDS.get.Charity shouldBe Some(
+        List(Charity(Name = "Charity One", HMRCref = "X95442"))
+      )
+
+      result.Body.IRenvelope.R68.Claim.GASDS.get.Building shouldBe Some(
+        List(
+          Building(
+            BldgName = "Village Hall",
+            Address = "1 High Street",
+            Postcode = "AB1 2CD",
+            BldgClaim = List(BldgClaim(Year = "2024", Amount = BigDecimal("500.00")))
+          )
+        )
+      )
+
+      result.Body.IRenvelope.R68.Claim.Repayment.get.OtherInc shouldBe
+        Some(
+          List(
+            OtherInc(
+              Payer = "John Smith",
+              OIDate = "2024-03-01",
+              Gross = BigDecimal("240.00"),
+              Tax = BigDecimal("15.00")
+            )
+          )
+        )
+
+    }
+
+    "buildChRISSubmission fetches gift aid upload data from validation service when gift aid upload reference is present" in {
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+
+      val giftAidRef = FileUploadReference("ga-ref-123")
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = false,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false
+          ),
+          giftAidScheduleFileUploadReference = Some(giftAidRef)
+        )
+      )
+
+      val giftAidScheduleData = GiftAidScheduleData(
+        earliestDonationDate = "2024-01-15",
+        prevOverclaimedGiftAid = Some(BigDecimal("50.00")),
+        totalDonations = BigDecimal("240.00"),
+        donations = Seq(
+          Donation(
+            donationDate = "2024-03-01",
+            donationAmount = BigDecimal("240.00"),
+            donorTitle = Some("Mr"),
+            donorFirstName = Some("John"),
+            donorLastName = Some("Smith"),
+            donorHouse = Some("10"),
+            donorPostcode = Some("AB1 2CD")
+          )
+        )
+      )
+
+      (claimsValidationConnectorMock
+        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
+        .expects("test-claim-id", giftAidRef, *)
+        .returns(
+          Future.successful(
+            Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))
+          )
+        )
+
+      val currentUser = organisationUser
+
+      (rdsConnectorMock
+        .getOrganisationName(_: String)(using _: HeaderCarrier))
+        .expects(currentUser.enrolmentIdentifierValue, *)
+        .returns(
+          Future.successful(orgName)
+        )
+
+      val result = service.buildChRISSubmission(claim, currentUser).futureValue
+
+      val repayment = result.Body.IRenvelope.R68.Claim.Repayment
+      repayment                    shouldBe defined
+      repayment.get.EarliestGAdate shouldBe Some("2024-01-15")
+      repayment.get.Adjustment     shouldBe Some(BigDecimal("50.00"))
+      repayment.get.GAD            shouldBe Some(
+        List(
+          GAD(
+            AggDonation = None,
+            Donor = Some(
+              Donor(
+                Ttl = Some("Mr"),
+                Fore = Some("John"),
+                Sur = Some("Smith"),
+                House = Some("10"),
+                Overseas = None,
+                Postcode = Some("AB1 2CD")
+              )
+            ),
+            Sponsored = None,
+            Date = "2024-03-01",
+            Total = "240.00"
+          )
+        )
+      )
+    }
+
+    "buildChRISSubmission fetches gift aid upload data from validation service when gift aid upload & otherIncome reference are present" in {
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+
+      val giftAidRef = FileUploadReference("ga-ref-123")
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = false,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = true,
+            claimingUnderGiftAidSmallDonationsScheme = false
+          ),
+          giftAidScheduleFileUploadReference = Some(giftAidRef)
+        )
+      )
+
+      val giftAidScheduleData = GiftAidScheduleData(
+        earliestDonationDate = "2024-01-15",
+        prevOverclaimedGiftAid = Some(BigDecimal("50.00")),
+        totalDonations = BigDecimal("240.00"),
+        donations = Seq(
+          Donation(
+            donationDate = "2024-03-01",
+            donationAmount = BigDecimal("240.00"),
+            donorTitle = Some("Mr"),
+            donorFirstName = Some("John"),
+            donorLastName = Some("Smith"),
+            donorHouse = Some("10"),
+            donorPostcode = Some("AB1 2CD")
+          )
+        )
+      )
+
+      (claimsValidationConnectorMock
+        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
+        .expects("test-claim-id", giftAidRef, *)
+        .returns(
+          Future.successful(
+            Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))
+          )
+        )
+
+      val currentUser = organisationUser
+
+      (rdsConnectorMock
+        .getOrganisationName(_: String)(using _: HeaderCarrier))
+        .expects(currentUser.enrolmentIdentifierValue, *)
+        .returns(
+          Future.successful(orgName)
+        )
+
+      val result = service.buildChRISSubmission(claim, currentUser).futureValue
+
+      val repayment = result.Body.IRenvelope.R68.Claim.Repayment
+      repayment                    shouldBe defined
+      repayment.get.EarliestGAdate shouldBe Some("2024-01-15")
+      repayment.get.Adjustment     shouldBe Some(BigDecimal("50.00"))
+      repayment.get.GAD            shouldBe Some(
+        List(
+          GAD(
+            AggDonation = None,
+            Donor = Some(
+              Donor(
+                Ttl = Some("Mr"),
+                Fore = Some("John"),
+                Sur = Some("Smith"),
+                House = Some("10"),
+                Overseas = None,
+                Postcode = Some("AB1 2CD")
+              )
+            ),
+            Sponsored = None,
+            Date = "2024-03-01",
+            Total = "240.00"
+          )
+        )
+      )
+    }
 
     "buildGiftAidSmallDonationsScheme" should {
 

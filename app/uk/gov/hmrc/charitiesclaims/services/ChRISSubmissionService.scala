@@ -292,8 +292,9 @@ class ChRISSubmissionServiceImpl @Inject() (
     claim: models.Claim,
     giftAidData: Option[GiftAidScheduleData],
     otherIncomeData: Option[OtherIncomeScheduleData]
-  ): Option[Repayment] =
+  ): Option[Repayment]                          =
     if !claim.claimData.repaymentClaimDetails.claimingGiftAid && !claim.claimData.repaymentClaimDetails.claimingTaxDeducted
+    // both are false
     then None
     else {
       // get the payments for other Income
@@ -317,33 +318,46 @@ class ChRISSubmissionServiceImpl @Inject() (
       val adjOtherIncome: Option[BigDecimal] =
         otherIncomeData.map(data => data.adjustmentForOtherIncomePreviousOverClaimed)
 
-      giftAidData.map { data =>
-        val gads: Option[List[GAD]] =
-          data.donations.map(buildGAD).toList match
-            case Nil  => None
-            case list => Some(list)
-
-        val adjForPrevOverClaim = (
-          if claim.claimData.repaymentClaimDetails.claimingTaxDeducted && adjOtherIncome > Some(0) then adjOtherIncome
-          else None,
-          if claim.claimData.repaymentClaimDetails.claimingGiftAid && data.prevOverclaimedGiftAid > Some(0) then
-            data.prevOverclaimedGiftAid
-          else None
-        ) match {
-          case (None, Some(giftAid))              => Some(giftAid)
-          case (Some(otherIncome), None)          => Some(otherIncome)
-          case (Some(otherIncome), Some(giftAid)) => Some(otherIncome + giftAid)
-          case (_, _)                             => None
-        }
-        Repayment(
-          GAD = if claim.claimData.repaymentClaimDetails.claimingGiftAid then gads else None,
-          EarliestGAdate = data.earliestDonationDate,
-          OtherInc = if claim.claimData.repaymentClaimDetails.claimingTaxDeducted then otherIncomeList else None,
-          Adjustment = adjForPrevOverClaim
+      if claim.claimData.repaymentClaimDetails.claimingTaxDeducted && !claim.claimData.repaymentClaimDetails.claimingGiftAid
+      then {
+        // only OtherIncome
+        Some(
+          Repayment(
+            GAD = None,
+            EarliestGAdate = None,
+            OtherInc = otherIncomeList,
+            Adjustment = adjOtherIncome
+          )
         )
+      } else {
+        // either GiftAid or/and OtherIncome
+        giftAidData.map { data =>
+          val gads: Option[List[GAD]] =
+            data.donations.map(buildGAD).toList match
+              case Nil  => None
+              case list => Some(list)
+
+          val adjForPrevOverClaim = (
+            if claim.claimData.repaymentClaimDetails.claimingTaxDeducted && adjOtherIncome > Some(0) then adjOtherIncome
+            else None,
+            if claim.claimData.repaymentClaimDetails.claimingGiftAid && data.prevOverclaimedGiftAid > Some(0) then
+              data.prevOverclaimedGiftAid
+            else None
+          ) match {
+            case (None, Some(giftAid))              => Some(giftAid)
+            case (Some(otherIncome), None)          => Some(otherIncome)
+            case (Some(otherIncome), Some(giftAid)) => Some(otherIncome + giftAid)
+            case (_, _)                             => None
+          }
+          Repayment(
+            GAD = if claim.claimData.repaymentClaimDetails.claimingGiftAid then gads else None,
+            EarliestGAdate = Some(data.earliestDonationDate),
+            OtherInc = if claim.claimData.repaymentClaimDetails.claimingTaxDeducted then otherIncomeList else None,
+            Adjustment = adjForPrevOverClaim
+          )
+        }
       }
     }
-
   private def buildGAD(donation: Donation): GAD =
     GAD(
       AggDonation = donation.aggregatedDonations.filter(_.nonEmpty),

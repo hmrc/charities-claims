@@ -94,7 +94,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                         )
                       )
                     ),
-                    EarliestGAdate = "2025-01-01"
+                    EarliestGAdate = Some("2025-01-01")
                   )
                 ),
                 OtherInfo = Some("def")
@@ -250,7 +250,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                       )
                     ),
                     Adjustment = Some(BigDecimal("123.45")),
-                    EarliestGAdate = "2025-01-01"
+                    EarliestGAdate = Some("2025-01-01")
                   )
                 ),
                 GASDS = Some(
@@ -439,7 +439,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                         )
                       )
                     ),
-                    EarliestGAdate = "2025-01-01",
+                    EarliestGAdate = Some("2025-01-01"),
                     OtherInc = Some(
                       List(
                         OtherInc(
@@ -595,7 +595,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                         )
                       )
                     ),
-                    EarliestGAdate = "2025-01-01"
+                    EarliestGAdate = Some("2025-01-01")
                   )
                 ),
                 OtherInfo = Some("Other Info")
@@ -697,7 +697,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
                         )
                       )
                     ),
-                    EarliestGAdate = "2021-06-01"
+                    EarliestGAdate = Some("2021-06-01")
                   )
                 ),
                 OtherInfo = Some("test test")

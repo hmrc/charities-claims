@@ -95,7 +95,7 @@ object ChRISTestData {
                     )
                   )
                 ),
-                EarliestGAdate = "2025-01-01"
+                EarliestGAdate = Some("2025-01-01")
               )
             ),
             OtherInfo = Some("def")

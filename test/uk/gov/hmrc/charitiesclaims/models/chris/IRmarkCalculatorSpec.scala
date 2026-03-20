@@ -102,7 +102,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
                       )
                     )
                   ),
-                  EarliestGAdate = "2025-01-01"
+                  EarliestGAdate = Some("2025-01-01")
                 )
               ),
               OtherInfo = Some("def")
@@ -223,7 +223,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
                     )
                   ),
                   Adjustment = Some(BigDecimal("123.45")),
-                  EarliestGAdate = "2025-01-01"
+                  EarliestGAdate = Some("2025-01-01")
                 )
               ),
               GASDS = Some(
@@ -378,7 +378,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
                       )
                     )
                   ),
-                  EarliestGAdate = "2025-01-01",
+                  EarliestGAdate = Some("2025-01-01"),
                   OtherInc = Some(
                     List(
                       OtherInc(

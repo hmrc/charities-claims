@@ -48,47 +48,6 @@ object IRmarkCalculator {
     Base64.getEncoder.encodeToString(digest)
   }
 
-  // private class LiteIRmarkBuilder extends XmlOutputBuilder {
-
-  //   private val sb = new StringBuilder()
-
-  //   private var context = 'e'
-  //   private var skip    = false
-
-  //   final def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit = {
-  //     if name == "IRmark" then skip = true
-  //     if !skip then {
-  //       sb.append(s"<$name")
-  //       if name == "Body" then sb.append(s" xmlns=\"http://www.govtalk.gov.uk/CM/envelope\"")
-  //       attributes.foreach { case (k, w, v) =>
-  //         sb.append(s" $k=")
-  //         context = 'a'
-  //         sb.append(s"\"")
-  //         w.asInstanceOf[XmlWriter[Any]].write(k, v)(using this)
-  //         sb.append(s"\"")
-  //         context = 'e'
-  //       }
-  //       sb.append(">")
-  //     }
-  //   }
-
-  //   final def appendElementEnd(name: String): Unit = {
-  //     if !skip then sb.append(s"</$name>")
-  //     if name == "IRmark" then skip = false
-  //   }
-
-  //   final def appendText(text: String): Unit =
-  //     if !skip then
-  //       sb.append(
-  //         context match {
-  //           case 'a' => escapeForAttribute(text)
-  //           case 'e' => escapeForElement(text)
-  //         }
-  //       )
-
-  //   def xmlStringResult: String = sb.toString()
-  // }
-
   private class LiteIRmarkBuilder extends XmlOutputBuilder {
 
     type Result = org.w3c.dom.Document

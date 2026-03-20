@@ -1,0 +1,42 @@
+{
+  "claimId": "test-claim-submitted",
+  "claimSubmitted": true,
+  "userId": "test-user-1",
+  "lastUpdatedReference": "test-last-updated-reference",
+  "claimData": {
+    "repaymentClaimDetails": {
+      "claimingGiftAid": false,
+      "claimingTaxDeducted": true,
+      "claimingUnderGiftAidSmallDonationsScheme": false,
+      "claimReferenceNumber": "New OI Claim"
+    },
+    "organisationDetails": {
+      "nameOfCharityRegulator": "None",
+      "reasonNotRegisteredWithRegulator": "LowIncome",
+      "areYouACorporateTrustee": true,
+      "doYouHaveCorporateTrusteeUKAddress": false,
+      "doYouHaveAuthorisedOfficialTrusteeUKAddress": true,
+      "nameOfCorporateTrustee": "Joe Bloggs",
+      "corporateTrusteeDaytimeTelephoneNumber": "071234567890"
+    },
+    "otherIncomeData": {
+      "totalOfGrossPayments": 1000.00,
+      "totalOfTaxDeducted": 25.00,
+      "otherIncomes": [
+        {
+          "otherIncomeItem": 1,
+          "payerName": "Test User",
+          "paymentDate": "2025-01-01",
+          "grossPayment": 1000.00,
+          "taxDeducted": 25.00
+        }
+      ]
+    },
+    "otherIncomeScheduleFileUploadReference": "oi-ref-789",
+    "understandFalseStatements": true
+  },
+  "submissionDetails": {
+    "submissionTimestamp": "2025-11-10T13:55:31.168Z",
+    "submissionReference": "T2QY5L7G6HT6DG5UCS67V73EEGN5HT2Y"
+  }
+}

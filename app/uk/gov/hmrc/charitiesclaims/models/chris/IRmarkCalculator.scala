@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.charitiesclaims.models.chris
 
-import uk.gov.hmrc.charitiesclaims.xml.{XmlStringBuilder, XmlUtils, XmlWriter}
+import uk.gov.hmrc.charitiesclaims.xml.{XmlOutputBuilder, XmlUtils, XmlWriter}
 
 import java.security.MessageDigest
 import java.util.Base64
-import scala.collection.View
+import javax.xml.parsers.DocumentBuilderFactory
+import uk.gov.hmrc.charitiesclaims.xml.XmlUtils.*
 
 object IRmarkCalculator {
 
@@ -28,14 +29,16 @@ object IRmarkCalculator {
     val builder   = new LiteIRmarkBuilder()
     val xmlWriter = summon[XmlWriter[Body]]
     xmlWriter.write(xmlWriter.label, body)(using builder)
-    hashSHA1Base64(builder.xmlStringResult)
+    val xml       = builder.result.compactPrint(omitXmlDeclaration = true)
+    hashSHA1Base64(xml)
   }
 
   def computeFullIRmark(body: Body): String = {
     val builder   = new LiteIRmarkBuilder()
     val xmlWriter = summon[XmlWriter[Body]]
     xmlWriter.write(xmlWriter.label, body)(using builder)
-    hashSHA1Base64(XmlUtils.canonicalizeXml(builder.xmlStringResult))
+    val xml       = XmlUtils.canonicalizeXml(builder.result)
+    hashSHA1Base64(xml)
   }
 
   def hashSHA1Base64(xml: String): String = {
@@ -45,44 +48,102 @@ object IRmarkCalculator {
     Base64.getEncoder.encodeToString(digest)
   }
 
-  private class LiteIRmarkBuilder extends XmlStringBuilder {
+  // private class LiteIRmarkBuilder extends XmlOutputBuilder {
 
-    private val sb = new StringBuilder()
+  //   private val sb = new StringBuilder()
 
-    private var context = 'e'
-    private var skip    = false
+  //   private var context = 'e'
+  //   private var skip    = false
 
-    final def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit = {
+  //   final def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit = {
+  //     if name == "IRmark" then skip = true
+  //     if !skip then {
+  //       sb.append(s"<$name")
+  //       if name == "Body" then sb.append(s" xmlns=\"http://www.govtalk.gov.uk/CM/envelope\"")
+  //       attributes.foreach { case (k, w, v) =>
+  //         sb.append(s" $k=")
+  //         context = 'a'
+  //         sb.append(s"\"")
+  //         w.asInstanceOf[XmlWriter[Any]].write(k, v)(using this)
+  //         sb.append(s"\"")
+  //         context = 'e'
+  //       }
+  //       sb.append(">")
+  //     }
+  //   }
+
+  //   final def appendElementEnd(name: String): Unit = {
+  //     if !skip then sb.append(s"</$name>")
+  //     if name == "IRmark" then skip = false
+  //   }
+
+  //   final def appendText(text: String): Unit =
+  //     if !skip then
+  //       sb.append(
+  //         context match {
+  //           case 'a' => escapeForAttribute(text)
+  //           case 'e' => escapeForElement(text)
+  //         }
+  //       )
+
+  //   def xmlStringResult: String = sb.toString()
+  // }
+
+  private class LiteIRmarkBuilder extends XmlOutputBuilder {
+
+    type Result = org.w3c.dom.Document
+
+    private val factory = DocumentBuilderFactory.newInstance();
+    factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+    factory.setFeature("http://xml.org/sax/features/external-general-entities", false)
+    factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+    factory.setNamespaceAware(true)
+
+    private val document = {
+      val builder = factory.newDocumentBuilder();
+      builder.newDocument();
+    }
+
+    val stack = scala.collection.mutable.Stack.empty[org.w3c.dom.Node]
+    stack.push(document)
+
+    private var skip = false
+
+    final override def appendElementStart(name: String): Unit = {
       if name == "IRmark" then skip = true
       if !skip then {
-        sb.append(s"<$name")
-        if name == "Body" then sb.append(s" xmlns=\"http://www.govtalk.gov.uk/CM/envelope\"")
-        attributes.foreach { case (k, w, v) =>
-          sb.append(s" $k=")
-          context = 'a'
-          sb.append(s"\"")
-          w.asInstanceOf[XmlWriter[Any]].write(k, v)(using this)
-          sb.append(s"\"")
-          context = 'e'
-        }
-        sb.append(">")
+        val node = document.createElement(name)
+        if name == "Body" then node.setAttribute("xmlns", "http://www.govtalk.gov.uk/CM/envelope")
+        stack.head.appendChild(node)
+        stack.push(node)
       }
     }
 
-    final def appendElementEnd(name: String): Unit = {
-      if !skip then sb.append(s"</$name>")
-      if name == "IRmark" then skip = false
+    final override def appendElementStart(name: String, attributes: Iterable[(String, String)]): Unit = {
+      if name == "IRmark" then skip = true
+      if !skip then {
+        val node = document.createElement(name)
+        if name == "Body" then node.setAttribute("xmlns", "http://www.govtalk.gov.uk/CM/envelope")
+        attributes.foreach { case (key, value) =>
+          val attribute = document.createAttribute(key)
+          attribute.setValue(value)
+          node.setAttributeNode(attribute)
+        }
+        stack.head.appendChild(node)
+        stack.push(node)
+      }
     }
 
-    final def appendText(text: String): Unit =
-      if !skip then
-        sb.append(
-          context match {
-            case 'a' => escapeForAttribute(text)
-            case 'e' => escapeForElement(text)
-          }
-        )
+    final override def appendElementEnd(name: String): Unit =
+      if !skip then stack.pop()
+      if name == "IRmark" then skip = false
 
-    def xmlStringResult: String = sb.toString()
+    final override def appendText(text: String): Unit =
+      if !skip then {
+        val node = document.createTextNode(text)
+        stack.head.appendChild(node)
+      }
+
+    final override def result: org.w3c.dom.Document = document
   }
 }

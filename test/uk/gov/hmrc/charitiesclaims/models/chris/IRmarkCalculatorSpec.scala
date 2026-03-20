@@ -28,8 +28,10 @@ class IRmarkCalculatorSpec extends BaseSpec {
         .fromInputStream(getClass.getResourceAsStream("/test-irmark-1.xml"))
         .getLines()
         .mkString("\n")
-      IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "AemngKi/VIqsnS+K8VsXE/Y7SgA="
-      IRmarkCalculator.hashSHA1Base64(XmlUtils.canonicalizeXml(xml)) shouldBe "KIYpXR8h95dWC6kB6HDq2c0d5TY="
+      IRmarkCalculator.hashSHA1Base64(xml) shouldBe "AemngKi/VIqsnS+K8VsXE/Y7SgA="
+      IRmarkCalculator.hashSHA1Base64(
+        XmlUtils.canonicalizeXml(XmlUtils.parseDocument(xml).get)
+      )                                    shouldBe "KIYpXR8h95dWC6kB6HDq2c0d5TY="
     }
 
     "compute hash SHA1 Base64 for a given XML example 2" in {
@@ -37,8 +39,10 @@ class IRmarkCalculatorSpec extends BaseSpec {
         .fromInputStream(getClass.getResourceAsStream("/test-irmark-2.xml"))
         .getLines()
         .mkString("\n")
-      IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "4YeSgqkJKGEgmCEhasYuwsxqfnM="
-      IRmarkCalculator.hashSHA1Base64(XmlUtils.canonicalizeXml(xml)) shouldBe "4YeSgqkJKGEgmCEhasYuwsxqfnM="
+      IRmarkCalculator.hashSHA1Base64(xml) shouldBe "4YeSgqkJKGEgmCEhasYuwsxqfnM="
+      IRmarkCalculator.hashSHA1Base64(
+        XmlUtils.canonicalizeXml(XmlUtils.parseDocument(xml).get)
+      )                                    shouldBe "4YeSgqkJKGEgmCEhasYuwsxqfnM="
     }
 
     "compute hash SHA1 Base64 for a given XML example 3" in {
@@ -46,8 +50,10 @@ class IRmarkCalculatorSpec extends BaseSpec {
         .fromInputStream(getClass.getResourceAsStream("/test-irmark-3.xml"))
         .getLines()
         .mkString("\n")
-      IRmarkCalculator.hashSHA1Base64(xml)                           shouldBe "RXvO9aWqS4RSVmxzx9uvPe2FmtI="
-      IRmarkCalculator.hashSHA1Base64(XmlUtils.canonicalizeXml(xml)) shouldBe "RXvO9aWqS4RSVmxzx9uvPe2FmtI="
+      IRmarkCalculator.hashSHA1Base64(xml) shouldBe "RXvO9aWqS4RSVmxzx9uvPe2FmtI="
+      IRmarkCalculator.hashSHA1Base64(
+        XmlUtils.canonicalizeXml(XmlUtils.parseDocument(xml).get)
+      )                                    shouldBe "RXvO9aWqS4RSVmxzx9uvPe2FmtI="
     }
 
     "compute the IRmark for a given body example 1" in {

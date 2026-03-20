@@ -19,6 +19,7 @@ package uk.gov.hmrc.charitiesclaims.xml
 import java.net.URL
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import uk.gov.hmrc.charitiesclaims.xml.XmlUtils.*
 
 class XmlUtilSpec extends AnyFreeSpec with Matchers {
 
@@ -59,8 +60,9 @@ class XmlUtilSpec extends AnyFreeSpec with Matchers {
         .getLines()
         .mkString("\n")
 
-      XmlUtils.parseDocument(xml).isSuccess           shouldBe true
-      XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
+      val document = XmlUtils.parseDocument(xml)
+      document.isSuccess                                       shouldBe true
+      XmlUtils.validateChRISSubmission(document.get).isSuccess shouldBe true
     }
 
     "should fail to validate an example invalid ChRIS submission XML document" in {
@@ -69,21 +71,59 @@ class XmlUtilSpec extends AnyFreeSpec with Matchers {
         .getLines()
         .mkString("\n")
 
-      XmlUtils.parseDocument(xml).isSuccess           shouldBe true
-      XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe false
+      val document = XmlUtils.parseDocument(xml)
+      document.isSuccess                                       shouldBe true
+      XmlUtils.validateChRISSubmission(document.get).isSuccess shouldBe false
     }
 
     "should fail to validate a random XML document" in {
-      val xml = "<xml><hello>world</hello></xml>"
-      XmlUtils.parseDocument(xml).isSuccess           shouldBe true
-      XmlUtils.validateChRISSubmission(xml).isFailure shouldBe true
+      val xml      = "<xml><hello>world</hello></xml>"
+      val document = XmlUtils.parseDocument(xml)
+      document.isSuccess                                       shouldBe true
+      XmlUtils.validateChRISSubmission(document.get).isFailure shouldBe true
     }
 
     "should canonicalize an XML document" in {
       val xml              =
         "<ns1:hello xmlns:ns1=\"http://www.example.com\"><the value=\"Foo\" name=\"Bar\" >world</the><org>ORG</org></ns1:hello >"
-      val canonicalizedXml = XmlUtils.canonicalizeXml(xml)
+      val document         = XmlUtils.parseDocument(xml)
+      val canonicalizedXml = XmlUtils.canonicalizeXml(document.get)
       canonicalizedXml shouldBe "<ns1:hello xmlns:ns1=\"http://www.example.com\"><the name=\"Bar\" value=\"Foo\">world</the><org>ORG</org></ns1:hello>"
+    }
+
+    "should pretty print an XML document" in {
+      val xml      = "<xml><hello>world</hello></xml>"
+      val document = XmlUtils.parseDocument(xml)
+      document.isSuccess                                         shouldBe true
+      document.get
+        .prettyPrint(indentation = 4, omitXmlDeclaration = true) shouldBe """|<xml>
+                                                                             |    <hello>world</hello>
+                                                                             |</xml>""".stripMargin
+    }
+
+    "should pretty print an XML document with XML declaration" in {
+      val xml      = "<xml><hello>world</hello></xml>"
+      val document = XmlUtils.parseDocument(xml)
+      document.isSuccess              shouldBe true
+      document.get
+        .prettyPrint(indentation = 4) shouldBe """|<?xml version='1.0' encoding='UTF-8'?>
+                                                  |<xml>
+                                                                             |    <hello>world</hello>
+                                                                             |</xml>""".stripMargin
+    }
+
+    "should compact print an XML document" in {
+      val xml      = "<xml><hello>world</hello></xml>"
+      val document = XmlUtils.parseDocument(xml)
+      document.isSuccess                                   shouldBe true
+      document.get.compactPrint(omitXmlDeclaration = true) shouldBe "<xml><hello>world</hello></xml>"
+    }
+
+    "should compact print an XML document with XML declaration" in {
+      val xml      = "<xml><hello>world</hello></xml>"
+      val document = XmlUtils.parseDocument(xml)
+      document.isSuccess          shouldBe true
+      document.get.compactPrint() shouldBe """<?xml version='1.0' encoding='UTF-8'?><xml><hello>world</hello></xml>"""
     }
   }
 

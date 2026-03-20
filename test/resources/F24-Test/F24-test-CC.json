@@ -1,0 +1,52 @@
+{
+  "claimId": "test-claim-submitted",
+  "claimSubmitted": true,
+  "userId": "test-user-1",
+  "lastUpdatedReference": "test-last-updated-reference",
+  "claimData": {
+    "repaymentClaimDetails": {
+      "claimingGiftAid": false,
+      "claimingTaxDeducted": false,
+      "claimingUnderGiftAidSmallDonationsScheme": true,
+      "claimReferenceNumber": "test-claim-reference-number",
+      "claimingDonationsNotFromCommunityBuilding": false,
+      "claimingDonationsCollectedInCommunityBuildings": false,
+      "connectedToAnyOtherCharities": true
+    },
+    "organisationDetails": {
+      "nameOfCharityRegulator": "EnglandAndWales",
+      "charityRegistrationNumber": "123456",
+      "areYouACorporateTrustee": false,
+      "doYouHaveAuthorisedOfficialTrusteeUKAddress": true,
+      "authorisedOfficialTrusteePostcode": "AB1 AB1",
+      "authorisedOfficialTrusteeDaytimeTelephoneNumber": "1234567890",
+      "authorisedOfficialTrusteeTitle": "Mr",
+      "authorisedOfficialTrusteeFirstName": "John",
+      "authorisedOfficialTrusteeLastName": "Jones"
+    },
+    "giftAidSmallDonationsSchemeDonationDetails": {
+      "adjustmentForGiftAidOverClaimed": 0.00,
+      "claims": [
+        {
+          "taxYear": 2025,
+          "amountOfDonationsReceived": 1000.00
+        }
+      ]
+    },
+    "connectedCharitiesData": {
+      "charities": [
+        {
+          "charityItem": 1,
+          "charityName": "Charity of the 501st Legion",
+          "charityReference": "CW501"
+        }
+      ]
+    },
+    "connectedCharitiesScheduleFileUploadReference": "cc-ref-456",
+    "understandFalseStatements": true
+  },
+  "submissionDetails": {
+    "submissionTimestamp": "2025-11-10T13:55:31.168Z",
+    "submissionReference": "T2QY5L7G6HT6DG5UCS67V73EEGN5HT2X"
+  }
+}

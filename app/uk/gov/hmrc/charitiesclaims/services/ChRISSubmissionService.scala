@@ -338,7 +338,7 @@ class ChRISSubmissionServiceImpl @Inject() (
             GAD = None,
             EarliestGAdate = None,
             OtherInc = otherIncomeList,
-            Adjustment = adjOtherIncome
+            Adjustment = if adjOtherIncome > Some(0) then adjOtherIncome else None
           )
         )
       } else {

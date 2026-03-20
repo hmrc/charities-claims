@@ -89,7 +89,18 @@ class ChRISSubmissionServiceImpl @Inject() (
               )
             )
         }
-    else Future.successful(None)
+    else
+      rdsConnector
+        .getOrganisationName(currentUser.enrolmentIdentifierValue)
+        .flatMap {
+          case Some(organisationName) => Future.successful(Some(organisationName))
+          case None                   =>
+            Future.failed(
+              new Exception(
+                s"No organisation name found for the given organisation reference ${currentUser.enrolmentIdentifierValue}"
+              )
+            )
+        }
 
   def getCommunityBuildingsUploadData(
     claim: models.Claim
@@ -173,7 +184,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         then None
         else buildAuthOfficial(claim),
       Declaration = true,
-      Claim = buildClaim(claim, currentUser, scheduleData)
+      Claim = buildClaim(orgName, claim, currentUser, scheduleData)
     )
 
   def buildAuthOfficial(claim: models.Claim): Option[AuthOfficial] =
@@ -248,6 +259,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     )
 
   def buildClaim(
+    orgName: Option[String],
     claim: models.Claim,
     currentUser: models.CurrentUser,
     scheduleData: ScheduleData
@@ -258,7 +270,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       OrgName =
         if currentUser.isAgent
         then "CASC" // TODO
-        else "", // TODO
+        else orgName.getOrElse(" "),
       // If user has an affinity group of "Agent", then set to the value of "HMRC Charities Reference"
       // Else set to the Charities Reference (derived from their HMRC-CHAR-ORG enrolment and CHARID identifier)
       HMRCref =

@@ -23,23 +23,29 @@ import scala.compiletime.constValue
 import scala.compiletime.constValueTuple
 import scala.collection.View
 import scala.annotation.nowarn
+import javax.xml.parsers.DocumentBuilderFactory
+import XmlUtils.*
 
 trait XmlWriter[A] {
   def label: String
   def isAttribute: Boolean = false
   def isPrimitive: Boolean = false
-  def write(name: String, value: A)(using XmlStringBuilder): Unit
+  def write(name: String, value: A)(using XmlOutputBuilder): Unit
 }
 
 @nowarn
-case class XmlAttribute[T : XmlWriter](attribute: T)
+case class XmlAttribute[T : XmlWriter](attribute: T) {
+  override def toString: String = attribute.toString
+}
 
 object XmlAttribute {
   given [A : XmlWriter] => Conversion[A, XmlAttribute[A]] = XmlAttribute[A](_)
 }
 
 @nowarn
-case class XmlContent[T : XmlWriter](attribute: T)
+case class XmlContent[T : XmlWriter](content: T) {
+  override def toString: String = content.toString
+}
 
 object XmlContent {
   given [A : XmlWriter] => Conversion[A, XmlContent[A]] = XmlContent[A](_)
@@ -47,35 +53,31 @@ object XmlContent {
 
 object XmlWriter {
 
-  def writeIndented[T : XmlWriter](value: T, addXmlDeclaration: Boolean = true): String = {
-    val builder: XmlStringBuilder = XmlStringBuilder.indented(
-      indentation = 4,
-      initialString =
-        if addXmlDeclaration
-        then "<?xml version='1.0' encoding='UTF-8'?>"
-        else "" // No XML declaration if not requested
-    )
-    val xmlWriter                 = summon[XmlWriter[T]]
+  def writeDocument[T : XmlWriter](value: T): org.w3c.dom.Document = {
+    val builder   = XmlOutputBuilder.document()
+    val xmlWriter = summon[XmlWriter[T]]
     xmlWriter.write(xmlWriter.label, value)(using builder)
-    builder.xmlStringResult
+    builder.result
+  }
+
+  def writeIndented[T : XmlWriter](value: T, addXmlDeclaration: Boolean = true): String = {
+    val builder   = XmlOutputBuilder.document()
+    val xmlWriter = summon[XmlWriter[T]]
+    xmlWriter.write(xmlWriter.label, value)(using builder)
+    builder.result.prettyPrint(indentation = 4, omitXmlDeclaration = !addXmlDeclaration)
   }
 
   def writeCompact[T : XmlWriter](value: T, addXmlDeclaration: Boolean = true): String = {
-    val builder: XmlStringBuilder = XmlStringBuilder.compact(
-      initialString =
-        if addXmlDeclaration
-        then "<?xml version='1.0' encoding='UTF-8'?>"
-        else "" // No XML declaration if not requested
-    )
-    val xmlWriter                 = summon[XmlWriter[T]]
+    val builder   = XmlOutputBuilder.document()
+    val xmlWriter = summon[XmlWriter[T]]
     xmlWriter.write(xmlWriter.label, value)(using builder)
-    builder.xmlStringResult
+    builder.result.compactPrint(omitXmlDeclaration = !addXmlDeclaration)
   }
 
   given XmlWriter[String] = new XmlWriter[String] {
     def label: String                                                             = "String"
     override def isPrimitive: Boolean                                             = true
-    def write(name: String, value: String)(using builder: XmlStringBuilder): Unit =
+    def write(name: String, value: String)(using builder: XmlOutputBuilder): Unit =
       builder.appendText(value)
   }
 
@@ -83,20 +85,20 @@ object XmlWriter {
   given [A : Numeric] => XmlWriter[A] = new XmlWriter[A] {
     def label: String                                                        = "Number"
     override def isPrimitive: Boolean                                        = true
-    def write(name: String, value: A)(using builder: XmlStringBuilder): Unit =
+    def write(name: String, value: A)(using builder: XmlOutputBuilder): Unit =
       builder.appendText(value.toString)
   }
 
   given XmlWriter[Boolean] = new XmlWriter[Boolean] {
     def label: String                                                              = "Boolean"
     override def isPrimitive: Boolean                                              = true
-    def write(name: String, value: Boolean)(using builder: XmlStringBuilder): Unit =
+    def write(name: String, value: Boolean)(using builder: XmlOutputBuilder): Unit =
       builder.appendText(value.toString())
   }
 
   given [A : XmlWriter] => XmlWriter[Option[A]] = new XmlWriter[Option[A]] {
     def label: String                                                                = summon[XmlWriter[A]].label
-    def write(name: String, value: Option[A])(using builder: XmlStringBuilder): Unit =
+    def write(name: String, value: Option[A])(using builder: XmlOutputBuilder): Unit =
       value.foreach { v =>
         val writer = summon[XmlWriter[A]]
         if (writer.isPrimitive) {
@@ -112,7 +114,7 @@ object XmlWriter {
   given [A : XmlWriter] => XmlWriter[List[A]] = new XmlWriter[List[A]] {
     def label: String                                                              = summon[XmlWriter[A]].label
     override def isPrimitive: Boolean                                              = summon[XmlWriter[A]].isPrimitive
-    def write(name: String, value: List[A])(using builder: XmlStringBuilder): Unit =
+    def write(name: String, value: List[A])(using builder: XmlOutputBuilder): Unit =
       val elementWriter = summon[XmlWriter[A]]
       if (label == name && !elementWriter.isPrimitive) {
         value.map(elementWriter.write(label, _))
@@ -127,14 +129,14 @@ object XmlWriter {
     def label: String                                                                      = summon[XmlWriter[A]].label
     override def isAttribute: Boolean                                                      = true
     override def isPrimitive: Boolean                                                      = summon[XmlWriter[A]].isPrimitive
-    def write(name: String, value: XmlAttribute[A])(using builder: XmlStringBuilder): Unit =
+    def write(name: String, value: XmlAttribute[A])(using builder: XmlOutputBuilder): Unit =
       summon[XmlWriter[A]].write(name, value.attribute)
   }
 
   given [A : XmlWriter] => XmlWriter[XmlContent[A]] = new XmlWriter[XmlContent[A]] {
     def label: String                                                                    = summon[XmlWriter[A]].label
-    def write(name: String, value: XmlContent[A])(using builder: XmlStringBuilder): Unit =
-      summon[XmlWriter[A]].write(name, value.attribute)
+    def write(name: String, value: XmlContent[A])(using builder: XmlOutputBuilder): Unit =
+      summon[XmlWriter[A]].write(name, value.content)
   }
 
   inline def derived[T](using mirror: Mirror.Of[T]): XmlWriter[T] = {
@@ -151,7 +153,7 @@ object XmlWriter {
   private def xmlWriterSum[T](l: String): XmlWriter[T] =
     new XmlWriter[T] {
       def label: String                                                        = l
-      def write(name: String, value: T)(using builder: XmlStringBuilder): Unit =
+      def write(name: String, value: T)(using builder: XmlOutputBuilder): Unit =
         builder.appendElementStart(name, View.empty)
         builder.appendText(value.toString)
         builder.appendElementEnd(name)
@@ -164,11 +166,11 @@ object XmlWriter {
     val items = names.lazyZip(xmlWriters)
     new XmlWriter[T] {
       def label: String                                                        = l
-      def write(name: String, value: T)(using builder: XmlStringBuilder): Unit =
+      def write(name: String, value: T)(using builder: XmlOutputBuilder): Unit =
         val values     = items.lazyZip(iterable(value))
         val elements   = values.filterNot(_._2.isAttribute)
         val attributes = values.filter(_._2.isAttribute)
-        builder.appendElementStart(name, attributes)
+        builder.appendElementStart(name, attributes.map { case (n, _, v) => (n, v.toString) })
         elements.foreach { (n, xmlWriter, v) =>
           if (xmlWriter.isPrimitive) {
             builder.appendElementStart(n, View.empty)
@@ -197,122 +199,76 @@ object XmlWriter {
       case _       => XmlWriter.derived[Elem](using summonInline[Mirror.Of[Elem]])
 }
 
-trait XmlStringBuilder {
+trait XmlOutputBuilder {
 
-  def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit
+  type Result
+  def result: Result
+
+  def appendElementStart(name: String): Unit
+  def appendElementStart(name: String, attributes: Iterable[(String, String)]): Unit
   def appendElementEnd(name: String): Unit
   def appendText(text: String): Unit
-
-  def xmlStringResult: String
-
-  def escapeForAttribute(text: String): String = text
-    .replace("&", "&amp;")
-    .replace("<", "&lt;")
-    .replace(">", "&gt;")
-    .replace("\"", "&quot;")
-    .replace("'", "&apos;")
-
-  def escapeForElement(text: String): String = text
-    .replace("&", "&amp;")
-    .replace("<", "&lt;")
-    .replace(">", "&gt;")
 }
 
-object XmlStringBuilder {
+object XmlOutputBuilder {
 
-  def indented(indentation: Int, initialString: String): XmlStringBuilder =
-    new IndentedXmlStringBuilder(indentation, initialString)
+  def document(): DocumentOutputBuilder =
+    new DocumentOutputBuilder()
 
-  def compact(initialString: String): XmlStringBuilder =
-    new CompactXmlStringBuilder(initialString)
+  class DocumentOutputBuilder extends XmlOutputBuilder {
 
-  class IndentedXmlStringBuilder(indentation: Int, initialString: String) extends XmlStringBuilder {
+    type Result = org.w3c.dom.Document
 
-    private val sb = new StringBuilder(initialString)
+    private val factory = DocumentBuilderFactory.newInstance();
+    factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+    factory.setFeature("http://xml.org/sax/features/external-general-entities", false)
+    factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+    factory.setNamespaceAware(true)
 
-    private val indentationString = " " * indentation
-    private var indentationLevel  = 0
-    private var previous          = '-'
-    private var context           = 'e'
-
-    private def indent(): Unit =
-      sb.append(indentationString * indentationLevel)
-
-    private def newline(): Unit =
-      sb.append("\n")
-
-    final def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit = {
-      if !sb.isEmpty then {
-        newline()
-        indent()
-      }
-      sb.append(s"<$name")
-      attributes.foreach { case (k, w, v) =>
-        sb.append(s" $k=")
-        context = 'a'
-        sb.append(s"\"")
-        w.asInstanceOf[XmlWriter[Any]].write(k, v)(using this)
-        sb.append(s"\"")
-        context = 'e'
-      }
-      sb.append(">")
-      indentationLevel = indentationLevel + 1
-      previous = 's'
+    private val document = {
+      val builder = factory.newDocumentBuilder()
+      builder.newDocument()
     }
 
-    final def appendElementEnd(name: String): Unit = {
-      indentationLevel = indentationLevel - 1
-      if (previous == 'e') {
-        newline()
-        indent()
-      }
-      sb.append(s"</$name>")
-      previous = 'e'
+    val stack = scala.collection.mutable.Stack.empty[org.w3c.dom.Node]
+    stack.push(document)
+
+    final override def appendElementStart(name: String): Unit = {
+      val node = document.createElement(name)
+      stack.head.appendChild(node)
+      stack.push(node)
     }
 
-    final def appendText(text: String): Unit = {
-      sb.append(
-        context match {
-          case 'a' => escapeForAttribute(text)
-          case 'e' => escapeForElement(text)
+    final override def appendElementStart(name: String, attributes: Iterable[(String, String)]): Unit = {
+      val namespace = attributes.find((name, _) => name == "xmlns").map((_, ns) => ns)
+      val node      =
+        namespace match {
+          case Some(ns) => document.createElementNS(ns, name)
+          case None     =>
+            Option(stack.head.getNamespaceURI()) match {
+              case Some(ns) => document.createElementNS(ns, name)
+              case None     => document.createElement(name)
+            }
         }
-      )
-      previous = 't'
-    }
 
-    final def xmlStringResult: String = sb.toString()
-  }
-
-  class CompactXmlStringBuilder(initialString: String) extends XmlStringBuilder {
-
-    private val sb = new StringBuilder(initialString)
-
-    private var context = 'e'
-
-    final def appendElementStart(name: String, attributes: View[(String, XmlWriter[?], Any)]): Unit = {
-      sb.append(s"<$name")
-      attributes.foreach { case (k, w, v) =>
-        sb.append(s" $k=")
-        context = 'a'
-        sb.append(s"\"")
-        w.asInstanceOf[XmlWriter[Any]].write(k, v)(using this)
-        sb.append(s"\"")
-        context = 'e'
+      attributes.foreach { case (key, value) =>
+        val attribute = document.createAttribute(key)
+        attribute.setValue(value)
+        node.setAttributeNode(attribute)
       }
-      sb.append(">")
+
+      stack.head.appendChild(node)
+      stack.push(node)
     }
 
-    final def appendElementEnd(name: String): Unit =
-      sb.append(s"</$name>")
+    final override def appendElementEnd(name: String): Unit =
+      stack.pop()
 
-    final def appendText(text: String): Unit =
-      sb.append(
-        context match {
-          case 'a' => escapeForAttribute(text)
-          case 'e' => escapeForElement(text)
-        }
-      )
+    final override def appendText(text: String): Unit = {
+      val node = document.createTextNode(text)
+      stack.head.appendChild(node)
+    }
 
-    final def xmlStringResult: String = sb.toString()
+    final override def result: org.w3c.dom.Document = document
   }
 }

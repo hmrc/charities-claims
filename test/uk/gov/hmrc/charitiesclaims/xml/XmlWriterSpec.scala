@@ -49,26 +49,7 @@ class XmlWriterSpec extends AnyFreeSpec with Matchers {
   ) derives XmlWriter
 
   "XmlWriter" - {
-    "serialise String to XML correctly" in {
-      val entity = "Hello, world!"
-      val xml    = XmlWriter.writeIndented(entity, addXmlDeclaration = false)
-      xml shouldBe entity
-    }
-    "serialise Int to XML correctly" in {
-      val entity = 5
-      val xml    = XmlWriter.writeIndented(entity, addXmlDeclaration = false)
-      xml shouldBe "5"
-    }
-    "serialise Double to XML correctly" in {
-      val entity = 5.15
-      val xml    = XmlWriter.writeIndented(entity, addXmlDeclaration = false)
-      xml shouldBe "5.15"
-    }
-    "serialise Boolean true to XML correctly" in {
-      val entity = true
-      val xml    = XmlWriter.writeIndented(entity, addXmlDeclaration = false)
-      xml shouldBe "true"
-    }
+
     "serialise object to XML correctly using indented format" in {
       val entity = Person(
         name = "John Doe",

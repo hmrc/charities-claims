@@ -8,7 +8,7 @@
       <CorrelationID>748ACBB01ABE497296E6B5039BADFB89</CorrelationID>
       <GatewayTimestamp>2026-01-09T13:44:03.440</GatewayTimestamp>
     </MessageDetails>
-    <SenderDetails />
+    <SenderDetails/>
   </Header>
   <GovTalkDetails>
     <Keys>

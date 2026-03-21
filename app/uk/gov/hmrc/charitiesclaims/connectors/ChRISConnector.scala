@@ -35,6 +35,7 @@ import play.api.libs.ws.InMemoryBody
 import org.apache.pekko.util.ByteString
 import uk.gov.hmrc.charitiesclaims.xml.XmlUtils
 import uk.gov.hmrc.charitiesclaims.validation.{SchematronValidationException, SchematronValidator}
+import uk.gov.hmrc.charitiesclaims.xml.XmlUtils.*
 
 @ImplementedBy(classOf[ChRISConnectorImpl])
 trait ChRISConnector {
@@ -65,9 +66,9 @@ class ChRISConnectorImpl @Inject() (
   final def submitClaim(govTalkMessage: GovTalkMessage)(using
     hc: HeaderCarrier
   ): Future[Unit] =
-    val xml = XmlWriter.writeCompact(govTalkMessage)
+    val document = XmlWriter.writeDocument(govTalkMessage)
     Future
-      .fromTry(XmlUtils.validateChRISSubmission(xml))
+      .fromTry(XmlUtils.validateChRISSubmission(document))
       .flatMap { _ =>
         SchematronValidator.validate(govTalkMessage) match
           case Left(errors) => Future.failed(SchematronValidationException(errors))
@@ -77,7 +78,7 @@ class ChRISConnectorImpl @Inject() (
         retry(retryIntervals*)(shouldRetry, retryReason)(
           http
             .post(URL(s"$baseUrl$path"))
-            .withBody(xml)
+            .withBody(document.compactPrint())
             .execute[HttpResponse]
         ).flatMap(response =>
           if response.status == 200

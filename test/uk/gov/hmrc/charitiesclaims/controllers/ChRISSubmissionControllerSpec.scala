@@ -33,6 +33,7 @@ import java.time.Instant
 import java.util.UUID
 
 class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
+  val declarationLanguage: String = "cy"
 
   "POST /chris" - {
     "return 200 when claim is submitted to ChRIS" in new AuthorisedOrganisationFixture {
@@ -63,12 +64,13 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock
+        unregulatedDonationsServiceMock,
+        declarationLanguage
       )
 
       (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
+        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
       (chrisConnectorMock
@@ -116,7 +118,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock
+        unregulatedDonationsServiceMock,
+        declarationLanguage
       )
 
       val request = testRequest(
@@ -164,7 +167,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock
+        unregulatedDonationsServiceMock,
+        declarationLanguage
       )
 
       val request = testRequest(
@@ -214,7 +218,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock
+        unregulatedDonationsServiceMock,
+        declarationLanguage
       )
 
       val request = testRequest(
@@ -249,7 +254,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock
+        unregulatedDonationsServiceMock,
+        declarationLanguage
       )
 
       (claimsService
@@ -306,7 +312,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock
+        unregulatedDonationsServiceMock,
+        declarationLanguage
       )
 
       (claimsService
@@ -320,8 +327,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.failed(new RuntimeException("Error message")))
 
       (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
+        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
       (chrisConnectorMock
@@ -385,12 +392,13 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock
+        unregulatedDonationsServiceMock,
+        declarationLanguage
       )
 
       (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
+        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
       (chrisConnectorMock
@@ -450,7 +458,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock
+        unregulatedDonationsServiceMock,
+        declarationLanguage
       )
 
       (claimsService
@@ -459,8 +468,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.successful(Some((claim, Instant.now()))))
 
       (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
+        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
       (chrisConnectorMock
@@ -524,12 +533,13 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock
+        unregulatedDonationsServiceMock,
+        declarationLanguage
       )
 
       (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
+        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
       (chrisConnectorMock

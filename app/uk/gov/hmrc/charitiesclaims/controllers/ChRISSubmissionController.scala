@@ -37,7 +37,8 @@ class ChRISSubmissionController @Inject() (
   claimsService: ClaimsService,
   chrisSubmissionService: ChRISSubmissionService,
   chrisConnector: ChRISConnector,
-  unregulatedDonationsService: UnregulatedDonationsService
+  unregulatedDonationsService: UnregulatedDonationsService,
+  declarationLanguage: String
 )(using ExecutionContext)
     extends BaseController {
 
@@ -78,7 +79,7 @@ class ChRISSubmissionController @Inject() (
                 )
               } else
                 chrisSubmissionService
-                  .buildChRISSubmission(claim, currentUser)
+                  .buildChRISSubmission(claim, currentUser, declarationLanguage)
                   .flatMap { govTalkMessage =>
                     chrisConnector
                       .submitClaim(govTalkMessage)

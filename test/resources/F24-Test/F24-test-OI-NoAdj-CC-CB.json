@@ -1,0 +1,80 @@
+{
+  "claimId": "test-claim-submitted",
+  "claimSubmitted": true,
+  "userId": "test-user-1",
+  "lastUpdatedReference": "test-last-updated-reference",
+  "claimData": {
+    "repaymentClaimDetails": {
+      "claimingGiftAid": true,
+      "claimingTaxDeducted": false,
+      "claimingUnderGiftAidSmallDonationsScheme": true,
+      "claimReferenceNumber": "test-claim-reference-number",
+      "claimingDonationsNotFromCommunityBuilding": false,
+      "claimingDonationsCollectedInCommunityBuildings": true,
+      "connectedToAnyOtherCharities": true
+    },
+    "organisationDetails": {
+      "nameOfCharityRegulator": "EnglandAndWales",
+      "charityRegistrationNumber": "123456",
+      "areYouACorporateTrustee": false,
+      "doYouHaveAuthorisedOfficialTrusteeUKAddress": true,
+      "authorisedOfficialTrusteePostcode": "AB1 AB1",
+      "authorisedOfficialTrusteeDaytimeTelephoneNumber": "1234567890",
+      "authorisedOfficialTrusteeTitle": "Mr",
+      "authorisedOfficialTrusteeFirstName": "John",
+      "authorisedOfficialTrusteeLastName": "Jones"
+    },
+    "otherIncomeData": {
+      "totalOfGrossPayments": 1000.00,
+      "totalOfTaxDeducted": 25.00,
+      "otherIncomes": [
+        {
+          "otherIncomeItem": 1,
+          "payerName": "Test User",
+          "paymentDate": "2025-01-01",
+          "grossPayment": 1000.00,
+          "taxDeducted": 25.00
+        }
+      ]
+    },
+    "giftAidSmallDonationsSchemeDonationDetails": {
+      "adjustmentForGiftAidOverClaimed": 0.00,
+      "claims": [
+        {
+          "taxYear": 2025,
+          "amountOfDonationsReceived": 1000.00
+        }
+      ]
+    },
+    "connectedCharitiesData": {
+      "charities": [
+        {
+          "charityItem": 1,
+          "charityName": "Charity of the 501st Legion",
+          "charityReference": "CW501"
+        }
+      ]
+    },
+    "communityBuildingsData": {
+      "totalOfAllAmounts": "1000.00",
+      "communityBuildings": [
+        {
+          "communityBuildingItem": 1,
+          "buildingName": "TEST BUILDING",
+          "firstLineOfAddress": "1 TEST STREET",
+          "postcode": "TE1 3ST",
+          "taxYear1": 2025,
+          "amountYear1": 1000
+        }
+      ]
+    },
+    "otherIncomeScheduleFileUploadReference": "oi-ref-789",
+    "connectedCharitiesScheduleFileUploadReference": "cc-ref-456",
+    "communityBuildingsScheduleFileUploadReference": "cb-ref-123",
+    "understandFalseStatements": true
+  },
+  "submissionDetails": {
+    "submissionTimestamp": "2025-11-10T13:55:31.168Z",
+    "submissionReference": "T2QY5L7G6HT6DG5UCS67V73EEGN5HT2X"
+  }
+}

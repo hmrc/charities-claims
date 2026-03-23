@@ -1,0 +1,167 @@
+{
+  "claimId": "test-claim-submitted",
+  "claimSubmitted": true,
+  "userId": "test-user-1",
+  "lastUpdatedReference": "test-last-updated-reference",
+  "claimData": {
+    "repaymentClaimDetails": {
+      "claimingGiftAid": true,
+      "claimingTaxDeducted": true,
+      "claimingUnderGiftAidSmallDonationsScheme": true,
+      "claimReferenceNumber": "test-claim-reference-number",
+      "claimingDonationsNotFromCommunityBuilding": false,
+      "claimingDonationsCollectedInCommunityBuildings": true,
+      "connectedToAnyOtherCharities": true
+    },
+    "organisationDetails": {
+      "nameOfCharityRegulator": "EnglandAndWales",
+      "charityRegistrationNumber": "123456",
+      "areYouACorporateTrustee": false,
+      "doYouHaveAuthorisedOfficialTrusteeUKAddress": true,
+      "authorisedOfficialTrusteePostcode": "AB1 AB1",
+      "authorisedOfficialTrusteeDaytimeTelephoneNumber": "1234567890",
+      "authorisedOfficialTrusteeTitle": "Mr",
+      "authorisedOfficialTrusteeFirstName": "John",
+      "authorisedOfficialTrusteeLastName": "Jones"
+    },
+    "giftAidScheduleData": {
+      "earliestDonationDate": "2025-01-01",
+      "prevOverclaimedGiftAid": 0.00,
+      "totalDonations": 500,
+      "donations": [
+        {
+          "donationItem": 1,
+          "donorTitle": "MISS",
+          "donorFirstName": "TESTFORENAME",
+          "donorLastName": "TESTSURNAME",
+          "donorHouse": "123",
+          "donorPostcode": "WG7 7FU",
+          "sponsoredEvent": true,
+          "donationDate": "2025-01-01",
+          "donationAmount": 100
+        },
+        {
+          "donationItem": 2,
+          "donorTitle": "MR",
+          "donorFirstName": "TESTFORENAME",
+          "donorLastName": "TESTSURNAME",
+          "donorHouse": "123",
+          "donorPostcode": "WG7 7FU",
+          "sponsoredEvent": true,
+          "donationDate": "2025-01-01",
+          "donationAmount": 101
+        },
+        {
+          "donationItem": 3,
+          "aggregatedDonations": "One off Gift Aid donations",
+          "sponsoredEvent": false,
+          "donationDate": "2025-03-31",
+          "donationAmount": 299
+        }
+      ]
+    },
+    "otherIncomeData": {
+      "adjustmentForOtherIncomePreviousOverClaimed": 50.00,
+      "totalOfGrossPayments": 3250.00,
+      "totalOfTaxDeducted": 82.25,
+      "otherIncomes": [
+        {
+          "otherIncomeItem": 1,
+          "payerName": "Test User1",
+          "paymentDate": "2025-01-01",
+          "grossPayment": 1000.00,
+          "taxDeducted": 25.00
+        },
+        {
+          "otherIncomeItem": 2,
+          "payerName": "Test User2",
+          "paymentDate": "2025-01-01",
+          "grossPayment": 500.00,
+          "taxDeducted": 12.50
+        },
+        {
+          "otherIncomeItem": 3,
+          "payerName": "Test User3",
+          "paymentDate": "2025-01-01",
+          "grossPayment": 750.00,
+          "taxDeducted": 19.75
+        },
+        {
+          "otherIncomeItem": 4,
+          "payerName": "Test User4",
+          "paymentDate": "2025-01-01",
+          "grossPayment": 1000.00,
+          "taxDeducted": 25.00
+        }
+      ]
+    },
+    "giftAidSmallDonationsSchemeDonationDetails": {
+      "adjustmentForGiftAidOverClaimed": 0.00,
+      "claims": [
+        {
+          "taxYear": 2025,
+          "amountOfDonationsReceived": 3000.00
+        },
+        {
+          "taxYear": 2024,
+          "amountOfDonationsReceived": 1500.00
+        }
+      ]
+    },
+    "connectedCharitiesData": {
+      "charities": [
+        {
+          "charityItem": 1,
+          "charityName": "Charity of the 501st Legion",
+          "charityReference": "CW501"
+        },
+        {
+          "charityItem": 2,
+          "charityName": "Charity of the 502nd Legion",
+          "charityReference": "CW502"
+        }
+      ]
+    },
+    "communityBuildingsData": {
+      "totalOfAllAmounts": "1000.00",
+      "communityBuildings": [
+        {
+          "communityBuildingItem": 1,
+          "buildingName": "TEST BUILDING",
+          "firstLineOfAddress": "1 TEST STREET",
+          "postcode": "TE1 3ST",
+          "taxYear1": 2025,
+          "amountYear1": 1000
+        },
+        {
+          "communityBuildingItem": 2,
+          "buildingName": "TEST BUILDING",
+          "firstLineOfAddress": "2 TEST STREET",
+          "postcode": "TE1 3ST",
+          "taxYear1": 2025,
+          "amountYear1": 1000,
+          "taxYear2": 2024,
+          "amountYear2": 1500
+        },
+        {
+          "communityBuildingItem": 3,
+          "buildingName": "TEST BUILDING",
+          "firstLineOfAddress": "3 TEST STREET",
+          "postcode": "TE1 3ST",
+          "taxYear1": 2025,
+          "amountYear1": 1000
+        }
+      ]
+    },
+    "giftAidScheduleFileUploadReference": "ga-ref-789",
+    "otherIncomeScheduleFileUploadReference": "oi-ref-789",
+    "connectedCharitiesScheduleFileUploadReference": "cc-ref-456",
+    "communityBuildingsScheduleFileUploadReference": "cb-ref-123",
+    "understandFalseStatements": true,
+    "includedAnyAdjustmentsInClaimPrompt": ""
+  },
+  "submissionDetails": {
+    "submissionTimestamp": "2025-11-10T13:55:31.168Z",
+    "submissionReference": "T2QY5L7G6HT6DG5UCS67V73EEGN5HT2X"
+  }
+}

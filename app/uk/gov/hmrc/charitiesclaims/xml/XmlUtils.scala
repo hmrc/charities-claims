@@ -19,19 +19,20 @@ package uk.gov.hmrc.charitiesclaims.xml
 import org.w3c.dom.traversal.{DocumentTraversal, NodeFilter, NodeIterator}
 import org.w3c.dom.{Document, Node}
 
-import java.io.ByteArrayInputStream
+import java.io.StringWriter
 import java.net.{URI, URL}
 import java.util.Iterator
 import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec
 import javax.xml.crypto.dsig.{CanonicalizationMethod, XMLSignatureFactory}
 import javax.xml.crypto.{Data, NodeSetData, OctetStreamData}
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.transform.Source
 import javax.xml.transform.dom.DOMSource
-import javax.xml.transform.stream.StreamSource
+import javax.xml.transform.stream.{StreamResult, StreamSource}
+import javax.xml.transform.{OutputKeys, Source, TransformerFactory}
 import javax.xml.validation.{Schema, Validator}
 import scala.io.Codec
 import scala.util.Try
+import javax.xml.parsers.DocumentBuilderFactory
+import java.io.ByteArrayInputStream
 
 object XmlUtils {
 
@@ -43,30 +44,19 @@ object XmlUtils {
 
   lazy val chrisSubmissionSchema: Schema = loadSchema(chrisSubmissionSchemaSourceMap).get
 
-  def validateChRISSubmission(xml: String): Try[Document] =
-    validateXml(xml, chrisSubmissionSchema)
+  def validateChRISSubmission(document: org.w3c.dom.Document): Try[Document] =
+    validate(document, chrisSubmissionSchema)
 
-  private def validateXml(xml: String, schema: Schema): Try[Document] =
-    parseDocument(xml)
-      .flatMap { document =>
-        Try {
-          val validator: Validator          = schema.newValidator()
-          val errorHandler: XMLErrorHandler = new XMLErrorHandler()
-          validator.setErrorHandler(errorHandler)
-          validator.validate(new DOMSource(document))
-          if errorHandler.hasError
-          then throw new Exception("Invalid XML: " + errorHandler.getLog)
-          else document
-        }
-      }
-
-  def parseDocument(document: String): Try[Document] = Try {
-    val documentBuilderFactory: DocumentBuilderFactory = secureDocumentBuilderFactory()
-
-    documentBuilderFactory
-      .newDocumentBuilder()
-      .parse(new ByteArrayInputStream(document.getBytes("utf-8")))
-  }
+  def validate(document: org.w3c.dom.Document, schema: Schema): Try[Document] =
+    Try {
+      val validator: Validator          = schema.newValidator()
+      val errorHandler: XMLErrorHandler = new XMLErrorHandler()
+      validator.setErrorHandler(errorHandler)
+      validator.validate(DOMSource.apply(document.getDocumentElement()))
+      if errorHandler.hasError
+      then throw new Exception("Invalid XML: " + errorHandler.getLog)
+      else document
+    }
 
   private class XMLErrorHandler extends org.xml.sax.helpers.DefaultHandler {
 
@@ -92,12 +82,8 @@ object XmlUtils {
     )
   }
 
-  def canonicalizeXml(xml: String): String = {
-    val dbf: DocumentBuilderFactory = secureDocumentBuilderFactory()
-
-    val doc: Document = dbf.newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("utf-8")))
-
-    val data: Data = new NodeSetDataImpl(doc, getRootNodeFilter())
+  def canonicalizeXml(document: org.w3c.dom.Document): String = {
+    val data: Data = new NodeSetDataImpl(document, getRootNodeFilter())
 
     val fac: XMLSignatureFactory = XMLSignatureFactory.getInstance("DOM")
 
@@ -115,6 +101,14 @@ object XmlUtils {
     dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
     dbf.setNamespaceAware(true)
     dbf
+  }
+
+  def parseDocument(document: String): Try[Document] = Try {
+    val documentBuilderFactory: DocumentBuilderFactory = secureDocumentBuilderFactory()
+
+    documentBuilderFactory
+      .newDocumentBuilder()
+      .parse(new ByteArrayInputStream(document.getBytes("utf-8")))
   }
 
   private def getRootNodeFilter(): NodeFilter =
@@ -164,5 +158,37 @@ object XmlUtils {
 
     override def next(): Node =
       consumeNextNode()
+  }
+
+  extension (document: org.w3c.dom.Document) {
+
+    def prettyPrint(indentation: Int = 4, omitXmlDeclaration: Boolean = false): String =
+      val transformer  = TransformerFactory.newInstance().newTransformer()
+      transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+      transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+      transformer.setOutputProperty(OutputKeys.INDENT, "yes")
+      transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", indentation.toString)
+      transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes")
+      val source       = new DOMSource(document)
+      val stringWriter = new StringWriter()
+      transformer.transform(source, new StreamResult(stringWriter))
+      val xml          = stringWriter.toString().dropRight(1) // drop the trailing newline
+      if omitXmlDeclaration
+      then xml
+      else """<?xml version='1.0' encoding='UTF-8'?>""" + "\n" + xml
+
+    def compactPrint(omitXmlDeclaration: Boolean = false): String =
+      val transformer  = TransformerFactory.newInstance().newTransformer()
+      transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+      transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+      transformer.setOutputProperty(OutputKeys.INDENT, "no")
+      transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes")
+      val source       = new DOMSource(document)
+      val stringWriter = new StringWriter()
+      transformer.transform(source, new StreamResult(stringWriter))
+      val xml          = stringWriter.toString()
+      if omitXmlDeclaration
+      then xml
+      else """<?xml version='1.0' encoding='UTF-8'?>""" + xml
   }
 }

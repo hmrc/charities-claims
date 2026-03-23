@@ -123,10 +123,10 @@ object SchematronValidator:
   def validateKeyRule(message: GovTalkMessage): List[ValidationError] =
     val govTalkKeys  = message.GovTalkDetails.Keys
       .filter(_.Type.attribute == CharityKeyType)
-      .map(_.Value.attribute)
+      .map(_.Value.content)
     val irHeaderKeys = message.Body.IRenvelope.IRheader.Keys
       .filter(_.Type.attribute == CharityKeyType)
-      .map(_.Value.attribute)
+      .map(_.Value.content)
     if govTalkKeys != irHeaderKeys
     then List(ValidationError.KeyRule)
     else Nil

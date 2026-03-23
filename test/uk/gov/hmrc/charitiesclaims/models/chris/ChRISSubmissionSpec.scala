@@ -19,6 +19,7 @@ package uk.gov.hmrc.charitiesclaims.models.chris
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.charitiesclaims.xml.{XmlUtils, XmlWriter}
+import uk.gov.hmrc.charitiesclaims.xml.XmlUtils.*
 
 class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
 
@@ -104,11 +105,11 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.writeIndented(govTalkMessage)
+      val document = XmlWriter.writeDocument(govTalkMessage)
+      val result   = XmlUtils.validateChRISSubmission(document)
+      result.isSuccess shouldBe true
 
-      XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
-
-      xml shouldBe scala.io.Source
+      document.prettyPrint(4) shouldEqual scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-1.xml"))
         .getLines()
         .mkString("\n")
@@ -312,11 +313,11 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.writeIndented(govTalkMessage)
+      val document = XmlWriter.writeDocument(govTalkMessage)
 
-      XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
+      XmlUtils.validateChRISSubmission(document).isSuccess shouldBe true
 
-      xml shouldEqual scala.io.Source
+      document.prettyPrint(4) shouldEqual scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-2.xml"))
         .getLines()
         .mkString("\n")
@@ -472,11 +473,11 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.writeIndented(govTalkMessage)
+      val document = XmlWriter.writeDocument(govTalkMessage)
 
-      XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
+      XmlUtils.validateChRISSubmission(document).isSuccess shouldBe true
 
-      xml shouldBe scala.io.Source
+      document.prettyPrint(4) shouldEqual scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-3.xml"))
         .getLines()
         .mkString("\n")
@@ -605,11 +606,11 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.writeIndented(govTalkMessage)
+      val document = XmlWriter.writeDocument(govTalkMessage)
 
-      XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
+      XmlUtils.validateChRISSubmission(document).isSuccess shouldBe true
 
-      xml shouldBe scala.io.Source
+      document.prettyPrint(4) shouldEqual scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-4.xml"))
         .getLines()
         .mkString("\n")
@@ -707,11 +708,11 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xml = XmlWriter.writeCompact(govTalkMessage)
+      val document = XmlWriter.writeDocument(govTalkMessage)
 
-      XmlUtils.validateChRISSubmission(xml).isSuccess shouldBe true
+      XmlUtils.validateChRISSubmission(document).isSuccess shouldBe true
 
-      xml shouldBe scala.io.Source
+      document.prettyPrint(indentation = 2) shouldEqual scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-6.xml"))
         .getLines()
         .mkString("\n")

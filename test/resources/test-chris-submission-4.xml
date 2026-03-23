@@ -9,7 +9,7 @@
             <CorrelationID>B483CF7FFA5A4100A25D7A316BF6F0FE</CorrelationID>
             <GatewayTimestamp>2025-12-04T13:07:49.171</GatewayTimestamp>
         </MessageDetails>
-        <SenderDetails></SenderDetails>
+        <SenderDetails/>
     </Header>
     <GovTalkDetails>
         <Keys>

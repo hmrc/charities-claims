@@ -19,7 +19,7 @@ package uk.gov.hmrc.charitiesclaims.models.chris
 import uk.gov.hmrc.charitiesclaims.xml.XmlAttribute
 import uk.gov.hmrc.charitiesclaims.xml.XmlWriter
 import uk.gov.hmrc.charitiesclaims.xml.XmlContent
-import uk.gov.hmrc.charitiesclaims.xml.XmlStringBuilder
+import uk.gov.hmrc.charitiesclaims.xml.XmlOutputBuilder
 import java.util.UUID
 import java.time.format.DateTimeFormatter
 import java.time.Instant
@@ -56,8 +56,7 @@ final case class GovTalkMessage(
 
 final case class Header(
   MessageDetails: MessageDetails = MessageDetails(),
-  SenderDetails: SenderDetails =
-    SenderDetails() // This is intentionally set to be empty (<SenderDetails></SenderDetails>)
+  SenderDetails: SenderDetails = SenderDetails() // This is intentionally set to be empty (<SenderDetails/>)
 ) derives XmlWriter
 
 val gatewayTimestampFormat: DateTimeFormatter =
@@ -302,7 +301,7 @@ object YesNo {
 
     override def isPrimitive: Boolean = true
 
-    def write(name: String, value: YesNo)(using builder: XmlStringBuilder): Unit =
+    def write(name: String, value: YesNo)(using builder: XmlOutputBuilder): Unit =
       builder.appendText(value match {
         case true  => "yes"
         case false => "no"

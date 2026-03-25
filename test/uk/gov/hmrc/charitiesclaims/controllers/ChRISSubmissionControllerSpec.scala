@@ -64,8 +64,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock,
-        declarationLanguage
+        unregulatedDonationsServiceMock
       )
 
       (chrisSubmissionServiceMock
@@ -88,7 +87,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "cy"
         )
       )
 
@@ -118,8 +118,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock,
-        declarationLanguage
+        unregulatedDonationsServiceMock
       )
 
       val request = testRequest(
@@ -127,7 +126,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4",
+          declarationLanguage = "en"
         )
       )
 
@@ -167,8 +167,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock,
-        declarationLanguage
+        unregulatedDonationsServiceMock
       )
 
       val request = testRequest(
@@ -176,7 +175,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "en"
         )
       )
 
@@ -218,8 +218,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock,
-        declarationLanguage
+        unregulatedDonationsServiceMock
       )
 
       val request = testRequest(
@@ -227,7 +226,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4",
+          declarationLanguage = "en"
         )
       )
 
@@ -254,8 +254,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock,
-        declarationLanguage
+        unregulatedDonationsServiceMock
       )
 
       (claimsService
@@ -268,7 +267,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4",
+          declarationLanguage = "en"
         )
       )
 
@@ -312,8 +312,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock,
-        declarationLanguage
+        unregulatedDonationsServiceMock
       )
 
       (claimsService
@@ -346,7 +345,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "cy"
         )
       )
 
@@ -392,8 +392,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock,
-        declarationLanguage
+        unregulatedDonationsServiceMock
       )
 
       (chrisSubmissionServiceMock
@@ -415,7 +414,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "cy"
         )
       )
 
@@ -458,8 +458,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock,
-        declarationLanguage
+        unregulatedDonationsServiceMock
       )
 
       (claimsService
@@ -487,7 +486,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "cy"
         )
       )
 
@@ -533,8 +533,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         claimsService,
         chrisSubmissionServiceMock,
         chrisConnectorMock,
-        unregulatedDonationsServiceMock,
-        declarationLanguage
+        unregulatedDonationsServiceMock
       )
 
       (chrisSubmissionServiceMock
@@ -552,7 +551,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "cy"
         )
       )
 

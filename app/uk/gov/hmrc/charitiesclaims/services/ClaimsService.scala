@@ -18,6 +18,7 @@ package uk.gov.hmrc.charitiesclaims.services
 
 import com.google.inject.ImplementedBy
 import org.mongodb.scala.bson.BsonDocument
+import play.api.Logger
 import org.mongodb.scala.model.Projections.*
 import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
 import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
@@ -46,12 +47,16 @@ class ClaimsServiceImpl @Inject() (
   ExecutionContext
 ) extends ClaimsService {
 
+  private val logger = Logger(getClass)
+
   def putClaim(claim: Claim): Future[Unit] =
     repository.getWithCreatedAt(claim.claimId)(ClaimsRepository.claimDataKey).flatMap {
       case Some(existingClaim, _) if existingClaim == claim =>
+        logger.info(s"Skipping put for unchanged claim: claimId=${claim.claimId}")
         Future.successful(())
 
       case _ =>
+        logger.info(s"Saving claim: claimId=${claim.claimId}")
         repository
           .put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
           .map(_ => ())
@@ -61,6 +66,7 @@ class ClaimsServiceImpl @Inject() (
     repository.getWithCreatedAt(claimId)(ClaimsRepository.claimDataKey)
 
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit] =
+    logger.info(s"Deleting claim: claimId=$claimId")
     claimsValidationConnector
       .deleteClaim(claimId)
       .flatMap(_ => repository.deleteEntity(claimId))

@@ -18,7 +18,7 @@ package uk.gov.hmrc.charitiesclaims.connectors
 
 import com.google.inject.ImplementedBy
 import org.apache.pekko.actor.ActorSystem
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import uk.gov.hmrc.charitiesclaims.models.chris.GovTalkMessage
 import uk.gov.hmrc.charitiesclaims.xml.XmlWriter
 import uk.gov.hmrc.http.HttpReads.Implicits.*
@@ -55,6 +55,8 @@ class ChRISConnectorImpl @Inject() (
 ) extends ChRISConnector
     with Retries {
 
+  private val logger = Logger(getClass)
+
   val baseUrl: String = servicesConfig.getString("microservice.services.chris.baseUrl")
   val path: String    = servicesConfig.getString("microservice.services.chris.path")
 
@@ -75,6 +77,7 @@ class ChRISConnectorImpl @Inject() (
           case Right(_)     => Future.unit
       }
       .flatMap { _ =>
+        logger.info(s"Submitting claim to ChRIS at POST $baseUrl$path")
         retry(retryIntervals*)(shouldRetry, retryReason)(
           http
             .post(URL(s"$baseUrl$path"))
@@ -82,13 +85,17 @@ class ChRISConnectorImpl @Inject() (
             .execute[HttpResponse]
         ).flatMap(response =>
           if response.status == 200
-          then Future.successful(())
-          else
+          then {
+            logger.info(s"Successfully submitted claim to ChRIS")
+            Future.successful(())
+          } else {
+            logger.error(s"ChRIS submission failed: POST $baseUrl$path returned ${response.status}")
             Future.failed(
               Exception(
                 s"Request to POST $baseUrl$path failed because of $response ${response.body}"
               )
             )
+          }
         )
       }
 

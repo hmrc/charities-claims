@@ -1,4 +1,4 @@
-#!/usr/bin/env -S scala-cli shebang --quiet
+#!/usr/bin/env -S scala shebang --quiet
 
 //> using scala 3.7.4
 //> using toolkit 0.7.0 

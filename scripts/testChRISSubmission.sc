@@ -1,4 +1,4 @@
-#!/usr/bin/env -S scala shebang --quiet
+#!/usr/bin/env -S scala-cli shebang --quiet
 
 //> using scala 3.7.4
 //> using toolkit 0.7.0 
@@ -324,7 +324,8 @@ val updateClaimResponse: UpdateClaimResponse =
 
 submitClaim(ChRISSubmissionRequest(
   claimId = saveClaimResponse.claimId,
-  lastUpdatedReference = updateClaimResponse.lastUpdatedReference
+  lastUpdatedReference = updateClaimResponse.lastUpdatedReference,
+  declarationLanguage = "en"
 ))
 
 

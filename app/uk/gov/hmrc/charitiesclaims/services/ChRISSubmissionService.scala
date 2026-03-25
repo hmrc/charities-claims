@@ -177,7 +177,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     scheduleData: ScheduleData
   ): R68 =
     R68(
-      WelshSubmission = if declarationLanguage.eq("cy") then Some(true) else Some(false),
+      WelshSubmission = if declarationLanguage == "cy" then Some(true) else Some(false),
       AgtOrNom =
         if currentUser.isAgent
         then buildAgtOrNom(claim, orgName, currentUser.enrolmentIdentifierValue)

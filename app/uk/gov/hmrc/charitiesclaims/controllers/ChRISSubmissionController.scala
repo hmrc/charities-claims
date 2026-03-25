@@ -85,7 +85,7 @@ class ChRISSubmissionController @Inject() (
               } else {
                 logger.info(s"Submitting claim to ChRIS: claimId=${chrisSubmissionRequest.claimId}")
                 chrisSubmissionService
-                  .buildChRISSubmission(claim, currentUser)
+                  .buildChRISSubmission(claim, currentUser, chrisSubmissionRequest.declarationLanguage)
                   .flatMap { govTalkMessage =>
                     chrisConnector
                       .submitClaim(govTalkMessage)

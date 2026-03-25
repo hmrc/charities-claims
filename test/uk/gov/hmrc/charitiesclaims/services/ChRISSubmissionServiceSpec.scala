@@ -58,7 +58,8 @@ class ChRISSubmissionServiceSpec
     enrolmentIdentifierKey = "test-enrolment-identifier-key"
   )
 
-  val orgName: Option[String] = Some("test-session-id")
+  val orgName: Option[String]     = Some("test-session-id")
+  val declarationLanguage: String = "cy"
 
   val agentUser: models.CurrentUser = TestCurrentUser(
     affinityGroup = AffinityGroup.Agent,
@@ -98,7 +99,7 @@ class ChRISSubmissionServiceSpec
           Future.successful(orgName)
         )
 
-      val submission = service.buildChRISSubmission(claim, currentUser).futureValue
+      val submission = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
       submission.GovTalkDetails shouldBe GovTalkDetails(
         Keys = List(
@@ -149,7 +150,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
       val submissionOffId     = service.buildOffId(claim)
       val submissionOffName   = service.buildOffName(claim)
       val submissionRegulator = service.buildRegulator(claim)
@@ -227,7 +228,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -295,7 +296,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -368,7 +369,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68 = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
+      val submissionR68 = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
 
       submissionR68.AuthOfficial shouldBe Some(
         AuthOfficial(
@@ -432,7 +433,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -505,7 +506,7 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
       submissionR68.AuthOfficial shouldBe Some(
@@ -578,12 +579,14 @@ class ChRISSubmissionServiceSpec
         )
       )
 
-      val currentUser = organisationUser
+      val currentUser         = organisationUser
+      val declarationLanguage = "en"
 
-      val submissionR68       = service.buildR68(claim, currentUser, orgName, ScheduleData.empty)
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
-      submissionR68.AuthOfficial shouldBe Some(
+      submissionR68.WelshSubmission shouldBe Some(false)
+      submissionR68.AuthOfficial    shouldBe Some(
         AuthOfficial(
           Trustee = None,
           OffName = Some(
@@ -658,15 +661,16 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = agentUser
 
-      val submission = service.buildChRISSubmission(claim, currentUser).futureValue
+      val submission = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
-      val submissionR68       = service.buildR68(claim, currentUser, Some("Test-Agent-Name"), ScheduleData.empty)
+      val submissionR68       =
+        service.buildR68(claim, currentUser, Some("Test-Agent-Name"), declarationLanguage, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
       submission.Body.IRenvelope.R68 shouldBe submissionR68
-
-      submissionR68.AuthOfficial shouldBe None
-      submissionR68.AgtOrNom     shouldBe Some(
+      submissionR68.WelshSubmission  shouldBe Some(true)
+      submissionR68.AuthOfficial     shouldBe None
+      submissionR68.AgtOrNom         shouldBe Some(
         AgtOrNom(
           OrgName = "Test-Agent-Name",
           RefNo = "test-enrolment-identifier-value",
@@ -822,7 +826,7 @@ class ChRISSubmissionServiceSpec
           Future.successful(orgName)
         )
 
-      val result = service.buildChRISSubmission(claim, currentUser).futureValue
+      val result = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
       result.Body.IRenvelope.R68.Claim.GASDS.get.Charity shouldBe Some(
         List(Charity(Name = "Charity One", HMRCref = "X95442"))
@@ -910,7 +914,7 @@ class ChRISSubmissionServiceSpec
           Future.successful(orgName)
         )
 
-      val result = service.buildChRISSubmission(claim, currentUser).futureValue
+      val result = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
       val repayment = result.Body.IRenvelope.R68.Claim.Repayment
       repayment                    shouldBe defined
@@ -995,7 +999,7 @@ class ChRISSubmissionServiceSpec
           Future.successful(orgName)
         )
 
-      val result = service.buildChRISSubmission(claim, currentUser).futureValue
+      val result = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
       val repayment = result.Body.IRenvelope.R68.Claim.Repayment
       repayment                    shouldBe defined

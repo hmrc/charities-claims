@@ -33,6 +33,8 @@ import scala.util.Try
 
 trait Retries {
 
+  private val logger = Logger(getClass)
+
   protected def actorSystem: ActorSystem
 
   // 469 and 499 sometimes occurs on MDTP platform, so we retry on these status codes
@@ -53,17 +55,17 @@ trait Retries {
         .flatMap(result =>
           if remainingIntervals.nonEmpty && shouldRetry(Success(result)) then {
             val delay = remainingIntervals.head // safe to assume that the list is not empty
-            Logger(getClass).warn(s"Will retry in $delay due to ${retryReason(result)}")
+            logger.warn(s"Will retry in $delay due to ${retryReason(result)}")
             after(delay, actorSystem.scheduler)(loop(remainingIntervals.drop(1))(mdcData)(block))
           } else Future.successful(result)
         )
         .recoverWith { case e: Throwable =>
           if remainingIntervals.nonEmpty && shouldRetry(Failure(e)) then {
             val delay = remainingIntervals.head // safe to assume that the list is not empty
-            Logger(getClass).warn(s"Will retry in $delay due to ${e.getClass.getName()}: ${e.getMessage()}")
+            logger.warn(s"Will retry in $delay due to ${e.getClass.getName()}: ${e.getMessage()}")
             after(delay, actorSystem.scheduler)(loop(remainingIntervals.drop(1))(mdcData)(block))
           } else {
-            Logger(getClass).error(s"Limit of ${intervals.size} has been reached, still failing ...")
+            logger.error(s"Limit of ${intervals.size} retries has been reached, still failing", e)
             Future.failed(e)
           }
         }

@@ -50,74 +50,168 @@ class SchematronValidatorSpec extends BaseSpec {
 
   "SchematronValidator" - {
 
-    "validate" - {
+    "All rules - validate" - {
 
-      "should pass for a valid message" in {
+      "should pass all rules for a valid, default message" in {
         SchematronValidator.validate(validMessage) shouldBe Right(())
       }
     }
 
-    "validateClaimRule (7028, 7029)" - {
+    "Rule 1. AdjRule (7061) - validate" - {
 
-      "should pass when Repayment is present" in {
-        SchematronValidator.validateClaimRule(validMessage) shouldBe Nil
+      "should pass when GASDS Adj and OtherInfo both are present" in {
+        SchematronValidator.validateAdjRule(validMessage) shouldBe Nil
       }
 
-      "should pass when only GASDS is present" in {
+      "should pass when GASDS Adj and OtherInfo both aren't present" in {
+        SchematronValidator.validateAdjRule(validMessage) shouldBe Nil
+      }
+
+      "should pass when GASDS Adj isn't present but OtherInfo is present" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            GASDS = None,
+            OtherInfo = Some("Adjustment details")
+          )
+        }
+        SchematronValidator.validateAdjRule(msg) shouldBe Nil
+      }
+
+      "should fail when GASDS Adj is present but OtherInfo isn't present" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            GASDS = Some(GASDS(ConnectedCharities = false, Adj = Some("100"))),
+            OtherInfo = None
+          )
+        }
+        SchematronValidator.validateAdjRule(msg) should contain(ValidationError.AdjRule)
+      }
+    }
+
+    "Rule 2. AdjustmentRule (7059) - validate" - {
+
+      "should pass when Repayment Adjustment and OtherInfo both are present" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            Repayment = c.Repayment.map(_.copy(Adjustment = Some(BigDecimal(100)))),
+            OtherInfo = Some("Some Other Info")
+          )
+        }
+        SchematronValidator.validateAdjustmentRule(msg) shouldBe Nil
+      }
+
+      "should pass when Repayment Adjustment and OtherInfo both aren't present" in {
         val msg = withClaim(validMessage) { c =>
           c.copy(
             Repayment = None,
-            GASDS = Some(
-              GASDS(ConnectedCharities = false, Adj = None)
-            )
+            OtherInfo = None
           )
         }
-        SchematronValidator.validateClaimRule(msg) shouldBe Nil
+        SchematronValidator.validateAdjustmentRule(msg) shouldBe Nil
       }
 
-      "should fail 7028 when neither Repayment nor GASDS is present" in {
-        val msg = withClaim(validMessage)(_.copy(Repayment = None, GASDS = None))
-        SchematronValidator.validateClaimRule(msg) should contain(ValidationError.ClaimRule7028)
+      "should pass when Repayment Adjustment isn't present and OtherInfo is present" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            Repayment = None,
+            OtherInfo = Some("Some Other Info")
+          )
+        }
+        SchematronValidator.validateAdjustmentRule(msg) shouldBe Nil
       }
 
-      "should fail 7029 when HMRCref not CH/CF and no Regulator" in {
-        val msg = withClaim(validMessage)(_.copy(Regulator = None))
-        SchematronValidator.validateClaimRule(msg) should contain(ValidationError.ClaimRule7029)
-      }
-
-      "should pass 7029 when HMRCref starts with CH" in {
-        val msg = withClaim(validMessage)(_.copy(HMRCref = "CH1234", Regulator = None))
-        SchematronValidator.validateClaimRule(msg) should not contain ValidationError.ClaimRule7029
-      }
-
-      "should pass 7029 when Regulator is present" in {
-        SchematronValidator.validateClaimRule(validMessage) should not contain ValidationError.ClaimRule7029
+      "should fail when Repayment Adjustment is present and OtherInfo isn't present" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            Repayment = c.Repayment.map(_.copy(Adjustment = Some(BigDecimal(100)))),
+            OtherInfo = None
+          )
+        }
+        SchematronValidator.validateAdjustmentRule(msg) should contain(ValidationError.AdjustmentRule)
       }
     }
 
-    "validateAuthOfficialRule (7026)" - {
+    // Rule 3. AgentNoRule (7025) is not required hence not implemented
 
-      "should pass when AuthOfficial is present" in {
-        SchematronValidator.validateAuthOfficialRule(validMessage) shouldBe Nil
-      }
+    "Rule 4. AggDonationRule (7038) - validate" - {
 
-      "should pass when AgtOrNom is present" in {
-        val msg = withR68(validMessage)(r =>
-          r.copy(
-            AuthOfficial = None,
-            AgtOrNom = Some(AgtOrNom(OrgName = "TestOrg", RefNo = "REF1", Phone = "07777777777"))
+      "should pass when AggDonation present and total < 1000" in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(List(GAD(AggDonation = Some("AggDonation"), Date = "2025-01-01", Total = "999.99"))),
+              EarliestGAdate = Some("2025-01-01")
+            )
           )
         )
-        SchematronValidator.validateAuthOfficialRule(msg) shouldBe Nil
+        SchematronValidator.validateAggDonationRule(msg) shouldBe Nil
       }
 
-      "should fail when neither AuthOfficial nor AgtOrNom is present" in {
-        val msg = withR68(validMessage)(_.copy(AuthOfficial = None, AgtOrNom = None))
-        SchematronValidator.validateAuthOfficialRule(msg) should contain(ValidationError.AuthOfficialRule)
+      "should pass when AggDonation present and total = 1000 in  GAD from List " in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(
+                List(
+                  GAD(AggDonation = Some("AggDonation1"), Date = "2025-01-01", Total = "1000.00"),
+                  GAD(AggDonation = Some("AggDonation2"), Date = "2025-01-01", Total = "1000.00")
+                )
+              ),
+              EarliestGAdate = Some("2025-01-01")
+            )
+          )
+        )
+        SchematronValidator.validateAggDonationRule(msg) shouldBe Nil
+      }
+
+      "should pass when AggDonation not present and total > 1000" in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(List(GAD(Date = "2025-01-01", Total = "1001.00"))),
+              EarliestGAdate = Some("2025-01-01")
+            )
+          )
+        )
+        SchematronValidator.validateAggDonationRule(msg) shouldBe Nil
+      }
+
+      "should fail when AggDonation present and total > 1000 in 1st GAD from List" in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(
+                List(
+                  GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "1000.01"),
+                  GAD(AggDonation = Some("4"), Date = "2025-01-01", Total = "999.99")
+                )
+              ),
+              EarliestGAdate = Some("2025-01-01")
+            )
+          )
+        )
+        SchematronValidator.validateAggDonationRule(msg) should contain(ValidationError.AggDonationRule)
+      }
+
+      "should fail when AggDonation present and total > 1000 in 2nd GAD from List" in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(
+                List(
+                  GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "999.99"),
+                  GAD(AggDonation = Some("4"), Date = "2025-01-01", Total = "1000.01")
+                )
+              ),
+              EarliestGAdate = Some("2025-01-01")
+            )
+          )
+        )
+        SchematronValidator.validateAggDonationRule(msg) should contain(ValidationError.AggDonationRule)
       }
     }
 
-    "validateAgtOrNomRule (7027)" - {
+    "Rule 5. AgtOrNomRule (7027) - validate" - {
 
       "should pass when AgtOrNom is not present" in {
         SchematronValidator.validateAgtOrNomRule(validMessage) shouldBe Nil
@@ -138,353 +232,129 @@ class SchematronValidatorSpec extends BaseSpec {
       }
     }
 
-    "validateDateRule (7040)" - {
+    "Rule 6. AuthOfficialRule (7026)" - {
 
-      "should pass when all GAD dates are in the past" in {
-        SchematronValidator.validateDateRule(validMessage) shouldBe Nil
+      "should pass when AuthOfficial is not present" in {
+        SchematronValidator.validateAuthOfficialRule(validMessage) shouldBe Nil
       }
 
-      "should pass when GAD date is today" in {
-        val todayStr         = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-        val msg              = withRepayment(validMessage)(_ =>
-          Some(
-            Repayment(
-              GAD = Some(List(GAD(Date = todayStr, Total = "100.00"))),
-              EarliestGAdate = Some(todayStr)
+      "should pass when AuthOfficial has both OffName and Trustee" in {
+        val msg = withR68(validMessage)(r =>
+          r.copy(
+            AuthOfficial = Some(
+              AuthOfficial(
+                Trustee = Some("Joe Bloggs"),
+                OffName = Some(
+                  OffName(
+                    Ttl = Some("SomeTtl"),
+                    Fore = Some("SomeFore"),
+                    Sur = Some("SomeSur")
+                  )
+                )
+              )
             )
           )
         )
-        val msgWithTimestamp = msg.copy(Header =
-          msg.Header.copy(MessageDetails =
-            msg.Header.MessageDetails.copy(GatewayTimestamp = s"${todayStr}T12:00:00.000")
-          )
-        )
-        SchematronValidator.validateDateRule(msgWithTimestamp) shouldBe Nil
+        SchematronValidator.validateAuthOfficialRule(msg) shouldBe Nil
       }
 
-      "should fail when any GAD date is in the future" in {
-        val futureDate       = LocalDate.now().plusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
-        val todayStr         = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-        val msg              = withRepayment(validMessage)(_ =>
-          Some(
-            Repayment(
-              GAD = Some(List(GAD(Date = futureDate, Total = "100.00"))),
-              EarliestGAdate = Some(todayStr)
+      "should pass when AuthOfficial has OffName" in {
+        val msg = withR68(validMessage)(r =>
+          r.copy(
+            AuthOfficial = Some(
+              AuthOfficial(
+                OffName = Some(
+                  OffName(
+                    Ttl = Some("SomeTtl"),
+                    Fore = Some("SomeFore"),
+                    Sur = Some("SomeSur")
+                  )
+                )
+              )
             )
           )
         )
-        val msgWithTimestamp = msg.copy(Header =
-          msg.Header.copy(MessageDetails =
-            msg.Header.MessageDetails.copy(GatewayTimestamp = s"${todayStr}T12:00:00.000")
+        SchematronValidator.validateAuthOfficialRule(msg) shouldBe Nil
+      }
+
+      "should pass when AuthOfficial has Trustee" in {
+        val msg = withR68(validMessage)(r =>
+          r.copy(
+            AuthOfficial = Some(
+              AuthOfficial(
+                Trustee = Some("Joe Bloggs")
+              )
+            )
           )
         )
-        SchematronValidator.validateDateRule(msgWithTimestamp) should contain(ValidationError.DateRule)
+        SchematronValidator.validateAuthOfficialRule(msg) shouldBe Nil
       }
 
-      "should pass when no Repayment" in {
-        val msg = withClaim(validMessage)(_.copy(Repayment = None))
-        SchematronValidator.validateDateRule(msg) shouldBe Nil
-      }
-
-      "should pass when no GAD" in {
-        val msg = withRepayment(validMessage)(_.map(_.copy(GAD = None)))
-        SchematronValidator.validateDateRule(msg) shouldBe Nil
-      }
-
-      "should fail when GatewayTimestamp is unparseable" in {
-        val msg = validMessage.copy(Header =
-          validMessage.Header.copy(MessageDetails =
-            validMessage.Header.MessageDetails.copy(GatewayTimestamp = "not-a-date")
-          )
-        )
-        SchematronValidator.validateDateRule(msg) should contain(ValidationError.GatewayTimestampRule)
+      "should fail when AuthOfficial has nighter OffName nor Trustee" in {
+        val msg = withR68(validMessage)(_.copy(AuthOfficial = Some(AuthOfficial())))
+        SchematronValidator.validateAuthOfficialRule(msg) should contain(ValidationError.AuthOfficialRule)
       }
     }
 
-    "validateOIDateRule (7042)" - {
+    "Rule 7. ClaimRule (7028, 7029)" - {
 
-      "should pass when all OtherInc dates are in the past" in {
-        val pastDate = LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
-        val msg      = withRepayment(validMessage)(
-          _.map(r => r.copy(OtherInc = Some(List(OtherInc(Payer = "Test", OIDate = pastDate, Gross = 100, Tax = 20)))))
-        )
-        SchematronValidator.validateOIDateRule(msg) shouldBe Nil
-      }
-
-      "should fail when any OtherInc date is in the future" in {
-        val futureDate = LocalDate.now().plusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
-        val msg        = withRepayment(validMessage)(
-          _.map(r =>
-            r.copy(OtherInc = Some(List(OtherInc(Payer = "Test", OIDate = futureDate, Gross = 100, Tax = 20))))
-          )
-        )
-        SchematronValidator.validateOIDateRule(msg) should contain(ValidationError.OIDateRule)
-      }
-
-      "should pass when no OtherInc" in {
-        SchematronValidator.validateOIDateRule(validMessage) shouldBe Nil
-      }
-    }
-
-    "validateKeyRule (5005)" - {
-
-      "should pass when keys match" in {
-        SchematronValidator.validateKeyRule(validMessage) shouldBe Nil
-      }
-
-      "should fail when CHARID keys do not match" in {
-        val msg = validMessage.copy(GovTalkDetails =
-          validMessage.GovTalkDetails.copy(Keys =
-            List(
-              Key(Type = "CredentialID", Value = "authorityOrg1"),
-              Key(Type = "CHARID", Value = "DIFFERENT"),
-              Key(Type = "SessionID", Value = "session-123")
-            )
-          )
-        )
-        SchematronValidator.validateKeyRule(msg) should contain(ValidationError.KeyRule)
-      }
-    }
-
-    "validateAggDonationRule (7038)" - {
-
-      "should pass when no AggDonation" in {
-        SchematronValidator.validateAggDonationRule(validMessage) shouldBe Nil
-      }
-
-      "should pass when AggDonation present and total <= 1000" in {
-        val msg = withRepayment(validMessage)(_ =>
-          Some(
-            Repayment(
-              GAD = Some(List(GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "999.99"))),
-              EarliestGAdate = Some("2025-01-01")
-            )
-          )
-        )
-        SchematronValidator.validateAggDonationRule(msg) shouldBe Nil
-      }
-
-      "should fail when AggDonation present and total > 1000" in {
-        val msg = withRepayment(validMessage)(_ =>
-          Some(
-            Repayment(
-              GAD = Some(List(GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "1000.01"))),
-              EarliestGAdate = Some("2025-01-01")
-            )
-          )
-        )
-        SchematronValidator.validateAggDonationRule(msg) should contain(ValidationError.AggDonationRule)
-      }
-    }
-
-    "validateSponsoredRule (7039)" - {
-
-      "should pass when no AggDonation" in {
-        SchematronValidator.validateSponsoredRule(validMessage) shouldBe Nil
-      }
-
-      "should pass when AggDonation exists without Sponsored" in {
-        val msg = withRepayment(validMessage)(_ =>
-          Some(
-            Repayment(
-              GAD = Some(List(GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "500.00"))),
-              EarliestGAdate = Some("2025-01-01")
-            )
-          )
-        )
-        SchematronValidator.validateSponsoredRule(msg) shouldBe Nil
-      }
-
-      "should fail when AggDonation and Sponsored both present" in {
-        val msg = withRepayment(validMessage)(_ =>
-          Some(
-            Repayment(
-              GAD =
-                Some(List(GAD(AggDonation = Some("3"), Sponsored = Some(true), Date = "2025-01-01", Total = "500.00"))),
-              EarliestGAdate = Some("2025-01-01")
-            )
-          )
-        )
-        SchematronValidator.validateSponsoredRule(msg) should contain(ValidationError.SponsoredRule)
-      }
-    }
-
-    "validateRepaymentRule (7034-7037)" - {
-
-      "should pass when no Repayment" in {
-        val msg = withClaim(validMessage)(_.copy(Repayment = None))
-        SchematronValidator.validateRepaymentRule(msg) shouldBe Nil
-      }
-
-      "should pass for valid repayment with GAD" in {
-        SchematronValidator.validateRepaymentRule(validMessage) shouldBe Nil
-      }
-
-      "should fail 7034 when GAD exists but EarliestGAdate is empty" in {
-        val msg = withRepayment(validMessage)(_ =>
-          Some(
-            Repayment(
-              GAD = Some(List(GAD(Date = "2025-01-01", Total = "100.00"))),
-              EarliestGAdate = None
-            )
-          )
-        )
-        SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7034)
-      }
-
-      "should fail 7035 when Repayment has neither GAD nor OtherInc" in {
-        val msg =
-          withRepayment(validMessage)(_ =>
-            Some(Repayment(GAD = None, OtherInc = None, EarliestGAdate = Some("2025-01-01")))
-          )
-        SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7035)
-      }
-
-      "should fail 7036 when GAD count exceeds 500000" in {
-        val bigGadList = List.fill(500001)(GAD(Date = "2025-01-01", Total = "10.00"))
-        val msg        =
-          withRepayment(validMessage)(_ => Some(Repayment(GAD = Some(bigGadList), EarliestGAdate = Some("2025-01-01"))))
-        SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7036)
-      }
-
-      "should fail 7037 when OtherInc count exceeds 2000" in {
-        val bigOtherIncList = List.fill(2001)(OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 20))
-        val msg             = withRepayment(validMessage)(_.map(_.copy(OtherInc = Some(bigOtherIncList))))
-        SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7037)
-      }
-    }
-
-    "validateTaxRule (7043)" - {
-
-      "should pass when Tax < Gross" in {
-        val msg = withRepayment(validMessage)(
-          _.map(r =>
-            r.copy(OtherInc = Some(List(OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 20))))
-          )
-        )
-        SchematronValidator.validateTaxRule(msg) shouldBe Nil
-      }
-
-      "should fail when Tax >= Gross" in {
-        val msg = withRepayment(validMessage)(
-          _.map(r =>
-            r.copy(OtherInc = Some(List(OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 100))))
-          )
-        )
-        SchematronValidator.validateTaxRule(msg) should contain(ValidationError.TaxRule)
-      }
-
-      "should fail when Tax > Gross" in {
-        val msg = withRepayment(validMessage)(
-          _.map(r =>
-            r.copy(OtherInc = Some(List(OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 150))))
-          )
-        )
-        SchematronValidator.validateTaxRule(msg) should contain(ValidationError.TaxRule)
-      }
-
-      "should pass when no OtherInc" in {
-        SchematronValidator.validateTaxRule(validMessage) shouldBe Nil
-      }
-    }
-
-    "validateAdjustmentRule (7059)" - {
-
-      "should pass when no Adjustment" in {
-        SchematronValidator.validateAdjustmentRule(validMessage) shouldBe Nil
-      }
-
-      "should pass when Adjustment present with OtherInfo" in {
-        val msg = withRepayment(validMessage)(_.map(_.copy(Adjustment = Some(BigDecimal(100)))))
-        SchematronValidator.validateAdjustmentRule(msg) shouldBe Nil
-      }
-
-      "should fail when Adjustment present without OtherInfo" in {
+      "should pass when Repayment and GASDS both are present" in {
         val msg = withClaim(validMessage) { c =>
           c.copy(
-            Repayment = c.Repayment.map(_.copy(Adjustment = Some(BigDecimal(100)))),
-            OtherInfo = None
-          )
-        }
-        SchematronValidator.validateAdjustmentRule(msg) should contain(ValidationError.AdjustmentRule)
-      }
-    }
-
-    "validateAdjRule (7061)" - {
-
-      "should pass when no GASDS" in {
-        SchematronValidator.validateAdjRule(validMessage) shouldBe Nil
-      }
-
-      "should pass when GASDS Adj present with OtherInfo" in {
-        val msg = withClaim(validMessage) { c =>
-          c.copy(
-            GASDS = Some(GASDS(ConnectedCharities = false, Adj = Some("100"))),
-            OtherInfo = Some("Adjustment details")
-          )
-        }
-        SchematronValidator.validateAdjRule(msg) shouldBe Nil
-      }
-
-      "should fail when GASDS Adj present without OtherInfo" in {
-        val msg = withClaim(validMessage) { c =>
-          c.copy(
-            GASDS = Some(GASDS(ConnectedCharities = false, Adj = Some("100"))),
-            OtherInfo = None
-          )
-        }
-        SchematronValidator.validateAdjRule(msg) should contain(ValidationError.AdjRule)
-      }
-    }
-
-    "validateConnectedCharitiesRule (7047, 7048)" - {
-
-      "should pass when no GASDS" in {
-        SchematronValidator.validateConnectedCharitiesRule(validMessage) shouldBe Nil
-      }
-
-      "should pass when indicator=yes and charities present" in {
-        val msg = withGasds(validMessage)(_ =>
-          Some(
-            GASDS(
-              ConnectedCharities = true,
-              Charity = Some(List(Charity(Name = "Test", HMRCref = "XR1234"))),
-              Adj = None
+            GASDS = Some(
+              GASDS(ConnectedCharities = false, Adj = None)
             )
           )
-        )
-        SchematronValidator.validateConnectedCharitiesRule(msg) shouldBe Nil
+        }
+        SchematronValidator.validateClaimRule(msg) shouldBe Nil
       }
 
-      "should fail 7047 when indicator=yes but no charities" in {
-        val msg = withGasds(validMessage)(_ => Some(GASDS(ConnectedCharities = true, Charity = None, Adj = None)))
-        SchematronValidator.validateConnectedCharitiesRule(msg) should contain(
-          ValidationError.ConnectedCharitiesRule7047
-        )
+      "should pass when only Repayment is present" in {
+        SchematronValidator.validateClaimRule(validMessage) shouldBe Nil
       }
 
-      "should pass when indicator=no and no charities" in {
-        val msg = withGasds(validMessage)(_ => Some(GASDS(ConnectedCharities = false, Charity = None, Adj = None)))
-        SchematronValidator.validateConnectedCharitiesRule(msg) shouldBe Nil
-      }
-
-      "should fail 7048 when indicator=no but charities present" in {
-        val msg = withGasds(validMessage)(_ =>
-          Some(
-            GASDS(
-              ConnectedCharities = false,
-              Charity = Some(List(Charity(Name = "Test", HMRCref = "XR1234"))),
-              Adj = None
+      "should pass when only GASDS is present" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            Repayment = None,
+            GASDS = Some(
+              GASDS(ConnectedCharities = false, Adj = None)
             )
           )
-        )
-        SchematronValidator.validateConnectedCharitiesRule(msg) should contain(
-          ValidationError.ConnectedCharitiesRule7048
-        )
+        }
+        SchematronValidator.validateClaimRule(msg) shouldBe Nil
+      }
+
+      "should fail 7028 when neither Repayment nor GASDS is present" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            Repayment = None
+          )
+        }
+        SchematronValidator.validateClaimRule(msg) should contain(ValidationError.ClaimRule7028)
+      }
+
+      "should pass 7029 when HMRCref starts with CH" in {
+        val msg = withClaim(validMessage)(_.copy(HMRCref = "CH1234", Regulator = None))
+        SchematronValidator.validateClaimRule(msg) should not contain ValidationError.ClaimRule7029
+      }
+
+      "should pass 7029 when HMRCref starts with CF" in {
+        val msg = withClaim(validMessage)(_.copy(HMRCref = "CF1234", Regulator = None))
+        SchematronValidator.validateClaimRule(msg) should not contain ValidationError.ClaimRule7029
+      }
+
+      "should pass 7029 when HMRCref not start with CH or CF and Regulator is present" in {
+        SchematronValidator.validateClaimRule(validMessage) should not contain ValidationError.ClaimRule7029
+      }
+
+      "should fail 7029 when HMRCref not start with CH or CF and Regulator is not present" in {
+        val msg = withClaim(validMessage)(_.copy(Regulator = None))
+        SchematronValidator.validateClaimRule(msg) should contain(ValidationError.ClaimRule7029)
       }
     }
 
-    "validateCommBldgsRule (7052, 7053, 7060)" - {
+    "Rule 8. CommBldgsRule (7052, 7053, 7060)" - {
 
       "should pass when no GASDS" in {
         SchematronValidator.validateCommBldgsRule(validMessage) shouldBe Nil
@@ -564,6 +434,83 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateCommBldgsRule(msg) should contain(ValidationError.CommBldgsRule7053)
       }
 
+      "should pass 7060 when HMRCref starts with CH and indicator=no" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            HMRCref = "CH1234",
+            GASDS = Some(
+              GASDS(
+                ConnectedCharities = false,
+                CommBldgs = Some(false),
+                Building = Some(
+                  List(
+                    Building(
+                      BldgName = "Hall",
+                      Address = "1 Main St",
+                      Postcode = "AB1 2CD",
+                      BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
+                    )
+                  )
+                ),
+                Adj = None
+              )
+            )
+          )
+        }
+        SchematronValidator.validateCommBldgsRule(msg) should not contain ValidationError.CommBldgsRule7060
+      }
+
+      "should pass 7060 when HMRCref starts with CF and indicator=no" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            HMRCref = "CH1234",
+            GASDS = Some(
+              GASDS(
+                ConnectedCharities = false,
+                CommBldgs = Some(false),
+                Building = Some(
+                  List(
+                    Building(
+                      BldgName = "Hall",
+                      Address = "1 Main St",
+                      Postcode = "AB1 2CD",
+                      BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
+                    )
+                  )
+                ),
+                Adj = None
+              )
+            )
+          )
+        }
+        SchematronValidator.validateCommBldgsRule(msg) should not contain ValidationError.CommBldgsRule7060
+      }
+
+      "should pass 7060 when HMRCref not starts with CH or CF and indicator=yes" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            GASDS = Some(
+              GASDS(
+                ConnectedCharities = false,
+                CommBldgs = Some(true),
+                Building = Some(
+                  List(
+                    Building(
+                      BldgName = "Hall",
+                      Address = "1 Main St",
+                      Postcode = "AB1 2CD",
+                      BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
+                    )
+                  )
+                ),
+                Adj = None
+              )
+            )
+          )
+        }
+        SchematronValidator.validateCommBldgsRule(msg) should not contain ValidationError.CommBldgsRule7060
+      }
+
       "should fail 7060 when HMRCref starts with CH and indicator=yes" in {
         val msg = withClaim(validMessage) { c =>
           c.copy(
@@ -589,9 +536,145 @@ class SchematronValidatorSpec extends BaseSpec {
         }
         SchematronValidator.validateCommBldgsRule(msg) should contain(ValidationError.CommBldgsRule7060)
       }
+
+      "should fail 7060 when HMRCref starts with CF and indicator=yes" in {
+        val msg = withClaim(validMessage) { c =>
+          c.copy(
+            HMRCref = "CF1234",
+            GASDS = Some(
+              GASDS(
+                ConnectedCharities = false,
+                CommBldgs = Some(true),
+                Building = Some(
+                  List(
+                    Building(
+                      BldgName = "Hall",
+                      Address = "1 Main St",
+                      Postcode = "AB1 2CD",
+                      BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
+                    )
+                  )
+                ),
+                Adj = None
+              )
+            )
+          )
+        }
+        SchematronValidator.validateCommBldgsRule(msg) should contain(ValidationError.CommBldgsRule7060)
+      }
     }
 
-    "validateGASDSRule (7045, 7046)" - {
+    "Rule 9. ConnectedCharitiesRule (7047, 7048)" - {
+
+      "should pass when no GASDS" in {
+        SchematronValidator.validateConnectedCharitiesRule(validMessage) shouldBe Nil
+      }
+
+      "should pass when indicator=yes and charities present" in {
+        val msg = withGasds(validMessage)(_ =>
+          Some(
+            GASDS(
+              ConnectedCharities = true,
+              Charity = Some(List(Charity(Name = "Test", HMRCref = "XR1234"))),
+              Adj = None
+            )
+          )
+        )
+        SchematronValidator.validateConnectedCharitiesRule(msg) shouldBe Nil
+      }
+
+      "should fail 7047 when indicator=yes but no charities" in {
+        val msg = withGasds(validMessage)(_ => Some(GASDS(ConnectedCharities = true, Charity = None, Adj = None)))
+        SchematronValidator.validateConnectedCharitiesRule(msg) should contain(
+          ValidationError.ConnectedCharitiesRule7047
+        )
+      }
+
+      "should pass when indicator=no and no charities" in {
+        val msg = withGasds(validMessage)(_ => Some(GASDS(ConnectedCharities = false, Charity = None, Adj = None)))
+        SchematronValidator.validateConnectedCharitiesRule(msg) shouldBe Nil
+      }
+
+      "should fail 7048 when indicator=no but charities present" in {
+        val msg = withGasds(validMessage)(_ =>
+          Some(
+            GASDS(
+              ConnectedCharities = false,
+              Charity = Some(List(Charity(Name = "Test", HMRCref = "XR1234"))),
+              Adj = None
+            )
+          )
+        )
+        SchematronValidator.validateConnectedCharitiesRule(msg) should contain(
+          ValidationError.ConnectedCharitiesRule7048
+        )
+      }
+    }
+
+    "Rule 10. DateRule (7040)" - {
+
+      "should pass when all GAD dates are in the past" in {
+        SchematronValidator.validateDateRule(validMessage) shouldBe Nil
+      }
+
+      "should pass when GAD date is today" in {
+        val todayStr         = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+        val msg              = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(List(GAD(Date = todayStr, Total = "100.00"))),
+              EarliestGAdate = Some(todayStr)
+            )
+          )
+        )
+        val msgWithTimestamp = msg.copy(Header =
+          msg.Header.copy(MessageDetails =
+            msg.Header.MessageDetails.copy(GatewayTimestamp = s"${todayStr}T12:00:00.000")
+          )
+        )
+        SchematronValidator.validateDateRule(msgWithTimestamp) shouldBe Nil
+      }
+
+      "should fail when any GAD date is in the future" in {
+        val futureDate       = LocalDate.now().plusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
+        val todayStr         = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+        val msg              = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(List(GAD(Date = futureDate, Total = "100.00"))),
+              EarliestGAdate = Some(todayStr)
+            )
+          )
+        )
+        val msgWithTimestamp = msg.copy(Header =
+          msg.Header.copy(MessageDetails =
+            msg.Header.MessageDetails.copy(GatewayTimestamp = s"${todayStr}T12:00:00.000")
+          )
+        )
+        SchematronValidator.validateDateRule(msgWithTimestamp) should contain(ValidationError.DateRule)
+      }
+
+      "should pass when no Repayment" in {
+        val msg = withClaim(validMessage)(_.copy(Repayment = None))
+        SchematronValidator.validateDateRule(msg) shouldBe Nil
+      }
+
+      "should pass when no GAD" in {
+        val msg = withRepayment(validMessage)(_.map(_.copy(GAD = None)))
+        SchematronValidator.validateDateRule(msg) shouldBe Nil
+      }
+
+      "should fail when GatewayTimestamp is unparseable" in {
+        val msg = validMessage.copy(Header =
+          validMessage.Header.copy(MessageDetails =
+            validMessage.Header.MessageDetails.copy(GatewayTimestamp = "not-a-date")
+          )
+        )
+        SchematronValidator.validateDateRule(msg) should contain(ValidationError.GatewayTimestampRule)
+      }
+    }
+
+    "Rule 11. GASDSRule (7045, 7046)" - {
 
       "should pass when no GASDS" in {
         SchematronValidator.validateGASDSRule(validMessage) shouldBe Nil
@@ -607,6 +690,15 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateGASDSRule(msg) shouldBe Nil
       }
 
+      "should pass when charity is None" in {
+        val msg = withGasds(validMessage)(_ =>
+          Some(
+            GASDS(ConnectedCharities = true, Charity = None, Adj = None)
+          )
+        )
+        SchematronValidator.validateGASDSRule(msg) shouldBe Nil
+      }
+
       "should fail 7045 when charity count > 1000" in {
         val charities = List.fill(1001)(Charity(Name = "Test", HMRCref = "XR1234"))
         val msg       = withGasds(validMessage)(_ =>
@@ -615,6 +707,42 @@ class SchematronValidatorSpec extends BaseSpec {
           )
         )
         SchematronValidator.validateGASDSRule(msg) should contain(ValidationError.GASDSRule7045)
+      }
+
+      "should pass when buildings count <= 1000" in {
+        val buildings = List.fill(1000)(
+          Building(
+            BldgName = "Hall",
+            Address = "1 Main St",
+            Postcode = "AB1 2CD",
+            BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
+          )
+        )
+        val msg       = withGasds(validMessage)(_ =>
+          Some(
+            GASDS(
+              ConnectedCharities = false,
+              CommBldgs = Some(true),
+              Building = Some(buildings),
+              Adj = None
+            )
+          )
+        )
+        SchematronValidator.validateGASDSRule(msg) shouldBe Nil
+      }
+
+      "should pass when buildings is None" in {
+        val msg = withGasds(validMessage)(_ =>
+          Some(
+            GASDS(
+              ConnectedCharities = false,
+              CommBldgs = Some(true),
+              Building = None,
+              Adj = None
+            )
+          )
+        )
+        SchematronValidator.validateGASDSRule(msg) shouldBe Nil
       }
 
       "should fail 7046 when building count > 1000" in {
@@ -640,7 +768,122 @@ class SchematronValidatorSpec extends BaseSpec {
       }
     }
 
-    "validateRegulatorRule (7031, 7033)" - {
+    "Rule 12. HMRCrefRule (7030)" - {
+
+      "should pass when keys match" in {
+        SchematronValidator.validateHMRCrefRule(validMessage) shouldBe Nil
+      }
+
+      "should fail when CHARID key do not match" in {
+        val msg = validMessage.copy(
+          Body = validMessage.Body.copy(
+            IRenvelope = validMessage.Body.IRenvelope.copy(
+              IRheader = validMessage.Body.IRenvelope.IRheader.copy(
+                Keys = List(
+                  Key(Type = "CredentialID", Value = "authorityOrg1"),
+                  Key(Type = "CHARID", Value = "DIFFERENT"),
+                  Key(Type = "SessionID", Value = "session-123")
+                )
+              )
+            )
+          )
+        )
+        SchematronValidator.validateHMRCrefRule(msg) should contain(ValidationError.HMRCrefRule)
+      }
+
+      "should fail when CHARID key do not exist" in {
+        val msg = validMessage.copy(
+          Body = validMessage.Body.copy(
+            IRenvelope = validMessage.Body.IRenvelope.copy(
+              IRheader = validMessage.Body.IRenvelope.IRheader.copy(
+                Keys = List(
+                  Key(Type = "CredentialID", Value = "authorityOrg1"),
+                  Key(Type = "SessionID", Value = "session-123")
+                )
+              )
+            )
+          )
+        )
+        SchematronValidator.validateHMRCrefRule(msg) should contain(ValidationError.HMRCrefRule)
+      }
+
+    }
+
+    "Rule 14. KeyRule (5005)" - {
+
+      "should pass when keys match" in {
+        SchematronValidator.validateKeyRule(validMessage) shouldBe Nil
+      }
+
+      "should fail when CHARID key do not match" in {
+        val msg = validMessage.copy(GovTalkDetails =
+          validMessage.GovTalkDetails.copy(Keys =
+            List(
+              Key(Type = "CredentialID", Value = "authorityOrg1"),
+              Key(Type = "CHARID", Value = "DIFFERENT"),
+              Key(Type = "SessionID", Value = "session-123")
+            )
+          )
+        )
+        SchematronValidator.validateKeyRule(msg) should contain(ValidationError.KeyRule)
+      }
+
+      "should fail when CHARID key do not exist" in {
+        val msg = validMessage.copy(GovTalkDetails =
+          validMessage.GovTalkDetails.copy(Keys =
+            List(
+              Key(Type = "CredentialID", Value = "authorityOrg1"),
+              Key(Type = "SessionID", Value = "session-123")
+            )
+          )
+        )
+        SchematronValidator.validateKeyRule(msg) should contain(ValidationError.KeyRule)
+      }
+    }
+
+    "Rule 15. OIDateRule (7042)" - {
+
+      "should pass when all OtherInc dates are in the past" in {
+        val todayStr         = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+        val pastDate         = LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
+        val msg              = withRepayment(validMessage)(
+          _.map(r => r.copy(OtherInc = Some(List(OtherInc(Payer = "Test", OIDate = pastDate, Gross = 100, Tax = 20)))))
+        )
+        val msgWithTimestamp = msg.copy(Header =
+          msg.Header.copy(MessageDetails =
+            msg.Header.MessageDetails.copy(GatewayTimestamp = s"${todayStr}T12:00:00.000")
+          )
+        )
+        SchematronValidator.validateOIDateRule(msgWithTimestamp) shouldBe Nil
+      }
+
+      "should fail when any OtherInc date is in the future" in {
+        val futureDate = LocalDate.now().plusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
+        val msg        = withRepayment(validMessage)(
+          _.map(r =>
+            r.copy(OtherInc = Some(List(OtherInc(Payer = "Test", OIDate = futureDate, Gross = 100, Tax = 20))))
+          )
+        )
+        SchematronValidator.validateOIDateRule(msg) should contain(ValidationError.OIDateRule)
+      }
+
+      "should pass when no OtherInc" in {
+        SchematronValidator.validateOIDateRule(validMessage) shouldBe Nil
+      }
+
+      "should fail when GatewayTimestamp is unparseable" in {
+
+        val msg = validMessage.copy(Header =
+          validMessage.Header.copy(MessageDetails =
+            validMessage.Header.MessageDetails.copy(GatewayTimestamp = "not-a-date")
+          )
+        )
+
+        SchematronValidator.validateOIDateRule(msg) should contain(ValidationError.GatewayTimestampRule)
+      }
+    }
+
+    "Rule 18. RegulatorRule (7031, 7033)" - {
 
       "should pass when no Regulator" in {
         val msg = withClaim(validMessage)(_.copy(HMRCref = "CH1234", Regulator = None))
@@ -668,6 +911,16 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateRegulatorRule(msg) should contain(ValidationError.RegulatorRule7033)
       }
 
+      "should fail 7033 when HMRCref starts with CF and Regulator has no NoReg" in {
+        val msg = withClaim(validMessage)(c =>
+          c.copy(
+            HMRCref = "CF1234",
+            Regulator = Some(Regulator(RegName = Some(RegulatorName.CCEW), RegNo = Some("1234")))
+          )
+        )
+        SchematronValidator.validateRegulatorRule(msg) should contain(ValidationError.RegulatorRule7033)
+      }
+
       "should pass 7033 when HMRCref starts with CH and Regulator has NoReg" in {
         val msg = withClaim(validMessage)(c =>
           c.copy(
@@ -677,9 +930,226 @@ class SchematronValidatorSpec extends BaseSpec {
         )
         SchematronValidator.validateRegulatorRule(msg) should not contain ValidationError.RegulatorRule7033
       }
+
+      "should pass 7033 when HMRCref starts with CF and Regulator has NoReg" in {
+        val msg = withClaim(validMessage)(c =>
+          c.copy(
+            HMRCref = "CF1234",
+            Regulator = Some(Regulator(NoReg = Some(true)))
+          )
+        )
+        SchematronValidator.validateRegulatorRule(msg) should not contain ValidationError.RegulatorRule7033
+      }
+
+      "should pass when HMRCref doesn't starts with CH or CF and Regulator has no NoReg" in {
+        val msg = withClaim(validMessage)(c =>
+          c.copy(
+            Regulator = Some(Regulator(RegName = Some(RegulatorName.CCEW), RegNo = Some("1234")))
+          )
+        )
+        SchematronValidator.validateRegulatorRule(msg) shouldBe Nil
+      }
     }
 
-    "validateYearRule1 (7049-7051)" - {
+    "Rule 19. RepaymentRule (7034, 7035, 7036, 7037)" - {
+
+      "should pass when no Repayment" in {
+        val msg = withClaim(validMessage)(_.copy(Repayment = None))
+        SchematronValidator.validateRepaymentRule(msg) shouldBe Nil
+      }
+
+      "should pass for valid repayment with GAD" in {
+        SchematronValidator.validateRepaymentRule(validMessage) shouldBe Nil
+      }
+
+      "should pass when GAD don't exist and EarliestGAdate is empty" in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = None,
+              OtherInc = Some(List(OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 20))),
+              EarliestGAdate = Some("  ")
+            )
+          )
+        )
+        SchematronValidator.validateRepaymentRule(msg) shouldBe Nil
+      }
+
+      "should fail 7034 when GAD exists but EarliestGAdate is empty" in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(List(GAD(Date = "2025-01-01", Total = "100.00"))),
+              EarliestGAdate = None
+            )
+          )
+        )
+        SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7034)
+      }
+
+      "should pass when Repayment has GAD but not OtherInc" in {
+        val msg =
+          withRepayment(validMessage)(_ =>
+            Some(
+              Repayment(
+                GAD = Some(List(GAD(Date = "2025-01-01", Total = "100.00"))),
+                OtherInc = None,
+                EarliestGAdate = Some("2025-01-01")
+              )
+            )
+          )
+        SchematronValidator.validateRepaymentRule(msg) shouldBe Nil
+      }
+
+      "should pass when Repayment has OtherInc but not GAD" in {
+        val msg =
+          withRepayment(validMessage)(_ =>
+            Some(
+              Repayment(
+                GAD = None,
+                OtherInc = Some(List(OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 20))),
+                EarliestGAdate = Some("2025-01-01")
+              )
+            )
+          )
+        SchematronValidator.validateRepaymentRule(msg) shouldBe Nil
+      }
+
+      "should fail 7035 when Repayment has neither GAD nor OtherInc" in {
+        val msg =
+          withRepayment(validMessage)(_ =>
+            Some(Repayment(GAD = None, OtherInc = None, EarliestGAdate = Some("2025-01-01")))
+          )
+        SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7035)
+      }
+
+      "should pass when GAD count less than or equal to 500000" in {
+        val bigGadList = List.fill(500000)(GAD(Date = "2025-01-01", Total = "10.00"))
+        val msg        =
+          withRepayment(validMessage)(_ => Some(Repayment(GAD = Some(bigGadList), EarliestGAdate = Some("2025-01-01"))))
+        SchematronValidator.validateRepaymentRule(msg) shouldBe Nil
+      }
+
+      "should fail 7036 when GAD count exceeds 500000" in {
+        val bigGadList = List.fill(500001)(GAD(Date = "2025-01-01", Total = "10.00"))
+        val msg        =
+          withRepayment(validMessage)(_ => Some(Repayment(GAD = Some(bigGadList), EarliestGAdate = Some("2025-01-01"))))
+        SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7036)
+      }
+
+      "should pass when OtherInc count less than or equal to 2000" in {
+        val bigOtherIncList = List.fill(2000)(OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 20))
+        val msg             = withRepayment(validMessage)(_.map(_.copy(OtherInc = Some(bigOtherIncList))))
+        SchematronValidator.validateRepaymentRule(msg) shouldBe Nil
+      }
+
+      "should fail 7037 when OtherInc count exceeds 2000" in {
+        val bigOtherIncList = List.fill(2001)(OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 20))
+        val msg             = withRepayment(validMessage)(_.map(_.copy(OtherInc = Some(bigOtherIncList))))
+        SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7037)
+      }
+    }
+
+    "Rule 20. SponsoredRule (7039)" - {
+
+      "should pass when neither AggDonation nor Sponsored exists" in {
+        SchematronValidator.validateSponsoredRule(validMessage) shouldBe Nil
+      }
+
+      "should pass when AggDonation exists without Sponsored" in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(List(GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "500.00"))),
+              EarliestGAdate = Some("2025-01-01")
+            )
+          )
+        )
+        SchematronValidator.validateSponsoredRule(msg) shouldBe Nil
+      }
+
+      "should pass when Sponsored exists without AggDonation" in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(List(GAD(Sponsored = Some(true), Date = "2025-01-01", Total = "500.00"))),
+              EarliestGAdate = Some("2025-01-01")
+            )
+          )
+        )
+        SchematronValidator.validateSponsoredRule(msg) shouldBe Nil
+      }
+
+      "should fail when AggDonation and Sponsored both present" in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD =
+                Some(List(GAD(AggDonation = Some("3"), Sponsored = Some(true), Date = "2025-01-01", Total = "500.00"))),
+              EarliestGAdate = Some("2025-01-01")
+            )
+          )
+        )
+        SchematronValidator.validateSponsoredRule(msg) should contain(ValidationError.SponsoredRule)
+      }
+    }
+
+    "Rule 21. TaxRule (7043)" - {
+
+      "should pass when no OtherInc" in {
+        SchematronValidator.validateTaxRule(validMessage) shouldBe Nil
+      }
+
+      "should pass when Tax < Gross" in {
+        val msg = withRepayment(validMessage)(
+          _.map(r =>
+            r.copy(OtherInc =
+              Some(
+                List(
+                  OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 99),
+                  OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 98)
+                )
+              )
+            )
+          )
+        )
+        SchematronValidator.validateTaxRule(msg) shouldBe Nil
+      }
+
+      "should fail when Tax == Gross" in {
+        val msg = withRepayment(validMessage)(
+          _.map(r =>
+            r.copy(OtherInc =
+              Some(
+                List(
+                  OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 99),
+                  OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 100)
+                )
+              )
+            )
+          )
+        )
+        SchematronValidator.validateTaxRule(msg) should contain(ValidationError.TaxRule)
+      }
+
+      "should fail when Tax > Gross" in {
+        val msg = withRepayment(validMessage)(
+          _.map(r =>
+            r.copy(OtherInc =
+              Some(
+                List(
+                  OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 99),
+                  OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 101)
+                )
+              )
+            )
+          )
+        )
+        SchematronValidator.validateTaxRule(msg) should contain(ValidationError.TaxRule)
+      }
+    }
+
+    "Rule 22. YearRule1 (7049, 7050, 7051)" - {
 
       "should pass when no GASDS" in {
         SchematronValidator.validateYearRule1(validMessage) shouldBe Nil
@@ -756,7 +1226,7 @@ class SchematronValidatorSpec extends BaseSpec {
       }
     }
 
-    "validateYearRule2 (7054-7056)" - {
+    "Rule 23. YearRule2 (7054, 7055, 7056)" - {
 
       "should pass when no GASDS" in {
         SchematronValidator.validateYearRule2(validMessage) shouldBe Nil

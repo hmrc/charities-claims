@@ -110,7 +110,8 @@ class ChRISSubmissionControllerISpec
   private def requestBody(id: String, ref: String) =
     Json.obj(
       "claimId"              -> id,
-      "lastUpdatedReference" -> ref
+      "lastUpdatedReference" -> ref,
+      "declarationLanguage" -> "EN"
     )
 
   private def postSubmission(body: play.api.libs.json.JsValue) =

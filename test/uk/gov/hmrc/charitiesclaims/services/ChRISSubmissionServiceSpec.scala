@@ -585,7 +585,7 @@ class ChRISSubmissionServiceSpec
       val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim)
 
-      submissionR68.WelshSubmission shouldBe Some(false)
+      submissionR68.WelshSubmission shouldBe None
       submissionR68.AuthOfficial    shouldBe Some(
         AuthOfficial(
           Trustee = None,

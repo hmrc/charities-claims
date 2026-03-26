@@ -107,7 +107,9 @@ class ChRISSubmissionController @Inject() (
                                 )
                               )
                               .map { _ =>
-                                logger.info(s"ChRIS submission complete: claimId=${chrisSubmissionRequest.claimId} submissionTimestamp=$submissionTimestamp")
+                                logger.info(
+                                  s"ChRIS submission complete: claimId=${chrisSubmissionRequest.claimId} submissionTimestamp=$submissionTimestamp"
+                                )
                                 Ok(
                                   Json.toJson(
                                     ChRISSubmissionResponse(
@@ -119,7 +121,10 @@ class ChRISSubmissionController @Inject() (
                                 )
                               }
                               .recover { case e =>
-                                logger.error(s"ChRIS submission succeeded but failed to update claim state: claimId=${chrisSubmissionRequest.claimId}", e)
+                                logger.error(
+                                  s"ChRIS submission succeeded but failed to update claim state: claimId=${chrisSubmissionRequest.claimId}",
+                                  e
+                                )
                                 InternalServerError(
                                   Json.obj(
                                     "errorMessage" -> s"ChRIS submission was successful but cannot update claim with claimId ${chrisSubmissionRequest.claimId} because of ${e.getClass.getName}: ${e.getMessage}",
@@ -129,7 +134,10 @@ class ChRISSubmissionController @Inject() (
                               }
                           }
                           .recover { case e =>
-                            logger.error(s"ChRIS submission succeeded but failed to record unregulated donation: claimId=${chrisSubmissionRequest.claimId}", e)
+                            logger.error(
+                              s"ChRIS submission succeeded but failed to record unregulated donation: claimId=${chrisSubmissionRequest.claimId}",
+                              e
+                            )
                             InternalServerError(
                               Json.obj(
                                 "errorMessage" -> s"ChRIS submission was successful but cannot record unregulated donation for claimId ${chrisSubmissionRequest.claimId} because of ${e.getClass.getName}: ${e.getMessage}",
@@ -141,7 +149,9 @@ class ChRISSubmissionController @Inject() (
                   }
                   .recover {
                     case SchematronValidationException(errors) =>
-                      logger.warn(s"Schematron validation failed: claimId=${chrisSubmissionRequest.claimId} errors=${errors.size}")
+                      logger.warn(
+                        s"Schematron validation failed: claimId=${chrisSubmissionRequest.claimId} errors=${errors.size}"
+                      )
                       BadRequest(
                         Json.obj(
                           "errorMessage" -> s"Schematron validation failed with ${errors.size} error(s)",

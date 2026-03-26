@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.Future
 class StubChRISSubmissionService extends ChRISSubmissionService {
 
-  override def buildChRISSubmission(claim: models.Claim, currentUser: models.CurrentUser)(using
+  override def buildChRISSubmission(claim: models.Claim, currentUser: models.CurrentUser, declarationLanguage: String)(using
     HeaderCarrier
   ): Future[GovTalkMessage] =
     Future.successful(ChRISTestData.exampleMessage)

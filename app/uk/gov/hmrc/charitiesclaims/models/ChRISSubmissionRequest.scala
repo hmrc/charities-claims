@@ -20,7 +20,8 @@ import play.api.libs.json.{Format, Json}
 
 final case class ChRISSubmissionRequest(
   claimId: String,
-  lastUpdatedReference: String
+  lastUpdatedReference: String,
+  declarationLanguage: String
 )
 
 object ChRISSubmissionRequest {

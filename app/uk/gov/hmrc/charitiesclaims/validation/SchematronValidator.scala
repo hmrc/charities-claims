@@ -39,6 +39,7 @@ object SchematronValidator:
       validateAgtOrNomRule(message),
       validateDateRule(message),
       validateOIDateRule(message),
+      validateHMRCrefRule(message),
       validateKeyRule(message),
       validateAggDonationRule(message),
       validateSponsoredRule(message),
@@ -70,7 +71,7 @@ object SchematronValidator:
       .orElse(Try(LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)))
       .toOption
 
-  private def now: LocalDate = LocalDate.now(ZoneId.of("Europe/London"))
+  private def now: LocalDate = LocalDate.now(ZoneId.of("UTC"))
 
   def currentTaxYear: Int =
     if now.isAfter(LocalDate.of(now.getYear, 4, 5)) then now.getYear + 1 else now.getYear
@@ -83,17 +84,17 @@ object SchematronValidator:
       else Nil
 
     val errors7029 =
-      if !startsWithCHorCF(c.HMRCref) && c.Regulator.isEmpty
+      if !startsWithCHorCF(c.HMRCref) && c.Regulator.flatMap(_.RegName).isEmpty && c.Regulator.flatMap(_.RegNo).isEmpty
       then List(ValidationError.ClaimRule7029)
       else Nil
 
     errors7028 ++ errors7029
 
   def validateAuthOfficialRule(message: GovTalkMessage): List[ValidationError] =
-    val r = r68(message)
-    if r.AuthOfficial.isEmpty && r.AgtOrNom.isEmpty
-    then List(ValidationError.AuthOfficialRule)
-    else Nil
+    r68(message).AuthOfficial match
+      case Some(authOfficial) if authOfficial.OffName.isEmpty && authOfficial.Trustee.isEmpty =>
+        List(ValidationError.AuthOfficialRule)
+      case _                                                                                  => Nil
 
   def validateAgtOrNomRule(message: GovTalkMessage): List[ValidationError] =
     r68(message).AgtOrNom match
@@ -113,20 +114,37 @@ object SchematronValidator:
           }
 
   def validateOIDateRule(message: GovTalkMessage): List[ValidationError] =
-    claim(message).Repayment
-      .flatMap(_.OtherInc)
-      .getOrElse(Nil)
-      .flatMap { oi =>
-        parseDate(oi.OIDate).filter(_.isAfter(now)).map(_ => ValidationError.OIDateRule)
+    parseDate(message.Header.MessageDetails.GatewayTimestamp) match
+      case None              => List(ValidationError.GatewayTimestampRule)
+      case Some(gatewayDate) =>
+        claim(message).Repayment
+          .flatMap(_.OtherInc)
+          .getOrElse(Nil)
+          .flatMap { oi =>
+            parseDate(oi.OIDate).filter(_.isAfter(gatewayDate)).map(_ => ValidationError.OIDateRule)
+          }
+
+  def validateHMRCrefRule(message: GovTalkMessage): List[ValidationError] =
+    val irHeaderCharIdTypeKey = message.Body.IRenvelope.IRheader.Keys
+      .collect {
+        case key if key.Type.attribute == CharityKeyType => key.Value.content
       }
 
+    if !irHeaderCharIdTypeKey.contains(claim(message).HMRCref)
+    then List(ValidationError.HMRCrefRule)
+    else Nil
+
   def validateKeyRule(message: GovTalkMessage): List[ValidationError] =
-    val govTalkKeys  = message.GovTalkDetails.Keys
-      .filter(_.Type.attribute == CharityKeyType)
-      .map(_.Value.content)
+    val govTalkKeys = message.GovTalkDetails.Keys
+      .collect {
+        case key if key.Type.attribute == CharityKeyType => key.Value.content
+      }
+
     val irHeaderKeys = message.Body.IRenvelope.IRheader.Keys
-      .filter(_.Type.attribute == CharityKeyType)
-      .map(_.Value.content)
+      .collect {
+        case key if key.Type.attribute == CharityKeyType => key.Value.content
+      }
+
     if govTalkKeys != irHeaderKeys
     then List(ValidationError.KeyRule)
     else Nil

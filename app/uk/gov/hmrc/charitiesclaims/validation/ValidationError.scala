@@ -37,6 +37,11 @@ object ValidationError:
     ValidationError("7026", "You must provide the name of the Authorised Official or the Corporate Trustee or both.")
   val AgtOrNomRule: ValidationError               =
     ValidationError("7027", "If Agent or Nominee details are provided, Organisation Name must be present.")
+  val HMRCrefRule: ValidationError                =
+    ValidationError(
+      "7030",
+      "The same HMRC Charities Reference must be used throughout this submission unless the Collecting Agent details are present."
+    )
   val GatewayTimestampRule: ValidationError       =
     ValidationError("7063", "The Gateway Timestamp could not be parsed as a valid date.")
   val DateRule: ValidationError                   =

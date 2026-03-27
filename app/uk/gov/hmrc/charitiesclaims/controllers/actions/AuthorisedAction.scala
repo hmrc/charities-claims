@@ -91,6 +91,7 @@ class DefaultAuthorisedAction @Inject() (
           Future.failed(UnsupportedAffinityGroup("No affinity group found"))
       }
       .recover { case e: AuthorisationException =>
+        logger.warn(s"Authorisation failed: ${e.reason}")
         Forbidden(s"Unauthorised: ${e.reason}")
       }
   }

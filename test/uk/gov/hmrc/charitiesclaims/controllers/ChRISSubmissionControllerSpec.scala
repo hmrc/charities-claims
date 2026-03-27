@@ -33,6 +33,7 @@ import java.time.Instant
 import java.util.UUID
 
 class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
+  val declarationLanguage: String = "cy"
 
   "POST /chris" - {
     "return 200 when claim is submitted to ChRIS" in new AuthorisedOrganisationFixture {
@@ -67,8 +68,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       )
 
       (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
+        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
       (chrisConnectorMock
@@ -86,7 +87,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "cy"
         )
       )
 
@@ -124,7 +126,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4",
+          declarationLanguage = "en"
         )
       )
 
@@ -172,7 +175,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "en"
         )
       )
 
@@ -222,7 +226,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4",
+          declarationLanguage = "en"
         )
       )
 
@@ -262,7 +267,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4"
+          lastUpdatedReference = "b4ae2a97-d97b-42d9-bf80-fe3db41968b4",
+          declarationLanguage = "en"
         )
       )
 
@@ -320,8 +326,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.failed(new RuntimeException("Error message")))
 
       (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
+        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
       (chrisConnectorMock
@@ -339,7 +345,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "cy"
         )
       )
 
@@ -389,8 +396,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       )
 
       (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
+        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
       (chrisConnectorMock
@@ -407,7 +414,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "cy"
         )
       )
 
@@ -459,8 +467,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.successful(Some((claim, Instant.now()))))
 
       (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
+        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
       (chrisConnectorMock
@@ -478,7 +486,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "cy"
         )
       )
 
@@ -528,8 +537,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       )
 
       (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
+        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
       (chrisConnectorMock
@@ -542,7 +551,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         "/chris",
         ChRISSubmissionRequest(
           claimId = "test-claim-id",
-          lastUpdatedReference = claim.lastUpdatedReference
+          lastUpdatedReference = claim.lastUpdatedReference,
+          declarationLanguage = "cy"
         )
       )
 

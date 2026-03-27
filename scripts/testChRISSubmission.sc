@@ -324,7 +324,8 @@ val updateClaimResponse: UpdateClaimResponse =
 
 submitClaim(ChRISSubmissionRequest(
   claimId = saveClaimResponse.claimId,
-  lastUpdatedReference = updateClaimResponse.lastUpdatedReference
+  lastUpdatedReference = updateClaimResponse.lastUpdatedReference,
+  declarationLanguage = "en"
 ))
 
 

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
+import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.Results.*
 import play.api.mvc.{Action, ControllerComponents}
@@ -41,6 +42,8 @@ class ChRISSubmissionController @Inject() (
 )(using ExecutionContext)
     extends BaseController {
 
+  private val logger = Logger(getClass)
+
   val submitClaim: Action[String] =
     whenAuthorised {
       withPayload[ChRISSubmissionRequest] { chrisSubmissionRequest =>
@@ -48,6 +51,7 @@ class ChRISSubmissionController @Inject() (
           .getClaim(chrisSubmissionRequest.claimId)
           .flatMap {
             case None           =>
+              logger.warn(s"Claim not found: claimId=${chrisSubmissionRequest.claimId}")
               Future.successful(
                 NotFound(
                   Json.obj(
@@ -58,7 +62,8 @@ class ChRISSubmissionController @Inject() (
               )
             case Some(claim, _) =>
               if claim.submissionDetails.isDefined || claim.claimSubmitted
-              then
+              then {
+                logger.warn(s"Claim already submitted: claimId=${chrisSubmissionRequest.claimId}")
                 Future.successful(
                   BadRequest(
                     Json.obj(
@@ -67,7 +72,8 @@ class ChRISSubmissionController @Inject() (
                     )
                   )
                 )
-              else if chrisSubmissionRequest.lastUpdatedReference != claim.lastUpdatedReference then {
+              } else if chrisSubmissionRequest.lastUpdatedReference != claim.lastUpdatedReference then {
+                logger.warn(s"Conflict on submission: claimId=${chrisSubmissionRequest.claimId}")
                 Future.successful(
                   BadRequest(
                     Json.obj(
@@ -76,9 +82,10 @@ class ChRISSubmissionController @Inject() (
                     )
                   )
                 )
-              } else
+              } else {
+                logger.info(s"Submitting claim to ChRIS: claimId=${chrisSubmissionRequest.claimId}")
                 chrisSubmissionService
-                  .buildChRISSubmission(claim, currentUser)
+                  .buildChRISSubmission(claim, currentUser, chrisSubmissionRequest.declarationLanguage)
                   .flatMap { govTalkMessage =>
                     chrisConnector
                       .submitClaim(govTalkMessage)
@@ -100,6 +107,9 @@ class ChRISSubmissionController @Inject() (
                                 )
                               )
                               .map { _ =>
+                                logger.info(
+                                  s"ChRIS submission complete: claimId=${chrisSubmissionRequest.claimId} submissionTimestamp=$submissionTimestamp"
+                                )
                                 Ok(
                                   Json.toJson(
                                     ChRISSubmissionResponse(
@@ -111,6 +121,10 @@ class ChRISSubmissionController @Inject() (
                                 )
                               }
                               .recover { case e =>
+                                logger.error(
+                                  s"ChRIS submission succeeded but failed to update claim state: claimId=${chrisSubmissionRequest.claimId}",
+                                  e
+                                )
                                 InternalServerError(
                                   Json.obj(
                                     "errorMessage" -> s"ChRIS submission was successful but cannot update claim with claimId ${chrisSubmissionRequest.claimId} because of ${e.getClass.getName}: ${e.getMessage}",
@@ -120,6 +134,10 @@ class ChRISSubmissionController @Inject() (
                               }
                           }
                           .recover { case e =>
+                            logger.error(
+                              s"ChRIS submission succeeded but failed to record unregulated donation: claimId=${chrisSubmissionRequest.claimId}",
+                              e
+                            )
                             InternalServerError(
                               Json.obj(
                                 "errorMessage" -> s"ChRIS submission was successful but cannot record unregulated donation for claimId ${chrisSubmissionRequest.claimId} because of ${e.getClass.getName}: ${e.getMessage}",
@@ -131,6 +149,9 @@ class ChRISSubmissionController @Inject() (
                   }
                   .recover {
                     case SchematronValidationException(errors) =>
+                      logger.warn(
+                        s"Schematron validation failed: claimId=${chrisSubmissionRequest.claimId} errors=${errors.size}"
+                      )
                       BadRequest(
                         Json.obj(
                           "errorMessage" -> s"Schematron validation failed with ${errors.size} error(s)",
@@ -139,6 +160,7 @@ class ChRISSubmissionController @Inject() (
                         )
                       )
                     case e                                     =>
+                      logger.error(s"ChRIS submission failed: claimId=${chrisSubmissionRequest.claimId}", e)
                       InternalServerError(
                         Json.obj(
                           "errorMessage" -> e.getMessage,
@@ -146,8 +168,10 @@ class ChRISSubmissionController @Inject() (
                         )
                       )
                   }
+              }
           }
           .recover { case e =>
+            logger.error(s"Failed to retrieve claim: claimId=${chrisSubmissionRequest.claimId}", e)
             InternalServerError(
               Json.obj(
                 "errorMessage" -> s"Cannot get claim with claimId ${chrisSubmissionRequest.claimId} because of ${e.getClass.getName}: ${e.getMessage}",

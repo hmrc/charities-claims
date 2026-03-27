@@ -34,7 +34,7 @@ import cats.instances.option.*
 @ImplementedBy(classOf[ChRISSubmissionServiceImpl])
 trait ChRISSubmissionService {
 
-  def buildChRISSubmission(claim: models.Claim, currentUser: models.CurrentUser)(using
+  def buildChRISSubmission(claim: models.Claim, currentUser: models.CurrentUser, declarationLanguage: String)(using
     HeaderCarrier
   ): Future[GovTalkMessage]
 
@@ -49,7 +49,8 @@ class ChRISSubmissionServiceImpl @Inject() (
 
   def buildChRISSubmission(
     claim: models.Claim,
-    currentUser: models.CurrentUser
+    currentUser: models.CurrentUser,
+    declarationLanguage: String
   )(using HeaderCarrier): Future[GovTalkMessage] =
 
     for
@@ -70,7 +71,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         Body = Body(
           IRenvelope = IRenvelope(
             IRheader = buildIRheader(currentUser),
-            R68 = buildR68(claim, currentUser, orgName, scheduleData)
+            R68 = buildR68(claim, currentUser, orgName, declarationLanguage, scheduleData)
           )
         )
       ).withLiteIRmark
@@ -172,9 +173,11 @@ class ChRISSubmissionServiceImpl @Inject() (
     claim: models.Claim,
     currentUser: models.CurrentUser,
     orgName: Option[String],
+    declarationLanguage: String,
     scheduleData: ScheduleData
   ): R68 =
     R68(
+      WelshSubmission = if declarationLanguage == "cy" then Some(true) else None,
       AgtOrNom =
         if currentUser.isAgent
         then buildAgtOrNom(claim, orgName, currentUser.enrolmentIdentifierValue)

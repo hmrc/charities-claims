@@ -26,6 +26,7 @@
       "authorisedOfficialTrusteeTitle": "Mr",
       "authorisedOfficialTrusteeFirstName": "John",
       "authorisedOfficialTrusteeLastName": "Jones"
-    }
+    },
+    "includedAnyAdjustmentsInClaimPrompt": "More information"
   }
 }

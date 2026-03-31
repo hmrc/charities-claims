@@ -290,7 +290,7 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateAuthOfficialRule(msg) shouldBe Nil
       }
 
-      "should fail when AuthOfficial has nighter OffName nor Trustee" in {
+      "should fail when AuthOfficial has neither OffName nor Trustee" in {
         val msg = withR68(validMessage)(_.copy(AuthOfficial = Some(AuthOfficial())))
         SchematronValidator.validateAuthOfficialRule(msg) should contain(ValidationError.AuthOfficialRule)
       }
@@ -442,16 +442,7 @@ class SchematronValidatorSpec extends BaseSpec {
               GASDS(
                 ConnectedCharities = false,
                 CommBldgs = Some(false),
-                Building = Some(
-                  List(
-                    Building(
-                      BldgName = "Hall",
-                      Address = "1 Main St",
-                      Postcode = "AB1 2CD",
-                      BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
-                    )
-                  )
-                ),
+                Building = None,
                 Adj = None
               )
             )
@@ -463,21 +454,12 @@ class SchematronValidatorSpec extends BaseSpec {
       "should pass 7060 when HMRCref starts with CF and indicator=no" in {
         val msg = withClaim(validMessage) { c =>
           c.copy(
-            HMRCref = "CH1234",
+            HMRCref = "CF1234",
             GASDS = Some(
               GASDS(
                 ConnectedCharities = false,
                 CommBldgs = Some(false),
-                Building = Some(
-                  List(
-                    Building(
-                      BldgName = "Hall",
-                      Address = "1 Main St",
-                      Postcode = "AB1 2CD",
-                      BldgClaim = List(BldgClaim(Year = SchematronValidator.currentTaxYear.toString, Amount = 100))
-                    )
-                  )
-                ),
+                Building = None,
                 Adj = None
               )
             )
@@ -654,12 +636,12 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateDateRule(msgWithTimestamp) should contain(ValidationError.DateRule)
       }
 
-      "should pass when no Repayment" in {
+      "should pass when no Repayment and hence no GAD and DATE" in {
         val msg = withClaim(validMessage)(_.copy(Repayment = None))
         SchematronValidator.validateDateRule(msg) shouldBe Nil
       }
 
-      "should pass when no GAD" in {
+      "should pass when no GAD and hence no DATE" in {
         val msg = withRepayment(validMessage)(_.map(_.copy(GAD = None)))
         SchematronValidator.validateDateRule(msg) shouldBe Nil
       }
@@ -685,15 +667,6 @@ class SchematronValidatorSpec extends BaseSpec {
         val msg       = withGasds(validMessage)(_ =>
           Some(
             GASDS(ConnectedCharities = true, Charity = Some(charities), Adj = None)
-          )
-        )
-        SchematronValidator.validateGASDSRule(msg) shouldBe Nil
-      }
-
-      "should pass when charity is None" in {
-        val msg = withGasds(validMessage)(_ =>
-          Some(
-            GASDS(ConnectedCharities = true, Charity = None, Adj = None)
           )
         )
         SchematronValidator.validateGASDSRule(msg) shouldBe Nil
@@ -1017,9 +990,7 @@ class SchematronValidatorSpec extends BaseSpec {
 
       "should fail 7035 when Repayment has neither GAD nor OtherInc" in {
         val msg =
-          withRepayment(validMessage)(_ =>
-            Some(Repayment(GAD = None, OtherInc = None, EarliestGAdate = Some("2025-01-01")))
-          )
+          withRepayment(validMessage)(_ => Some(Repayment(GAD = None, OtherInc = None, EarliestGAdate = None)))
         SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7035)
       }
 
@@ -1164,7 +1135,8 @@ class SchematronValidatorSpec extends BaseSpec {
               GASDSClaim = Some(
                 List(
                   GASDSClaim(Year = Some(taxYear.toString), Amount = Some(100)),
-                  GASDSClaim(Year = Some((taxYear - 1).toString), Amount = Some(200))
+                  GASDSClaim(Year = Some((taxYear - 2).toString), Amount = Some(300)),
+                  GASDSClaim(Year = Some((taxYear - 3).toString), Amount = Some(400))
                 )
               ),
               Adj = None

@@ -90,25 +90,29 @@ class UnregulatedDonationsServiceImpl @Inject() (
     else
       resolveCharityReference(claim, currentUser) match {
         case None =>
-          throw Exception("Cannot record unregulated donation: no charity reference available")
+          Future.failed(MissingCharityReferenceException(claim.claimId))
 
         case Some(charityReference) =>
-          for
-            giftAidData <- getGiftAidUploadData(claim)
+          (
+            for
+              giftAidData <- getGiftAidUploadData(claim)
 
-            amount = calculateDonationsTotal(giftAidData)
+              amount = calculateDonationsTotal(giftAidData)
 
-            // save the unregulated donation record via FormP Proxy
-            _  =
-              logger.info(
-                s"Recording unregulated donation for Claim: ${claim.claimId}, Charity Reference: $charityReference, Amount: $amount"
-              )
-            _ <- formpProxyConnector.saveUnregulatedDonation(
-                   charityReference,
-                   claimIdToInt(claim.claimId),
-                   amount
-                 )
-          yield ()
+              // save the unregulated donation record via FormP Proxy
+              _  =
+                logger.info(
+                  s"Recording unregulated donation for Claim: ${claim.claimId}, Charity Reference: $charityReference, Amount: $amount"
+                )
+              _ <- formpProxyConnector.saveUnregulatedDonation(
+                     charityReference,
+                     claimIdToInt(claim.claimId),
+                     amount
+                   )
+            yield ()
+          ).recoverWith { case e =>
+            Future.failed(UnregulatedDonationException(claim.claimId, e))
+          }
       }
 
   private def getGiftAidUploadData(
@@ -120,3 +124,12 @@ class UnregulatedDonationsServiceImpl @Inject() (
         .map(_.collect { case GetUploadResultValidatedGiftAid(_, data) => data })
     }
 }
+
+final case class MissingCharityReferenceException(claimId: String)
+    extends RuntimeException(s"Cannot record unregulated donation: no charity reference available for claimId=$claimId")
+
+final case class UnregulatedDonationException(claimId: String, cause: Throwable)
+    extends RuntimeException(
+      s"Failed to record unregulated donation for claimId=$claimId: ${cause.getMessage}",
+      cause
+    )

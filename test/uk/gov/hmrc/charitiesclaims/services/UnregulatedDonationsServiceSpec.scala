@@ -336,8 +336,13 @@ class UnregulatedDonationsServiceSpec extends BaseSpec {
           hmrcCharitiesReference = None
         )
 
-        val thrown = the[Exception] thrownBy service.recordUnregulatedDonation(claim, agentUser)
-        thrown.getMessage shouldBe "Cannot record unregulated donation: no charity reference available"
+        val result = service.recordUnregulatedDonation(claim, agentUser)
+
+        val ex = result.failed.futureValue
+
+        ex            shouldBe a[MissingCharityReferenceException]
+        ex.getMessage shouldBe
+          s"Cannot record unregulated donation: no charity reference available for claimId=${claim.claimId}"
       }
 
       "should be FormP error when saveUnregulatedDonation fails" in {
@@ -360,7 +365,11 @@ class UnregulatedDonationsServiceSpec extends BaseSpec {
           .returning(Future.failed(Exception("FormP Proxy error")))
 
         val result = service.recordUnregulatedDonation(claim, organisationUser)
-        result.failed.futureValue.getMessage shouldBe "FormP Proxy error"
+        val ex     = result.failed.futureValue
+
+        ex            shouldBe a[UnregulatedDonationException]
+        ex.getMessage shouldBe
+          s"Failed to record unregulated donation for claimId=${claim.claimId}: FormP Proxy error"
       }
 
       "should handle a qualifying claim when no gift aid schedule uploaded (total is zero)" in {

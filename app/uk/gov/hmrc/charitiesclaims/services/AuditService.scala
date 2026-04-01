@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.charitiesclaims.services
 
-import com.google.inject.Inject
+import javax.inject.Inject
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.charitiesclaims.models.Claim

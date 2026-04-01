@@ -21,8 +21,10 @@ import play.api.libs.json.Json
 import play.api.mvc.Results.*
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.charitiesclaims.models.ChRISSubmissionRequest
-import uk.gov.hmrc.charitiesclaims.services.{ChRISSubmissionService, ClaimsService, UnregulatedDonationsService}
+import uk.gov.hmrc.charitiesclaims.models.{ChRISSubmissionRequest, Claim}
+import uk.gov.hmrc.charitiesclaims.services.{AuditService, ChRISSubmissionService, ClaimsService, MissingCharityReferenceException, UnregulatedDonationException, UnregulatedDonationsService}
+import uk.gov.hmrc.play.audit.http.connector.AuditResult
+import play.api.mvc.Result
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,11 +40,73 @@ class ChRISSubmissionController @Inject() (
   claimsService: ClaimsService,
   chrisSubmissionService: ChRISSubmissionService,
   chrisConnector: ChRISConnector,
-  unregulatedDonationsService: UnregulatedDonationsService
+  unregulatedDonationsService: UnregulatedDonationsService,
+  auditService: AuditService
 )(using ExecutionContext)
     extends BaseController {
 
   private val logger = Logger(getClass)
+
+  private def logAndFail(message: String, code: String, e: Throwable): Result = {
+    logger.error(message, e)
+    InternalServerError(
+      Json.obj(
+        "errorMessage" -> s"$message because of ${e.getClass.getName}: ${e.getMessage}",
+        "errorCode"    -> code
+      )
+    )
+  }
+
+  private def handleAuditResult(result: Future[AuditResult], claimId: String, userId: String): Future[Unit] =
+    result
+      .flatMap {
+        case AuditResult.Success => Future.unit
+        case _                   =>
+          logger.warn(s"Chris submission audit failed: claimId=$claimId, userId=$userId")
+          Future.unit
+      }
+      .recover { case e =>
+        logger.warn(s"Audit call failed: claimId=$claimId, userId=$userId", e)
+      }
+
+  private def updateClaim(
+    claim: Claim,
+    chrisSubmissionRequest: ChRISSubmissionRequest,
+    submissionTimestamp: String
+  ): Future[Result] =
+    claimsService
+      .putClaim(
+        claim.copy(
+          claimSubmitted = true,
+          submissionDetails = Some(
+            SubmissionDetails(
+              submissionTimestamp = submissionTimestamp,
+              submissionReference = chrisSubmissionRequest.lastUpdatedReference
+            )
+          )
+        )
+      )
+      .map { _ =>
+        logger.info(
+          s"ChRIS submission complete: claimId=${claim.claimId} submissionTimestamp=$submissionTimestamp"
+        )
+        Ok(
+          Json.toJson(
+            ChRISSubmissionResponse(
+              success = true,
+              submissionTimestamp = submissionTimestamp,
+              submissionReference = chrisSubmissionRequest.lastUpdatedReference
+            )
+          )
+        )
+      }
+      .recover { case e =>
+        logAndFail(
+          s"ChRIS submission was successful but cannot update claim with claimId ${claim.claimId}",
+          "CLAIM_SERVICE_ERROR",
+          e
+        )
+      }
 
   val submitClaim: Action[String] =
     whenAuthorised {
@@ -83,91 +147,63 @@ class ChRISSubmissionController @Inject() (
                   )
                 )
               } else {
-                logger.info(s"Submitting claim to ChRIS: claimId=${chrisSubmissionRequest.claimId}")
-                chrisSubmissionService
-                  .buildChRISSubmission(claim, currentUser, chrisSubmissionRequest.declarationLanguage)
-                  .flatMap { govTalkMessage =>
-                    chrisConnector
-                      .submitClaim(govTalkMessage)
-                      .flatMap { _ =>
-                        unregulatedDonationsService
-                          .recordUnregulatedDonation(claim, currentUser)
-                          .flatMap { _ =>
-                            val submissionTimestamp = ISODateTime.timestampNow()
-                            claimsService
-                              .putClaim(
-                                claim.copy(
-                                  claimSubmitted = true,
-                                  submissionDetails = Some(
-                                    SubmissionDetails(
-                                      submissionTimestamp = submissionTimestamp,
-                                      submissionReference = chrisSubmissionRequest.lastUpdatedReference
+                val claimId = chrisSubmissionRequest.claimId
+
+                logger.info(s"Submitting claim to ChRIS: claimId=$claimId")
+
+                val chrisSubmissionFlow = for {
+                  govTalkMessage <- chrisSubmissionService.buildChRISSubmission(
+                                      claim,
+                                      currentUser,
+                                      chrisSubmissionRequest.declarationLanguage
                                     )
-                                  )
-                                )
-                              )
-                              .map { _ =>
-                                logger.info(
-                                  s"ChRIS submission complete: claimId=${chrisSubmissionRequest.claimId} submissionTimestamp=$submissionTimestamp"
-                                )
-                                Ok(
-                                  Json.toJson(
-                                    ChRISSubmissionResponse(
-                                      success = true,
-                                      submissionTimestamp = submissionTimestamp,
-                                      submissionReference = chrisSubmissionRequest.lastUpdatedReference
-                                    )
-                                  )
-                                )
-                              }
-                              .recover { case e =>
-                                logger.error(
-                                  s"ChRIS submission succeeded but failed to update claim state: claimId=${chrisSubmissionRequest.claimId}",
-                                  e
-                                )
-                                InternalServerError(
-                                  Json.obj(
-                                    "errorMessage" -> s"ChRIS submission was successful but cannot update claim with claimId ${chrisSubmissionRequest.claimId} because of ${e.getClass.getName}: ${e.getMessage}",
-                                    "errorCode"    -> "CLAIM_SERVICE_ERROR"
-                                  )
-                                )
-                              }
-                          }
-                          .recover { case e =>
-                            logger.error(
-                              s"ChRIS submission succeeded but failed to record unregulated donation: claimId=${chrisSubmissionRequest.claimId}",
-                              e
-                            )
-                            InternalServerError(
-                              Json.obj(
-                                "errorMessage" -> s"ChRIS submission was successful but cannot record unregulated donation for claimId ${chrisSubmissionRequest.claimId} because of ${e.getClass.getName}: ${e.getMessage}",
-                                "errorCode"    -> "UNREGULATED_DONATION_ERROR"
-                              )
-                            )
-                          }
-                      }
-                  }
-                  .recover {
-                    case SchematronValidationException(errors) =>
-                      logger.warn(
-                        s"Schematron validation failed: claimId=${chrisSubmissionRequest.claimId} errors=${errors.size}"
+
+                  _ <- chrisConnector.submitClaim(govTalkMessage)
+
+                  _ <- handleAuditResult(auditService.sendEvent(claim), claimId, claim.userId)
+
+                  _ <- unregulatedDonationsService.recordUnregulatedDonation(claim, currentUser)
+
+                  result <- updateClaim(claim, chrisSubmissionRequest, ISODateTime.timestampNow())
+
+                } yield result
+
+                chrisSubmissionFlow.recover {
+                  case SchematronValidationException(errors) =>
+                    logger.warn(
+                      s"Schematron validation failed: claimId=$claimId errors=${errors.size}"
+                    )
+                    BadRequest(
+                      Json.obj(
+                        "errorMessage" -> s"Schematron validation failed with ${errors.size} error(s)",
+                        "errorCode"    -> "SCHEMATRON_VALIDATION_ERROR",
+                        "errors"       -> Json.toJson(errors)
                       )
-                      BadRequest(
-                        Json.obj(
-                          "errorMessage" -> s"Schematron validation failed with ${errors.size} error(s)",
-                          "errorCode"    -> "SCHEMATRON_VALIDATION_ERROR",
-                          "errors"       -> Json.toJson(errors)
-                        )
+                    )
+
+                  case e: MissingCharityReferenceException =>
+                    logAndFail(
+                      s"Cannot record unregulated donation: no charity reference available for claimId=$claimId",
+                      "UNREGULATED_DONATION_ERROR",
+                      e
+                    )
+
+                  case e: UnregulatedDonationException =>
+                    logAndFail(
+                      s"ChRIS submission was successful but cannot record unregulated donation for claimId $claimId",
+                      "UNREGULATED_DONATION_ERROR",
+                      e
+                    )
+
+                  case e =>
+                    logger.error(s"ChRIS submission failed: claimId=$claimId", e)
+                    InternalServerError(
+                      Json.obj(
+                        "errorMessage" -> e.getMessage,
+                        "errorCode"    -> "CHRIS_SUBMISSION_ERROR"
                       )
-                    case e                                     =>
-                      logger.error(s"ChRIS submission failed: claimId=${chrisSubmissionRequest.claimId}", e)
-                      InternalServerError(
-                        Json.obj(
-                          "errorMessage" -> e.getMessage,
-                          "errorCode"    -> "CHRIS_SUBMISSION_ERROR"
-                        )
-                      )
-                  }
+                    )
+                }
               }
           }
           .recover { case e =>

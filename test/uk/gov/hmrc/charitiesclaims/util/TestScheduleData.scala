@@ -91,4 +91,12 @@ object TestScheduleData {
       )
     )
   )
+
+  val exampleScheduleData: ScheduleData = ScheduleData(
+    giftAid = Some(exampleGiftAidScheduleData),
+    connectedCharities = Some(exampleConnectedCharitiesScheduleData),
+    communityBuildings = Some(exampleCommunityBuildingsScheduleData),
+    otherIncome = Some(exampleOtherIncomeScheduleData)
+  )
+
 }

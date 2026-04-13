@@ -114,7 +114,7 @@ class ChRISSubmissionController @Inject() (
         claimsService
           .getClaim(chrisSubmissionRequest.claimId)
           .flatMap {
-            case None           =>
+            case None                           =>
               logger.warn(s"Claim not found: claimId=${chrisSubmissionRequest.claimId}")
               Future.successful(
                 NotFound(
@@ -124,7 +124,7 @@ class ChRISSubmissionController @Inject() (
                   )
                 )
               )
-            case Some(claim, _) =>
+            case Some(claim, creationTimestamp) =>
               if claim.submissionDetails.isDefined || claim.claimSubmitted
               then {
                 logger.warn(s"Claim already submitted: claimId=${chrisSubmissionRequest.claimId}")
@@ -160,7 +160,13 @@ class ChRISSubmissionController @Inject() (
 
                   _ <- chrisConnector.submitClaim(govTalkMessage)
 
-                  _ <- handleAuditResult(auditService.sendEvent(claim), claimId, claim.userId)
+                  scheduleData <- chrisSubmissionService.getScheduleData(claim)
+
+                  _ <- handleAuditResult(
+                         auditService.sendEvent(claim, scheduleData, creationTimestamp),
+                         claimId,
+                         claim.userId
+                       )
 
                   _ <- unregulatedDonationsService.recordUnregulatedDonation(claim, currentUser)
 

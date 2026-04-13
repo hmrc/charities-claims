@@ -18,8 +18,11 @@ package uk.gov.hmrc.charitiesclaims.models
 
 import scala.util.Try
 
-enum NameOfCharityRegulator {
-  case EnglandAndWales, NorthernIreland, Scottish, None
+enum NameOfCharityRegulator(val value: String) {
+  case EnglandAndWales extends NameOfCharityRegulator("EnglandAndWales")
+  case NorthernIreland extends NameOfCharityRegulator("NorthernIreland")
+  case Scottish extends NameOfCharityRegulator("Scottish")
+  case None extends NameOfCharityRegulator("None")
 }
 
 object NameOfCharityRegulator extends Enumerable.Implicits {

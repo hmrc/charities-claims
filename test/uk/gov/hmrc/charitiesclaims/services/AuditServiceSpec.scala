@@ -26,8 +26,9 @@ import uk.gov.hmrc.charitiesclaims.models._
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 import uk.gov.hmrc.http.HeaderCarrier
 import org.scalamock.matchers.ArgThat
+import java.time.Instant
 
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
 
 import scala.concurrent.{ExecutionContext, Future}
 import org.scalatest.concurrent.ScalaFutures
@@ -61,16 +62,21 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
 
     "send correct ExtendedDataEvent and return success" in {
 
-      val claim = testClaim
+      val claim             = testClaim
+      val scheduleData      = ScheduleData()
+      val creationTimestamp = Instant.now()
 
       (mockAuditConnector
         .sendExtendedEvent(_: ExtendedDataEvent)(using _: HeaderCarrier, _: ExecutionContext))
         .expects(
-          ArgThat(
-            (event: ExtendedDataEvent) =>
+          ArgThat[ExtendedDataEvent](
+            { event =>
+              val json = event.detail
               event.auditSource == "charities-claims" &&
-                event.auditType == "ClaimSubmission" &&
-                event.detail == Json.toJson(claim),
+              event.auditType == "ClaimSubmission" &&
+              (json \ "claimId").as[String] == claim.claimId &&
+              (json \ "userId").as[String] == claim.userId
+            },
             None
           ),
           *,
@@ -78,7 +84,7 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         )
         .returning(Future.successful(AuditResult.Success))
 
-      val result = service.sendEvent(claim)
+      val result = service.sendEvent(claim, scheduleData, creationTimestamp)
 
       whenReady(result) { res =>
         res shouldBe AuditResult.Success
@@ -87,14 +93,16 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
 
     "propagate failure from auditConnector" in {
 
-      val claim = testClaim
+      val claim             = testClaim
+      val scheduleData      = ScheduleData()
+      val creationTimestamp = Instant.now()
 
       (mockAuditConnector
         .sendExtendedEvent(_: ExtendedDataEvent)(using _: HeaderCarrier, _: ExecutionContext))
         .expects(*, *, *)
         .returning(Future.failed(new RuntimeException("Audit failed")))
 
-      whenReady(service.sendEvent(claim).failed) { ex =>
+      whenReady(service.sendEvent(claim, scheduleData, creationTimestamp).failed) { ex =>
         ex            shouldBe a[RuntimeException]
         ex.getMessage shouldBe "Audit failed"
       }
@@ -111,6 +119,9 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         )
       )
 
+      val scheduleData      = ScheduleData()
+      val creationTimestamp = Instant.now()
+
       (mockAuditConnector
         .sendExtendedEvent(_: ExtendedDataEvent)(using _: HeaderCarrier, _: ExecutionContext))
         .expects(
@@ -120,7 +131,7 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         )
         .returning(Future.successful(AuditResult.Success))
 
-      val result = service.sendEvent(claim)
+      val result = service.sendEvent(claim, scheduleData, creationTimestamp)
 
       whenReady(result) { res =>
         res shouldBe AuditResult.Success

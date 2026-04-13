@@ -400,71 +400,79 @@ class ChRISSubmissionServiceImpl @Inject() (
     connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
     communityBuildingsData: Option[CommunityBuildingsScheduleData]
   ): Option[GASDS] =
-    if !claim.claimData.repaymentClaimDetails.claimingUnderGiftAidSmallDonationsScheme then None
-    else
-      claim.claimData.giftAidSmallDonationsSchemeDonationDetails.map { gasdsDetails =>
-        val repaymentDetails = claim.claimData.repaymentClaimDetails
+    val repaymentDetails = claim.claimData.repaymentClaimDetails
+    if !repaymentDetails.claimingUnderGiftAidSmallDonationsScheme
+    then None
+    else {
+      val connectedCharities: YesNo = repaymentDetails.connectedToAnyOtherCharities.getOrElse(false)
 
-        val connectedCharities: YesNo = repaymentDetails.connectedToAnyOtherCharities.getOrElse(false)
+      val charities: Option[List[Charity]] =
+        connectedCharitiesData
+          .map(_.charities)
+          .getOrElse(Seq.empty)
+          .map(c => Charity(Name = c.charityName, HMRCref = c.charityReference))
+          .toList match
+          case Nil  => None
+          case list => Some(list)
 
-        val charities: Option[List[Charity]] =
-          connectedCharitiesData
-            .map(_.charities)
-            .getOrElse(Seq.empty)
-            .map(c => Charity(Name = c.charityName, HMRCref = c.charityReference))
-            .toList match
-            case Nil  => None
-            case list => Some(list)
+      val commBldgs: Option[YesNo] =
+        Some(repaymentDetails.claimingDonationsCollectedInCommunityBuildings.getOrElse(false))
 
-        val gasdsClaims: Option[List[GASDSClaim]] =
-          gasdsDetails.claims
-            .map(c =>
-              GASDSClaim(
-                Year = Some(c.taxYear.toString),
-                Amount = Some(c.amountOfDonationsReceived)
-              )
+      val buildings: Option[List[Building]] =
+        communityBuildingsData
+          .map(_.communityBuildings)
+          .getOrElse(Seq.empty)
+          .map { b =>
+            val year1Claim = List(BldgClaim(Year = b.taxYear1.toString, Amount = b.amountYear1))
+            val year2Claim = (b.taxYear2, b.amountYear2) match
+              case (Some(year), Some(amount)) => List(BldgClaim(Year = year.toString, Amount = amount))
+              case _                          => Nil
+
+            Building(
+              BldgName = b.buildingName,
+              Address = b.firstLineOfAddress,
+              Postcode = b.postcode,
+              BldgClaim = year1Claim ++ year2Claim
             )
-            .toList match
-            case Nil  => None
-            case list => Some(list)
+          }
+          .toList match
+          case Nil  => None
+          case list => Some(list)
 
-        val commBldgs: Option[YesNo] =
-          Some(repaymentDetails.claimingDonationsCollectedInCommunityBuildings.getOrElse(false))
-
-        val buildings: Option[List[Building]] =
-          communityBuildingsData
-            .map(_.communityBuildings)
-            .getOrElse(Seq.empty)
-            .map { b =>
-              val year1Claim = List(BldgClaim(Year = b.taxYear1.toString, Amount = b.amountYear1))
-              val year2Claim = (b.taxYear2, b.amountYear2) match
-                case (Some(year), Some(amount)) => List(BldgClaim(Year = year.toString, Amount = amount))
-                case _                          => Nil
-
-              Building(
-                BldgName = b.buildingName,
-                Address = b.firstLineOfAddress,
-                Postcode = b.postcode,
-                BldgClaim = year1Claim ++ year2Claim
+      val gasdsClaims: Option[List[GASDSClaim]] =
+        claim.claimData.giftAidSmallDonationsSchemeDonationDetails
+          .flatMap { gasdsDetails =>
+            gasdsDetails.claims
+              .map(c =>
+                GASDSClaim(
+                  Year = Some(c.taxYear.toString),
+                  Amount = Some(c.amountOfDonationsReceived)
+                )
               )
+              .toList match {
+              case Nil  => None
+              case list => Some(list)
             }
-            .toList match
-            case Nil  => None
-            case list => Some(list)
+          }
 
-        val adj: Option[String] =
-          Option.when(gasdsDetails.adjustmentForGiftAidOverClaimed > 0)(
-            gasdsDetails.adjustmentForGiftAidOverClaimed.toString
-          )
+      val adjustmentForGiftAidOverClaimed: Option[String] =
+        claim.claimData.giftAidSmallDonationsSchemeDonationDetails
+          .flatMap { gasdsDetails =>
+            Option.when(gasdsDetails.adjustmentForGiftAidOverClaimed > 0)(
+              gasdsDetails.adjustmentForGiftAidOverClaimed.toString
+            )
+          }
 
+      Some(
         GASDS(
           ConnectedCharities = connectedCharities,
           Charity = charities,
           GASDSClaim = gasdsClaims,
           CommBldgs = commBldgs,
           Building = buildings,
-          Adj = adj
+          Adj = adjustmentForGiftAidOverClaimed
         )
-      }
+      )
+    }
 
 }

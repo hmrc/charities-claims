@@ -1157,7 +1157,7 @@ class ChRISSubmissionServiceSpec
         result.GASDS shouldBe None
       }
 
-      "return None when giftAidSmallDonationsSchemeDonationDetails is None" in {
+      "return GASDSClaim as None when giftAidSmallDonationsSchemeDonationDetails is None" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
         val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
@@ -1180,7 +1180,7 @@ class ChRISSubmissionServiceSpec
         val currentUser = organisationUser
 
         val result = service.buildClaim(orgName, claim, currentUser, ScheduleData.empty)
-        result.GASDS shouldBe None
+        result.GASDS.flatMap(_.GASDSClaim) shouldBe None
       }
 
       "map multiple connected charities from upload data correctly" in {

@@ -43,36 +43,6 @@
     "otherIncomeScheduleFileUploadReference": "oi-ref-789",
     "giftAidScheduleFileUploadReference": "ga-ref-789",
     "understandFalseStatements": true,
-    "includedAnyAdjustmentsInClaimPrompt": "some details goes here regarding why ...",
-    "otherIncomeData": {
-      "adjustmentForOtherIncomePreviousOverClaimed": 240.03,
-      "totalOfGrossPayments": 240.01,
-      "totalOfTaxDeducted": 240.02,
-      "otherIncomes": [
-        {
-          "otherIncomeItem": 1,
-          "payerName": "John Smith",
-          "paymentDate": "2024-03-01",
-          "grossPayment": 240.00,
-          "taxDeducted": 15.00
-        }
-      ]
-    },
-    "giftAidScheduleData": {
-      "earliestDonationDate": "2024-01-15",
-      "prevOverclaimedGiftAid": 123.45,
-      "totalDonations": 200,
-      "donations": [
-        {
-          "donationItem": 1,
-          "donorTitle": "Mr",
-          "donorFirstName": "Test",
-          "donorLastName": "User",
-          "donorPostcode": "ZZ1 1ZZ",
-          "donationDate": "2024-02-01",
-          "donationAmount": 200.00
-        }
-      ]
-    }
+    "includedAnyAdjustmentsInClaimPrompt": "some details goes here regarding why ..."
   }
 }

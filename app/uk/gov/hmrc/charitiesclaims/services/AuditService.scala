@@ -81,11 +81,11 @@ class AuditService @Inject() (
           nameOfCorporateTrustee = dOrganisationDetails.nameOfCorporateTrustee,
           corporateTrusteePostcode = dOrganisationDetails.corporateTrusteePostcode,
           corporateTrusteeDaytimeTelephoneNumber = dOrganisationDetails.corporateTrusteeDaytimeTelephoneNumber,
-          authorisedOfficialTitle = dOrganisationDetails.authorisedOfficialTrusteeTitle,
-          authorisedOfficialFirstName = dOrganisationDetails.authorisedOfficialTrusteeFirstName,
-          authorisedOfficialLastName = dOrganisationDetails.authorisedOfficialTrusteeLastName,
-          authorisedOfficialPostcode = dOrganisationDetails.authorisedOfficialTrusteePostcode,
-          authorisedOfficialDaytimeTelephoneNumber =
+          authorisedOfficialTrusteeTitle = dOrganisationDetails.authorisedOfficialTrusteeTitle,
+          authorisedOfficialTrusteeFirstName = dOrganisationDetails.authorisedOfficialTrusteeFirstName,
+          authorisedOfficialTrusteeLastName = dOrganisationDetails.authorisedOfficialTrusteeLastName,
+          authorisedOfficialTrusteePostcode = dOrganisationDetails.authorisedOfficialTrusteePostcode,
+          authorisedOfficialTrusteeDaytimeTelephoneNumber =
             dOrganisationDetails.authorisedOfficialTrusteeDaytimeTelephoneNumber
         )
       }
@@ -111,7 +111,7 @@ class AuditService @Inject() (
       odGiftAid.map { dGiftAid =>
         AuditGiftAidScheduleData(
           earliestDonationDate = dGiftAid.earliestDonationDate,
-          previouslyOverclaimedGiftAid = dGiftAid.prevOverclaimedGiftAid,
+          prevOverclaimedGiftAid = dGiftAid.prevOverclaimedGiftAid,
           totalDonations = dGiftAid.totalDonations,
           donations = auditDonations
         )
@@ -164,14 +164,14 @@ class AuditService @Inject() (
       odCommunityBuildings
         .map(_.communityBuildings.map { communityBuilding =>
           AuditCommunityBuildingsScheduleData(
-            buildingItem = communityBuilding.communityBuildingItem,
+            communityBuildingItem = communityBuilding.communityBuildingItem,
             buildingName = communityBuilding.buildingName,
             firstLineOfAddress = communityBuilding.firstLineOfAddress,
             postcode = communityBuilding.postcode,
-            taxYearOneEnd = communityBuilding.taxYear1,
-            taxYearOneAmount = communityBuilding.amountYear1,
-            taxYearTwoEnd = communityBuilding.taxYear2,
-            taxYearTwoAmount = communityBuilding.amountYear2
+            taxYear1 = communityBuilding.taxYear1,
+            amountYear1 = communityBuilding.amountYear1,
+            taxYear2 = communityBuilding.taxYear2,
+            amountYear2 = communityBuilding.amountYear2
           )
         })
         .getOrElse(Nil)

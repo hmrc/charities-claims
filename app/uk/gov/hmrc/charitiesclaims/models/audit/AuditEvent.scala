@@ -59,16 +59,16 @@ final case class AuditOrganisationDetails(
   // TODO: It doesn't exist in data model. Need to build it.
   // notCorporateTrusteePostcode: Option[Boolean] = None,
   corporateTrusteeDaytimeTelephoneNumber: Option[String] = None,
-  authorisedOfficialTitle: Option[String] = None,
-  authorisedOfficialFirstName: Option[String] = None,
-  authorisedOfficialLastName: Option[String] = None,
-  authorisedOfficialPostcode: Option[String] = None,
-  authorisedOfficialDaytimeTelephoneNumber: Option[String] = None
+  authorisedOfficialTrusteeTitle: Option[String] = None,
+  authorisedOfficialTrusteeFirstName: Option[String] = None,
+  authorisedOfficialTrusteeLastName: Option[String] = None,
+  authorisedOfficialTrusteePostcode: Option[String] = None,
+  authorisedOfficialTrusteeDaytimeTelephoneNumber: Option[String] = None
 )
 
 final case class AuditGiftAidScheduleData(
   earliestDonationDate: String,
-  previouslyOverclaimedGiftAid: Option[BigDecimal] = None,
+  prevOverclaimedGiftAid: Option[BigDecimal] = None,
   totalDonations: BigDecimal,
   donations: Seq[AuditDonation]
 )
@@ -122,17 +122,17 @@ final case class AuditConnectedCharitiesScheduleData(
 )
 
 final case class AuditCommunityBuildingsScheduleData(
-  buildingItem: Int,
+  communityBuildingItem: Int,
   buildingName: String,
   firstLineOfAddress: String,
   postcode: String,
-  taxYearOneEnd: Int,
-  taxYearOneAmount: BigDecimal,
-  taxYearTwoEnd: Option[Int] = None,
-  taxYearTwoAmount: Option[BigDecimal] = None
+  taxYear1: Int,
+  amountYear1: BigDecimal,
+  taxYear2: Option[Int] = None,
+  amountYear2: Option[BigDecimal] = None
   // TODO: taxYearThreeEnd and taxYearThreeAmount doesn't exist in data model. Need to update data model.
-  // taxYearThreeEnd: Option[Int] = None,
-  // taxYearThreeAmount: Option[BigDecimal] = None
+  // taxYear3: Option[Int] = None,
+  // amountYear3: Option[BigDecimal] = None
 )
 
 final case class AuditDeclarationDetails(

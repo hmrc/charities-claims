@@ -10,7 +10,7 @@
       "claimingUnderGiftAidSmallDonationsScheme": true,
       "claimReferenceNumber": "test-claim-reference-number",
       "claimingDonationsNotFromCommunityBuilding": true,
-      "claimingDonationsCollectedInCommunityBuildings": true,
+      "claimingDonationsCollectedInCommunityBuildings": false,
       "connectedToAnyOtherCharities": true,
       "makingAdjustmentToPreviousClaim": true,
       "hmrcCharitiesReference": "test-hmrc-charities-reference",

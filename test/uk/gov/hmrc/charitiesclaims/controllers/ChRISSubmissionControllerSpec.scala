@@ -23,7 +23,7 @@ import uk.gov.hmrc.charitiesclaims.connectors.ChRISConnector
 import uk.gov.hmrc.charitiesclaims.models.*
 import uk.gov.hmrc.charitiesclaims.models.chris.GovTalkMessage
 import uk.gov.hmrc.charitiesclaims.services.{AuditService, ChRISSubmissionService, ClaimsService, MissingCharityReferenceException, UnregulatedDonationException, UnregulatedDonationsService}
-import uk.gov.hmrc.charitiesclaims.util.{ChRISTestData, ControllerSpec, TestClaimsService, TestClaimsServiceHelper}
+import uk.gov.hmrc.charitiesclaims.util.{ChRISTestData, ControllerSpec, TestClaimsService, TestClaimsServiceHelper, TestScheduleData}
 import uk.gov.hmrc.charitiesclaims.validation.{SchematronValidationException, ValidationError}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
@@ -49,7 +49,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
             claimingGiftAid = true,
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
-            claimReferenceNumber = Some("test-claim-reference-number")
+            claimReferenceNumber = Some("test-claim-reference-number"),
+            hmrcCharitiesReference = Some("XR4010")
           )
         )
       )
@@ -75,6 +76,11 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
+      (chrisSubmissionServiceMock
+        .getScheduleData(_: Claim)(using _: HeaderCarrier))
+        .expects(*, *)
+        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+
       (chrisConnectorMock
         .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
         .expects(ChRISTestData.exampleMessage, *)
@@ -86,8 +92,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.successful(()))
 
       (auditServiceMock
-        .sendEvent(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(AuditResult.Success))
 
       val request = testRequest(
@@ -161,7 +167,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
             claimingGiftAid = true,
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
-            claimReferenceNumber = Some("test-claim-reference-number")
+            claimReferenceNumber = Some("test-claim-reference-number"),
+            hmrcCharitiesReference = Some("XR4010")
           )
         )
       )
@@ -214,7 +221,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
             claimingGiftAid = true,
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
-            claimReferenceNumber = Some("test-claim-reference-number")
+            claimReferenceNumber = Some("test-claim-reference-number"),
+            hmrcCharitiesReference = Some("XR4010")
           )
         )
       )
@@ -314,7 +322,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
             claimingGiftAid = true,
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
-            claimReferenceNumber = Some("test-claim-reference-number")
+            claimReferenceNumber = Some("test-claim-reference-number"),
+            hmrcCharitiesReference = Some("XR4010")
           )
         )
       )
@@ -350,6 +359,11 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
+      (chrisSubmissionServiceMock
+        .getScheduleData(_: Claim)(using _: HeaderCarrier))
+        .expects(*, *)
+        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+
       (chrisConnectorMock
         .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
         .expects(ChRISTestData.exampleMessage, *)
@@ -361,8 +375,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.successful(()))
 
       (auditServiceMock
-        .sendEvent(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(AuditResult.Success))
 
       val request = testRequest(
@@ -401,7 +415,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
             claimingGiftAid = true,
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
-            claimReferenceNumber = Some("test-claim-reference-number")
+            claimReferenceNumber = Some("test-claim-reference-number"),
+            hmrcCharitiesReference = Some("XR4010")
           )
         )
       )
@@ -426,6 +441,12 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
         .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
+
+      (chrisSubmissionServiceMock
+        .getScheduleData(_: Claim)(using _: HeaderCarrier))
+        .expects(*, *)
+        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+        .anyNumberOfTimes()
 
       (chrisConnectorMock
         .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
@@ -469,7 +490,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
             claimingGiftAid = true,
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
-            claimReferenceNumber = Some("test-claim-reference-number")
+            claimReferenceNumber = Some("test-claim-reference-number"),
+            hmrcCharitiesReference = Some("XR4010")
           )
         )
       )
@@ -505,14 +527,20 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .expects(ChRISTestData.exampleMessage, *)
         .returning(Future.successful(()))
 
+      (chrisSubmissionServiceMock
+        .getScheduleData(_: Claim)(using _: HeaderCarrier))
+        .expects(*, *)
+        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+        .anyNumberOfTimes()
+
       (unregulatedDonationsServiceMock
         .recordUnregulatedDonation(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
         .expects(*, *, *)
         .returning(Future.failed(UnregulatedDonationException("test-claim-id", new RuntimeException("Error message"))))
 
       (auditServiceMock
-        .sendEvent(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(AuditResult.Success))
 
       val request = testRequest(
@@ -551,7 +579,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
             claimingGiftAid = true,
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
-            claimReferenceNumber = Some("test-claim-reference-number")
+            claimReferenceNumber = Some("test-claim-reference-number"),
+            hmrcCharitiesReference = Some("XR4010")
           )
         )
       )
@@ -581,6 +610,12 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
         .expects(ChRISTestData.exampleMessage, *)
         .returning(Future.failed(Exception("Request to POST failed")))
+
+      (chrisSubmissionServiceMock
+        .getScheduleData(_: Claim)(using _: HeaderCarrier))
+        .expects(*, *)
+        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+        .anyNumberOfTimes()
 
       val request = testRequest(
         "POST",
@@ -616,7 +651,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
             claimingGiftAid = true,
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
-            claimReferenceNumber = Some("test-claim-reference-number")
+            claimReferenceNumber = Some("test-claim-reference-number"),
+            hmrcCharitiesReference = Some("XR4010")
           )
         )
       )
@@ -642,14 +678,19 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
+      (chrisSubmissionServiceMock
+        .getScheduleData(_: Claim)(using _: HeaderCarrier))
+        .expects(*, *)
+        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+
       (chrisConnectorMock
         .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
         .expects(*, *)
         .returning(Future.successful(()))
 
       (auditServiceMock
-        .sendEvent(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(AuditResult.Failure("Audit failed")))
 
       (unregulatedDonationsServiceMock
@@ -692,7 +733,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
             claimingGiftAid = true,
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
-            claimReferenceNumber = Some("test-claim-reference-number")
+            claimReferenceNumber = Some("test-claim-reference-number"),
+            hmrcCharitiesReference = Some("XR4010")
           )
         )
       )
@@ -718,14 +760,19 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .expects(*, *, *, *)
         .returning(Future.successful(ChRISTestData.exampleMessage))
 
+      (chrisSubmissionServiceMock
+        .getScheduleData(_: Claim)(using _: HeaderCarrier))
+        .expects(*, *)
+        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+
       (chrisConnectorMock
         .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
         .expects(*, *)
         .returning(Future.successful(()))
 
       (auditServiceMock
-        .sendEvent(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.failed(new RuntimeException("Audit crashed")))
 
       (unregulatedDonationsServiceMock
@@ -768,7 +815,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
             claimingGiftAid = true,
             claimingTaxDeducted = false,
             claimingUnderGiftAidSmallDonationsScheme = false,
-            claimReferenceNumber = Some("test-claim-reference-number")
+            claimReferenceNumber = Some("test-claim-reference-number"),
+            hmrcCharitiesReference = Some("XR4010")
           )
         )
       )
@@ -799,9 +847,14 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .expects(*, *)
         .returning(Future.successful(()))
 
-      (auditServiceMock
-        .sendEvent(_: Claim)(using _: HeaderCarrier))
+      (chrisSubmissionServiceMock
+        .getScheduleData(_: Claim)(using _: HeaderCarrier))
         .expects(*, *)
+        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+
+      (auditServiceMock
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant)(using _: HeaderCarrier))
+        .expects(*, *, *, *)
         .returning(Future.successful(AuditResult.Success))
 
       (unregulatedDonationsServiceMock

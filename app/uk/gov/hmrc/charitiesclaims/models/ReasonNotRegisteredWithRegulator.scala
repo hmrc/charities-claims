@@ -18,8 +18,11 @@ package uk.gov.hmrc.charitiesclaims.models
 
 import scala.util.Try
 
-enum ReasonNotRegisteredWithRegulator {
-  case LowIncome, Excepted, Exempt, Waiting
+enum ReasonNotRegisteredWithRegulator(val value: String) {
+  case LowIncome extends ReasonNotRegisteredWithRegulator("LowIncome")
+  case Excepted extends ReasonNotRegisteredWithRegulator("Excepted")
+  case Exempt extends ReasonNotRegisteredWithRegulator("Exempt")
+  case Waiting extends ReasonNotRegisteredWithRegulator("Waiting")
 }
 
 object ReasonNotRegisteredWithRegulator extends Enumerable.Implicits {

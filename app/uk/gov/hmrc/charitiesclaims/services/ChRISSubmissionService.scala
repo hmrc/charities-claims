@@ -38,6 +38,10 @@ trait ChRISSubmissionService {
     HeaderCarrier
   ): Future[GovTalkMessage]
 
+  def getScheduleData(claim: models.Claim)(using
+    HeaderCarrier
+  ): Future[ScheduleData]
+
 }
 
 @Singleton
@@ -54,27 +58,17 @@ class ChRISSubmissionServiceImpl @Inject() (
   )(using HeaderCarrier): Future[GovTalkMessage] =
 
     for
-      orgName                <- getOrganisationName(currentUser)
-      giftAidData            <- getGiftAidUploadData(claim)
-      communityBuildingsData <- getCommunityBuildingsUploadData(claim)
-      connectedCharitiesData <- getConnectedCharitiesUploadData(claim)
-      otherIncomeData        <- getOtherIncomeUploadData(claim)
-    yield
-      val scheduleData = ScheduleData(
-        giftAid = giftAidData,
-        connectedCharities = connectedCharitiesData,
-        communityBuildings = communityBuildingsData,
-        otherIncome = otherIncomeData
-      )
-      GovTalkMessage(
-        GovTalkDetails = buildGovTalkDetails(currentUser),
-        Body = Body(
-          IRenvelope = IRenvelope(
-            IRheader = buildIRheader(currentUser),
-            R68 = buildR68(claim, currentUser, orgName, declarationLanguage, scheduleData)
-          )
+      orgName      <- getOrganisationName(currentUser)
+      scheduleData <- getScheduleData(claim)
+    yield GovTalkMessage(
+      GovTalkDetails = buildGovTalkDetails(currentUser),
+      Body = Body(
+        IRenvelope = IRenvelope(
+          IRheader = buildIRheader(currentUser),
+          R68 = buildR68(claim, currentUser, orgName, declarationLanguage, scheduleData)
         )
-      ).withLiteIRmark
+      )
+    ).withLiteIRmark
 
   def getOrganisationName(currentUser: models.CurrentUser)(using HeaderCarrier): Future[Option[String]] =
     if currentUser.isAgent
@@ -146,6 +140,19 @@ class ChRISSubmissionServiceImpl @Inject() (
           data
         })
     }
+
+  def getScheduleData(claim: models.Claim)(using HeaderCarrier): Future[ScheduleData] =
+    for {
+      giftAidData            <- getGiftAidUploadData(claim)
+      communityBuildingsData <- getCommunityBuildingsUploadData(claim)
+      connectedCharitiesData <- getConnectedCharitiesUploadData(claim)
+      otherIncomeData        <- getOtherIncomeUploadData(claim)
+    } yield ScheduleData(
+      giftAid = giftAidData,
+      connectedCharities = connectedCharitiesData,
+      communityBuildings = communityBuildingsData,
+      otherIncome = otherIncomeData
+    )
 
   def buildGovTalkDetails(currentUser: models.CurrentUser)(using hc: HeaderCarrier): GovTalkDetails =
     GovTalkDetails(

@@ -17,9 +17,11 @@
 package uk.gov.hmrc.charitiesclaims.stubs
 
 import uk.gov.hmrc.charitiesclaims.models
+import uk.gov.hmrc.charitiesclaims.models.ScheduleData
 import uk.gov.hmrc.charitiesclaims.models.chris.GovTalkMessage
 import uk.gov.hmrc.charitiesclaims.services.ChRISSubmissionService
 import uk.gov.hmrc.charitiesclaims.util.ChRISTestData
+import uk.gov.hmrc.charitiesclaims.util.TestScheduleData
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -29,5 +31,10 @@ class StubChRISSubmissionService extends ChRISSubmissionService {
     HeaderCarrier
   ): Future[GovTalkMessage] =
     Future.successful(ChRISTestData.exampleMessage)
+
+  override def getScheduleData(claim: models.Claim)(using
+                                                    HeaderCarrier
+  ): Future[ScheduleData] =
+    Future.successful(TestScheduleData.exampleScheduleData)
 
 }

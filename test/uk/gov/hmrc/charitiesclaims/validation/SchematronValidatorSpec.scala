@@ -874,7 +874,7 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateRegulatorRule(msg) should contain(ValidationError.RegulatorRule7031)
       }
 
-      "should fail 7033 when HMRCref starts with CH and Regulator present (not NoReg)" in {
+      "should fail 7033 when HMRCref starts with CH and Regulator present" in {
         val msg = withClaim(validMessage)(c =>
           c.copy(
             HMRCref = "CH1234",
@@ -884,7 +884,7 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateRegulatorRule(msg) should contain(ValidationError.RegulatorRule7033)
       }
 
-      "should fail 7033 when HMRCref starts with CF and Regulator has no NoReg" in {
+      "should fail 7033 when HMRCref starts with CF and Regulator present" in {
         val msg = withClaim(validMessage)(c =>
           c.copy(
             HMRCref = "CF1234",
@@ -894,27 +894,27 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateRegulatorRule(msg) should contain(ValidationError.RegulatorRule7033)
       }
 
-      "should pass 7033 when HMRCref starts with CH and Regulator has NoReg" in {
+      "should pass 7033 when HMRCref starts with CH and Regulator not present" in {
         val msg = withClaim(validMessage)(c =>
           c.copy(
             HMRCref = "CH1234",
-            Regulator = Some(Regulator(NoReg = Some(true)))
+            Regulator = None
           )
         )
         SchematronValidator.validateRegulatorRule(msg) should not contain ValidationError.RegulatorRule7033
       }
 
-      "should pass 7033 when HMRCref starts with CF and Regulator has NoReg" in {
+      "should pass 7033 when HMRCref starts with CF and Regulator not present" in {
         val msg = withClaim(validMessage)(c =>
           c.copy(
             HMRCref = "CF1234",
-            Regulator = Some(Regulator(NoReg = Some(true)))
+            Regulator = None
           )
         )
         SchematronValidator.validateRegulatorRule(msg) should not contain ValidationError.RegulatorRule7033
       }
 
-      "should pass when HMRCref doesn't starts with CH or CF and Regulator has no NoReg" in {
+      "should pass when HMRCref doesn't starts with CH or CF and Regulator present" in {
         val msg = withClaim(validMessage)(c =>
           c.copy(
             Regulator = Some(Regulator(RegName = Some(RegulatorName.CCEW), RegNo = Some("1234")))

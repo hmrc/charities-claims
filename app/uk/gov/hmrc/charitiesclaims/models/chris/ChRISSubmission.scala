@@ -52,6 +52,9 @@ final case class GovTalkMessage(
         )
       )
     )
+
+  def submissionReference: Option[String] =
+    Body.IRenvelope.IRheader.IRmark.map(irmark => IRmarkCalculator.asBase32(irmark.Content.toString))
 }
 
 final case class Header(

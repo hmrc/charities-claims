@@ -111,12 +111,12 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       val response = json.as[ChRISSubmissionResponse]
       status(result)               shouldBe OK
       response.success             shouldBe true
-      response.submissionReference shouldBe claim.lastUpdatedReference
+      response.submissionReference shouldBe "UAQ5WGU7S4AIRPYBQ5YVWEWNFTEZWET2"
 
       val (updatedClaim, _) = claimsService.getClaim("test-claim-id").futureValue.get
       updatedClaim.claimSubmitted                               shouldBe true
       updatedClaim.submissionDetails.map(_.submissionTimestamp) shouldBe Some(response.submissionTimestamp)
-      updatedClaim.submissionDetails.map(_.submissionReference) shouldBe Some(claim.lastUpdatedReference)
+      updatedClaim.submissionDetails.map(_.submissionReference) shouldBe Some("UAQ5WGU7S4AIRPYBQ5YVWEWNFTEZWET2")
     }
 
     "return 404 when claim does not exist" in new AuthorisedOrganisationFixture {
@@ -715,7 +715,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       status(result) shouldBe OK
 
       response.success             shouldBe true
-      response.submissionReference shouldBe claim.lastUpdatedReference
+      response.submissionReference shouldBe "UAQ5WGU7S4AIRPYBQ5YVWEWNFTEZWET2"
 
       val (updatedClaim, _) = claimsService.getClaim("test-claim-id").futureValue.get
       updatedClaim.claimSubmitted shouldBe true
@@ -797,7 +797,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       status(result) shouldBe OK
 
       response.success             shouldBe true
-      response.submissionReference shouldBe claim.lastUpdatedReference
+      response.submissionReference shouldBe "UAQ5WGU7S4AIRPYBQ5YVWEWNFTEZWET2"
 
       val (updatedClaim, _) = claimsService.getClaim("test-claim-id").futureValue.get
       updatedClaim.claimSubmitted shouldBe true

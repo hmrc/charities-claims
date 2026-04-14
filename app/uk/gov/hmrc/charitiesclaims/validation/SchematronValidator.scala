@@ -84,7 +84,7 @@ object SchematronValidator:
       else Nil
 
     val errors7029 =
-      if !startsWithCHorCF(c.HMRCref) && c.Regulator.flatMap(_.RegName).isEmpty && c.Regulator.flatMap(_.RegNo).isEmpty
+      if !startsWithCHorCF(c.HMRCref) && c.Regulator.isEmpty
       then List(ValidationError.ClaimRule7029)
       else Nil
 
@@ -278,7 +278,7 @@ object SchematronValidator:
           then List(ValidationError.RegulatorRule7031)
           else Nil
         val err7033 =
-          if startsWithCHorCF(c.HMRCref) && reg.NoReg.isEmpty
+          if startsWithCHorCF(c.HMRCref)
           then List(ValidationError.RegulatorRule7033)
           else Nil
         err7031 ++ err7033

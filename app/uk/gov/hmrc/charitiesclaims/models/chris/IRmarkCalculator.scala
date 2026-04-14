@@ -48,6 +48,11 @@ object IRmarkCalculator {
     Base64.getEncoder.encodeToString(digest)
   }
 
+  def asBase32(base64IRmark: String): String = {
+    val bytes = Base64.getDecoder.decode(base64IRmark)
+    Base32.encodeToBase32(bytes)
+  }
+
   private class LiteIRmarkBuilder extends XmlOutputBuilder {
 
     type Result = org.w3c.dom.Document

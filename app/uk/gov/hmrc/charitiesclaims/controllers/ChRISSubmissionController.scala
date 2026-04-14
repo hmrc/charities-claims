@@ -72,7 +72,8 @@ class ChRISSubmissionController @Inject() (
   private def updateClaim(
     claim: Claim,
     chrisSubmissionRequest: ChRISSubmissionRequest,
-    submissionTimestamp: String
+    submissionTimestamp: String,
+    submissionReference: String
   ): Future[Result] =
     claimsService
       .putClaim(
@@ -81,21 +82,21 @@ class ChRISSubmissionController @Inject() (
           submissionDetails = Some(
             SubmissionDetails(
               submissionTimestamp = submissionTimestamp,
-              submissionReference = chrisSubmissionRequest.lastUpdatedReference
+              submissionReference = submissionReference
             )
           )
         )
       )
       .map { _ =>
         logger.info(
-          s"ChRIS submission complete: claimId=${claim.claimId} submissionTimestamp=$submissionTimestamp"
+          s"ChRIS submission complete: claimId=${claim.claimId} submissionTimestamp=$submissionTimestamp submissionReference=$submissionReference"
         )
         Ok(
           Json.toJson(
             ChRISSubmissionResponse(
               success = true,
               submissionTimestamp = submissionTimestamp,
-              submissionReference = chrisSubmissionRequest.lastUpdatedReference
+              submissionReference = submissionReference
             )
           )
         )
@@ -170,7 +171,12 @@ class ChRISSubmissionController @Inject() (
 
                   _ <- unregulatedDonationsService.recordUnregulatedDonation(claim, currentUser)
 
-                  result <- updateClaim(claim, chrisSubmissionRequest, ISODateTime.timestampNow())
+                  result <- updateClaim(
+                              claim,
+                              chrisSubmissionRequest,
+                              ISODateTime.timestampNow(),
+                              govTalkMessage.submissionReference.getOrElse(claimId)
+                            )
 
                 } yield result
 

@@ -56,7 +56,7 @@ object TestScheduleData {
   val exampleCommunityBuildingsScheduleData: CommunityBuildingsScheduleData = CommunityBuildingsScheduleData(
     totalOfAllAmounts = 1000.00,
     communityBuildings = Seq(
-      CommunityBuilding1(
+      CommunityBuilding(
         communityBuildingItem = 1,
         buildingName = "test-building-name",
         firstLineOfAddress = "test-building-address",
@@ -66,7 +66,7 @@ object TestScheduleData {
         taxYear2 = Some(2026),
         amountYear2 = Some(1002.00)
       ),
-      CommunityBuilding1(
+      CommunityBuilding(
         communityBuildingItem = 2,
         buildingName = "test-building-name-2",
         firstLineOfAddress = "test-building-address-2",

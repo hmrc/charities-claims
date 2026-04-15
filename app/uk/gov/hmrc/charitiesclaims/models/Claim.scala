@@ -184,7 +184,7 @@ object ConnectedCharity {
   given Format[ConnectedCharity] = Json.format[ConnectedCharity]
 }
 
-final case class CommunityBuilding1(
+final case class CommunityBuilding(
   communityBuildingItem: Int,
   buildingName: String,
   firstLineOfAddress: String,
@@ -195,13 +195,13 @@ final case class CommunityBuilding1(
   amountYear2: Option[BigDecimal] = None
 )
 
-object CommunityBuilding1 {
-  given Format[CommunityBuilding1] = Json.format[CommunityBuilding1]
+object CommunityBuilding {
+  given Format[CommunityBuilding] = Json.format[CommunityBuilding]
 }
 
 case class CommunityBuildingsScheduleData(
   totalOfAllAmounts: BigDecimal,
-  communityBuildings: Seq[CommunityBuilding1]
+  communityBuildings: Seq[CommunityBuilding]
 )
 
 object CommunityBuildingsScheduleData {

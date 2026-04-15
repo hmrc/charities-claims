@@ -32,7 +32,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
 
 import scala.concurrent.Future
-import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding1, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, Donation, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncome, OtherIncomeScheduleData, ScheduleData}
+import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, Donation, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncome, OtherIncomeScheduleData, ScheduleData}
 
 class ChRISSubmissionServiceSpec
     extends AnyWordSpec
@@ -748,7 +748,7 @@ class ChRISSubmissionServiceSpec
       val communityBuildingsData = CommunityBuildingsScheduleData(
         totalOfAllAmounts = BigDecimal("500.00"),
         communityBuildings = Seq(
-          CommunityBuilding1(
+          CommunityBuilding(
             communityBuildingItem = 1,
             buildingName = "Village Hall",
             firstLineOfAddress = "1 High Street",
@@ -1072,7 +1072,7 @@ class ChRISSubmissionServiceSpec
           CommunityBuildingsScheduleData(
             totalOfAllAmounts = BigDecimal("1757.21"),
             communityBuildings = Seq(
-              CommunityBuilding1(
+              CommunityBuilding(
                 communityBuildingItem = 1,
                 buildingName = "YMCA",
                 firstLineOfAddress = "123 New Street",
@@ -1307,7 +1307,7 @@ class ChRISSubmissionServiceSpec
         )
       }
 
-      "map CommunityBuilding1 with 2 years from upload data" in {
+      "map CommunityBuilding with 2 years from upload data" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
         val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
@@ -1338,7 +1338,7 @@ class ChRISSubmissionServiceSpec
           CommunityBuildingsScheduleData(
             totalOfAllAmounts = BigDecimal("1757.21"),
             communityBuildings = Seq(
-              CommunityBuilding1(
+              CommunityBuilding(
                 communityBuildingItem = 1,
                 buildingName = "YMCA",
                 firstLineOfAddress = "123 New Street",
@@ -1371,7 +1371,7 @@ class ChRISSubmissionServiceSpec
         )
       }
 
-      "map CommunityBuilding1 with 1 year only from upload data" in {
+      "map CommunityBuilding with 1 year only from upload data" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
         val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
@@ -1402,7 +1402,7 @@ class ChRISSubmissionServiceSpec
           CommunityBuildingsScheduleData(
             totalOfAllAmounts = BigDecimal("500.00"),
             communityBuildings = Seq(
-              CommunityBuilding1(
+              CommunityBuilding(
                 communityBuildingItem = 1,
                 buildingName = "Village Hall",
                 firstLineOfAddress = "1 High Street",

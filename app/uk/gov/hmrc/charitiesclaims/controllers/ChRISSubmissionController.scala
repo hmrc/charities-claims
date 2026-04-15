@@ -72,7 +72,6 @@ class ChRISSubmissionController @Inject() (
 
   private def updateClaim(
     claim: Claim,
-    chrisSubmissionRequest: ChRISSubmissionRequest,
     submissionTimestamp: String,
     submissionReference: String
   )(using HeaderCarrier): Future[Result] =
@@ -173,10 +172,9 @@ class ChRISSubmissionController @Inject() (
                   _ <- unregulatedDonationsService.recordUnregulatedDonation(claim, currentUser)
 
                   result <- updateClaim(
-                              claim,
-                              chrisSubmissionRequest,
-                              ISODateTime.timestampNow(),
-                              govTalkMessage.submissionReference.getOrElse(claimId)
+                              claim = claim,
+                              submissionTimestamp = ISODateTime.timestampNow(),
+                              submissionReference = govTalkMessage.submissionReference.getOrElse(claimId)
                             )
 
                 } yield result

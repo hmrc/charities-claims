@@ -19,6 +19,7 @@ package uk.gov.hmrc.charitiesclaims.connectors
 import com.google.inject.ImplementedBy
 import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
+import play.api.http.Status.NO_CONTENT
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -43,6 +44,8 @@ trait ClaimsValidationConnector {
   def getUploadResult(claimId: String, reference: FileUploadReference)(using
     hc: HeaderCarrier
   ): Future[Option[GetUploadResultResponse]]
+
+  def touchTtl(claimId: String)(using hc: HeaderCarrier): Future[Unit]
 }
 
 class ClaimsValidationConnectorImpl @Inject() (
@@ -123,4 +126,11 @@ class ClaimsValidationConnectorImpl @Inject() (
         )
     )
 
+  def touchTtl(claimId: String)(using hc: HeaderCarrier): Future[Unit] =
+    retry(retryIntervals*)(shouldRetry, retryReason) {
+      http.patch(URL(s"$baseUrl$contextPath/ttl/$claimId")).execute[HttpResponse]
+    }.flatMap { response =>
+      if response.status == NO_CONTENT then Future.unit
+      else Future.failed(Exception(s"Touch TTL failed: ${response.status} ${response.body}"))
+    }
 }

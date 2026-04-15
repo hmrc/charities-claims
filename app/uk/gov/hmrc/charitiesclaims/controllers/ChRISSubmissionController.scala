@@ -32,6 +32,7 @@ import uk.gov.hmrc.charitiesclaims.connectors.ChRISConnector
 import uk.gov.hmrc.charitiesclaims.models.ChRISSubmissionResponse
 import uk.gov.hmrc.charitiesclaims.models.SubmissionDetails
 import uk.gov.hmrc.charitiesclaims.validation.SchematronValidationException
+import uk.gov.hmrc.http.HeaderCarrier
 
 @Singleton()
 class ChRISSubmissionController @Inject() (
@@ -74,7 +75,7 @@ class ChRISSubmissionController @Inject() (
     chrisSubmissionRequest: ChRISSubmissionRequest,
     submissionTimestamp: String,
     submissionReference: String
-  ): Future[Result] =
+  )(using HeaderCarrier): Future[Result] =
     claimsService
       .putClaim(
         claim.copy(

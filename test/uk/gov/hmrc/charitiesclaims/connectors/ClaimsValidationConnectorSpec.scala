@@ -83,6 +83,9 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
       response = response
     )
 
+  def givenTouchTtlEndpointReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
+    mockHttpPatchSuccess(URL("http://foo.bar.com:1234/foo-claims/ttl/12345"))(response)
+
   def readJsonString(path: String): String =
     Source.fromInputStream(this.getClass.getResourceAsStream(path)).getLines().mkString("\n")
 
@@ -232,6 +235,48 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
       "should throw an exception if the service returns 404 status" in {
         givenDeleteUploadEndpointReturns(HttpResponse(404, "")).once()
         await(connector.deleteUpload("12345", FileUploadReference("test-ref-123"))) shouldBe false
+      }
+    }
+
+    "touchTtl" - {
+
+      "should return unit when the service returns 204 NO_CONTENT" in {
+        givenTouchTtlEndpointReturns(HttpResponse(204)).once()
+
+        await(connector.touchTtl("12345")) shouldBe ()
+      }
+
+      "should throw an exception if the service returns non-204 status" in {
+        givenTouchTtlEndpointReturns(HttpResponse(200, "unexpected")).once()
+
+        a[Exception] shouldBe thrownBy {
+          await(connector.touchTtl("12345"))
+        }
+      }
+
+      "should retry and succeed on second attempt" in {
+        givenTouchTtlEndpointReturns(HttpResponse(500, "")).once()
+        givenTouchTtlEndpointReturns(HttpResponse(204)).once()
+
+        await(connector.touchTtl("12345")) shouldBe ()
+      }
+
+      "should retry and succeed on third attempt" in {
+        givenTouchTtlEndpointReturns(HttpResponse(500, "")).once()
+        givenTouchTtlEndpointReturns(HttpResponse(499, "")).once()
+        givenTouchTtlEndpointReturns(HttpResponse(204)).once()
+
+        await(connector.touchTtl("12345")) shouldBe ()
+      }
+
+      "should fail after retries are exhausted" in {
+        givenTouchTtlEndpointReturns(HttpResponse(500, "")).once()
+        givenTouchTtlEndpointReturns(HttpResponse(499, "")).once()
+        givenTouchTtlEndpointReturns(HttpResponse(469, "")).once()
+
+        a[Exception] shouldBe thrownBy {
+          await(connector.touchTtl("12345"))
+        }
       }
     }
   }

@@ -171,8 +171,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         .returning(Future.successful(Some((existingClaim, Instant.now()))))
 
       (mockClaimsService
-        .putClaim(_: Claim))
-        .expects(capture(captured))
+        .putClaim(_: Claim)(using _: HeaderCarrier))
+        .expects(capture(captured), *)
         .returning(Future.successful(()))
 
       (mockClaimsValidationConnector
@@ -220,8 +220,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         .returning(Future.successful(Some((existingClaim, Instant.now()))))
 
       (mockClaimsService
-        .putClaim(_: Claim))
-        .expects(capture(captured))
+        .putClaim(_: Claim)(using _: HeaderCarrier))
+        .expects(capture(captured), *)
         .returning(Future.successful(()))
 
       (mockClaimsValidationConnector
@@ -269,8 +269,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         .returning(Future.successful(Some((existingClaim, Instant.now()))))
 
       (mockClaimsService
-        .putClaim(_: Claim))
-        .expects(capture(captured))
+        .putClaim(_: Claim)(using _: HeaderCarrier))
+        .expects(capture(captured), *)
         .returning(Future.successful(()))
 
       (mockClaimsValidationConnector
@@ -375,8 +375,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         )
 
       (mockClaimsService
-        .putClaim(_: Claim))
-        .expects(capture(captured))
+        .putClaim(_: Claim)(using _: HeaderCarrier))
+        .expects(capture(captured), *)
         .returning(Future.successful(()))
 
       (mockClaimsValidationConnector
@@ -412,8 +412,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         .returning(Future.successful(Some((existingClaim, Instant.now()))))
 
       (mockClaimsService
-        .putClaim(_: Claim))
-        .expects(*)
+        .putClaim(_: Claim)(using _: HeaderCarrier))
+        .expects(*, *)
         .returning(Future.failed(new RuntimeException("Error message")))
 
       val controller =
@@ -492,8 +492,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         .returning(Future.successful(Some((existingClaimWithOrgDetails, Instant.now()))))
 
       (mockClaimsService
-        .putClaim(_: Claim))
-        .expects(capture(captured))
+        .putClaim(_: Claim)(using _: HeaderCarrier))
+        .expects(capture(captured), *)
         .returning(Future.successful(()))
 
       (mockClaimsValidationConnector
@@ -534,8 +534,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         .returning(Future.successful(Some((existingClaimWithGasds, Instant.now()))))
 
       (mockClaimsService
-        .putClaim(_: Claim))
-        .expects(capture(captured))
+        .putClaim(_: Claim)(using _: HeaderCarrier))
+        .expects(capture(captured), *)
         .returning(Future.successful(()))
 
       (mockClaimsValidationConnector
@@ -577,8 +577,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         .returning(Future.successful(Some((existingClaimWithDeclaration, Instant.now()))))
 
       (mockClaimsService
-        .putClaim(_: Claim))
-        .expects(capture(captured))
+        .putClaim(_: Claim)(using _: HeaderCarrier))
+        .expects(capture(captured), *)
         .returning(Future.successful(()))
 
       (mockClaimsValidationConnector

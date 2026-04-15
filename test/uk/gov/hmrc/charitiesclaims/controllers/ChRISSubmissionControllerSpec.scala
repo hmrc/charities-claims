@@ -350,8 +350,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.successful(Some((claim, Instant.now()))))
 
       (claimsService
-        .putClaim(_: Claim))
-        .expects(*)
+        .putClaim(_: Claim)(using _: HeaderCarrier))
+        .expects(*, *)
         .returning(Future.failed(UnregulatedDonationException("test-claim-id", new RuntimeException("Error message"))))
 
       (chrisSubmissionServiceMock

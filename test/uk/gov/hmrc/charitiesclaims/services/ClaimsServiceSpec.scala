@@ -49,6 +49,12 @@ class ClaimsServiceSpec
     .anyNumberOfTimes()
     .returning(Future.successful(()))
 
+  (mockClaimsValidationConnector
+    .touchTtl(_: String)(using _: HeaderCarrier))
+    .expects(*, *)
+    .atLeastOnce()
+    .returning(Future.unit)
+
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
       .overrides {

@@ -55,7 +55,7 @@ class TestClaimsService(initialClaims: Seq[Claim]) extends ClaimsService {
   private val claims: ListBuffer[(Claim, Instant)] =
     ListBuffer.from(initialClaims.map(_ -> Instant.now()))
 
-  override def putClaim(claim: Claim): Future[Unit] = {
+  override def putClaim(claim: Claim)(using HeaderCarrier): Future[Unit] = {
     claims.filterInPlace((c, _) => c.claimId != claim.claimId)
     claims.append((claim, Instant.now()))
     Future.successful(())

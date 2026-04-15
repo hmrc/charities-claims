@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[ClaimsServiceImpl])
 trait ClaimsService {
 
-  def putClaim(claim: Claim): Future[Unit]
+  def putClaim(claim: Claim)(using HeaderCarrier): Future[Unit]
   def getClaim(claimId: String): Future[Option[(Claim, Instant)]]
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit]
   def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]]
@@ -49,7 +49,7 @@ class ClaimsServiceImpl @Inject() (
 
   private val logger = Logger(getClass)
 
-  def putClaim(claim: Claim): Future[Unit] =
+  def putClaim(claim: Claim)(using HeaderCarrier): Future[Unit] =
     repository.getWithCreatedAt(claim.claimId)(ClaimsRepository.claimDataKey).flatMap {
       case Some(existingClaim, _) if existingClaim == claim =>
         logger.info(s"Skipping put for unchanged claim: claimId=${claim.claimId}")
@@ -59,7 +59,17 @@ class ClaimsServiceImpl @Inject() (
         logger.info(s"Saving claim: claimId=${claim.claimId}")
         repository
           .put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
-          .map(_ => ())
+          .flatMap { _ =>
+            claimsValidationConnector
+              .touchTtl(claim.claimId)
+              .recover { case exception: Exception =>
+                logger.warn(
+                  s"Touch TTL failed for claimId=${claim.claimId}, continuing anyway",
+                  exception
+                )
+                ()
+              }
+          }
     }
 
   def getClaim(claimId: String): Future[Option[(Claim, Instant)]] =

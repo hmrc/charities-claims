@@ -202,7 +202,7 @@ class SubmissionSummaryServiceSpec extends AnyWordSpec with Matchers with Mockit
       val communityBuildingsData = CommunityBuildingsScheduleData(
         totalOfAllAmounts = BigDecimal("500.00"),
         communityBuildings = Seq(
-          CommunityBuilding1(
+          CommunityBuilding(
             communityBuildingItem = 1,
             buildingName = "Village Hall",
             firstLineOfAddress = "1 High Street",
@@ -243,7 +243,7 @@ class SubmissionSummaryServiceSpec extends AnyWordSpec with Matchers with Mockit
       val communityBuildingsData = CommunityBuildingsScheduleData(
         totalOfAllAmounts = BigDecimal("500.00"),
         communityBuildings = Seq(
-          CommunityBuilding1(
+          CommunityBuilding(
             communityBuildingItem = 1,
             buildingName = "Village Hall",
             firstLineOfAddress = "1 High Street",

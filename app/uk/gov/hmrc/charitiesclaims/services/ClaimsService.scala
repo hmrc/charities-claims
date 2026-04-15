@@ -64,7 +64,7 @@ class ClaimsServiceImpl @Inject() (
               .touchTtl(claim.claimId)
               .recover { case exception: Exception =>
                 logger.warn(
-                  s"Touch TTL failed for claimId=${claim.claimId}, continuing anyway",
+                  s"Non-blocking error: TTL update failed for claimId=${claim.claimId}; continuing with successful claim persistence",
                   exception
                 )
                 ()

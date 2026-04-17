@@ -136,9 +136,8 @@ final case class AuditCommunityBuildingsScheduleData(
 
 final case class AuditDeclarationDetails(
   understandFalseStatements: Option[Boolean] = None,
-  includedAnyAdjustmentsInClaimPrompt: Option[String] = None
-  // TODO: Doesn't exist in data model.
-  // language: String
+  includedAnyAdjustmentsInClaimPrompt: Option[String] = None,
+  language: String
 )
 
 final case class AuditSubmissionDetails(

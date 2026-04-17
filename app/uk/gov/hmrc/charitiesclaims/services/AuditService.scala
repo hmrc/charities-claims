@@ -35,17 +35,26 @@ class AuditService @Inject() (
   private val auditSource: String = "charities-claims"
   private val auditType: String   = "ClaimSubmission"
 
-  private def buildAuditEvent(claim: Claim, scheduleData: ScheduleData, creationTimestamp: Instant) =
+  private def buildAuditEvent(
+    claim: Claim,
+    scheduleData: ScheduleData,
+    creationTimestamp: Instant,
+    declarationLanguage: String
+  ) =
     AuditEvent(
       claimId = claim.claimId,
       userId = claim.userId,
       claimSubmitted = claim.claimSubmitted,
       creationTimestamp = creationTimestamp.toString,
-      claimData = buildAuditClaimData(claim, scheduleData),
+      claimData = buildAuditClaimData(claim, scheduleData, declarationLanguage),
       submissionDetails = buildSubmissionDetails(claim.submissionDetails)
     )
 
-  private def buildAuditClaimData(claim: Claim, scheduleData: ScheduleData): AuditClaimData = {
+  private def buildAuditClaimData(
+    claim: Claim,
+    scheduleData: ScheduleData,
+    declarationLanguage: String
+  ): AuditClaimData = {
 
     val dRepaymentClaimDetails: RepaymentClaimDetails                                                    = claim.claimData.repaymentClaimDetails
     val odOrganisationDetails: Option[OrganisationDetails]                                               = claim.claimData.organisationDetails
@@ -193,7 +202,8 @@ class AuditService @Inject() (
     val auditDeclarationDetails =
       AuditDeclarationDetails(
         understandFalseStatements = claim.claimData.understandFalseStatements,
-        includedAnyAdjustmentsInClaimPrompt = claim.claimData.includedAnyAdjustmentsInClaimPrompt
+        includedAnyAdjustmentsInClaimPrompt = claim.claimData.includedAnyAdjustmentsInClaimPrompt,
+        language = declarationLanguage
       )
 
     AuditClaimData(
@@ -214,13 +224,13 @@ class AuditService @Inject() (
       )
     }
 
-  def sendEvent(claim: Claim, scheduleData: ScheduleData, creationTimestamp: Instant)(implicit
-    hc: HeaderCarrier
+  def sendEvent(claim: Claim, scheduleData: ScheduleData, creationTimestamp: Instant, declarationLanguage: String)(
+    implicit hc: HeaderCarrier
   ): Future[AuditResult] = {
     val extendedDataEvent = ExtendedDataEvent(
       auditSource = auditSource,
       auditType = auditType,
-      detail = Json.toJson(buildAuditEvent(claim, scheduleData, creationTimestamp))
+      detail = Json.toJson(buildAuditEvent(claim, scheduleData, creationTimestamp, declarationLanguage))
     )
 
     auditConnector.sendExtendedEvent(extendedDataEvent)

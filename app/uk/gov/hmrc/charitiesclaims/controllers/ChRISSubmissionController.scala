@@ -163,11 +163,13 @@ class ChRISSubmissionController @Inject() (
 
                   scheduleData <- chrisSubmissionService.getScheduleData(claim)
 
-                  _ <- handleAuditResult(
-                         auditService.sendEvent(claim, scheduleData, creationTimestamp),
-                         claimId,
-                         claim.userId
-                       )
+                  _ <-
+                    handleAuditResult(
+                      auditService
+                        .sendEvent(claim, scheduleData, creationTimestamp, chrisSubmissionRequest.declarationLanguage),
+                      claimId,
+                      claim.userId
+                    )
 
                   _ <- unregulatedDonationsService.recordUnregulatedDonation(claim, currentUser)
 

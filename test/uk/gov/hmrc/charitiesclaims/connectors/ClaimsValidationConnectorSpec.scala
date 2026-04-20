@@ -246,12 +246,10 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
         await(connector.touchTtl("12345")) shouldBe ()
       }
 
-      "should throw an exception if the service returns non-204 status" in {
+      "should return unit when the service returns non-204 status" in {
         givenTouchTtlEndpointReturns(HttpResponse(200, "unexpected")).once()
 
-        a[Exception] shouldBe thrownBy {
-          await(connector.touchTtl("12345"))
-        }
+        await(connector.touchTtl("12345")) shouldBe ()
       }
 
       "should retry and succeed on second attempt" in {
@@ -269,14 +267,12 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
         await(connector.touchTtl("12345")) shouldBe ()
       }
 
-      "should fail after retries are exhausted" in {
+      "should return unit after retries are exhausted" in {
         givenTouchTtlEndpointReturns(HttpResponse(500, "")).once()
         givenTouchTtlEndpointReturns(HttpResponse(499, "")).once()
         givenTouchTtlEndpointReturns(HttpResponse(469, "")).once()
 
-        a[Exception] shouldBe thrownBy {
-          await(connector.touchTtl("12345"))
-        }
+        await(connector.touchTtl("12345")) shouldBe ()
       }
     }
   }

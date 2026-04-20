@@ -19,19 +19,16 @@ package uk.gov.hmrc.charitiesclaims.connectors
 import com.google.inject.ImplementedBy
 import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
-import play.api.http.Status.NO_CONTENT
+import uk.gov.hmrc.charitiesclaims.models.{DeleteUploadResponse, FileUploadReference, GetUploadResultResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.charitiesclaims.models.DeleteUploadResponse
 
 import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.charitiesclaims.models.FileUploadReference
-import uk.gov.hmrc.charitiesclaims.models.GetUploadResultResponse
 
 @ImplementedBy(classOf[ClaimsValidationConnectorImpl])
 trait ClaimsValidationConnector {
@@ -129,8 +126,5 @@ class ClaimsValidationConnectorImpl @Inject() (
   def touchTtl(claimId: String)(using hc: HeaderCarrier): Future[Unit] =
     retry(retryIntervals*)(shouldRetry, retryReason) {
       http.patch(URL(s"$baseUrl$contextPath/ttl/$claimId")).execute[HttpResponse]
-    }.flatMap { response =>
-      if response.status == NO_CONTENT then Future.unit
-      else Future.failed(Exception(s"Touch TTL failed: ${response.status} ${response.body}"))
-    }
+    }.map(_ => ())
 }

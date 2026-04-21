@@ -68,6 +68,20 @@ class ChRISSubmissionServiceSpec
     enrolmentIdentifierKey = "test-enrolment-identifier-key"
   )
 
+  val CHOrganisationUser: models.CurrentUser = TestCurrentUser(
+    affinityGroup = AffinityGroup.Organisation,
+    userId = "test-user-id",
+    enrolmentIdentifierValue = "CH-test-enrolment-identifier-value",
+    enrolmentIdentifierKey = "test-enrolment-identifier-key"
+  )
+
+  val CFOrganisationUser: models.CurrentUser = TestCurrentUser(
+    affinityGroup = AffinityGroup.Organisation,
+    userId = "test-user-id",
+    enrolmentIdentifierValue = "CH-test-enrolment-identifier-value",
+    enrolmentIdentifierKey = "test-enrolment-identifier-key"
+  )
+
   "ChRISSubmissionService" should {
     "build a ChRISSubmission correctly for an organisation user claiming gift aid" in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
@@ -153,7 +167,7 @@ class ChRISSubmissionServiceSpec
       val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
       val submissionOffId     = service.buildOffId(claim)
       val submissionOffName   = service.buildOffName(claim)
-      val submissionRegulator = service.buildRegulator(claim)
+      val submissionRegulator = service.buildRegulator(claim, organisationUser.enrolmentIdentifierValue)
 
       submissionR68.AuthOfficial shouldBe Some(
         AuthOfficial(
@@ -229,7 +243,7 @@ class ChRISSubmissionServiceSpec
       val currentUser = organisationUser
 
       val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
-      val submissionRegulator = service.buildRegulator(claim)
+      val submissionRegulator = service.buildRegulator(claim, organisationUser.enrolmentIdentifierValue)
 
       submissionR68.AuthOfficial shouldBe Some(
         AuthOfficial(
@@ -297,7 +311,7 @@ class ChRISSubmissionServiceSpec
       val currentUser = organisationUser
 
       val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
-      val submissionRegulator = service.buildRegulator(claim)
+      val submissionRegulator = service.buildRegulator(claim, organisationUser.enrolmentIdentifierValue)
 
       submissionR68.AuthOfficial shouldBe Some(
         AuthOfficial(
@@ -434,7 +448,7 @@ class ChRISSubmissionServiceSpec
       val currentUser = organisationUser
 
       val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
-      val submissionRegulator = service.buildRegulator(claim)
+      val submissionRegulator = service.buildRegulator(claim, organisationUser.enrolmentIdentifierValue)
 
       submissionR68.AuthOfficial shouldBe Some(
         AuthOfficial(
@@ -507,7 +521,7 @@ class ChRISSubmissionServiceSpec
       val currentUser = organisationUser
 
       val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
-      val submissionRegulator = service.buildRegulator(claim)
+      val submissionRegulator = service.buildRegulator(claim, organisationUser.enrolmentIdentifierValue)
 
       submissionR68.AuthOfficial shouldBe Some(
         AuthOfficial(
@@ -583,7 +597,7 @@ class ChRISSubmissionServiceSpec
       val declarationLanguage = "en"
 
       val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
-      val submissionRegulator = service.buildRegulator(claim)
+      val submissionRegulator = service.buildRegulator(claim, organisationUser.enrolmentIdentifierValue)
 
       submissionR68.WelshSubmission shouldBe None
       submissionR68.AuthOfficial    shouldBe Some(
@@ -614,6 +628,218 @@ class ChRISSubmissionServiceSpec
           RegNo = Some("123456")
         )
       )
+    }
+
+    "build a ChRISSubmission correctly for an organisation which has CF - Regulator = None, Corporate Trustee = false and address in UK " in {
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = NameOfCharityRegulator.None,
+              reasonNotRegisteredWithRegulator = None,
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = false,
+              doYouHaveCorporateTrusteeUKAddress = Some(true),
+              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteeTitle = Some("Mr"),
+              authorisedOfficialTrusteeFirstName = Some("John"),
+              authorisedOfficialTrusteeLastName = Some("Jones")
+            )
+          )
+        )
+      )
+
+      val currentUser         = organisationUser
+      val declarationLanguage = "en"
+
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
+      val submissionRegulator = service.buildRegulator(claim, CFOrganisationUser.enrolmentIdentifierValue)
+
+      submissionR68.WelshSubmission shouldBe None
+      submissionR68.AuthOfficial    shouldBe Some(
+        AuthOfficial(
+          Trustee = None,
+          OffName = Some(
+            OffName(
+              Ttl = Some("Mr"),
+              Fore = Some("John"),
+              Sur = Some("Jones")
+            )
+          ),
+          ClaimNo = Some("test-claim-reference-number"),
+          OffID = Some(
+            OffID(
+              Postcode = Some("post-code"),
+              Overseas = None
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+
+      submissionRegulator shouldBe None
+    }
+
+    "build a ChRISSubmission correctly for an organisation which has CH - Regulator = None, Corporate Trustee = false and address in UK " in {
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = NameOfCharityRegulator.None,
+              reasonNotRegisteredWithRegulator = None,
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = false,
+              doYouHaveCorporateTrusteeUKAddress = Some(true),
+              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteeTitle = Some("Mr"),
+              authorisedOfficialTrusteeFirstName = Some("John"),
+              authorisedOfficialTrusteeLastName = Some("Jones")
+            )
+          )
+        )
+      )
+
+      val currentUser         = organisationUser
+      val declarationLanguage = "en"
+
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
+      val submissionRegulator = service.buildRegulator(claim, CHOrganisationUser.enrolmentIdentifierValue)
+
+      submissionR68.WelshSubmission shouldBe None
+      submissionR68.AuthOfficial    shouldBe Some(
+        AuthOfficial(
+          Trustee = None,
+          OffName = Some(
+            OffName(
+              Ttl = Some("Mr"),
+              Fore = Some("John"),
+              Sur = Some("Jones")
+            )
+          ),
+          ClaimNo = Some("test-claim-reference-number"),
+          OffID = Some(
+            OffID(
+              Postcode = Some("post-code"),
+              Overseas = None
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+
+      submissionRegulator shouldBe None
+    }
+
+    "build a ChRISSubmission correctly for an organisation which has CH - Regulator = Scottish, Corporate Trustee = false and address in UK " in {
+      val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
+      val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+
+      val claim = models.Claim(
+        claimId = "test-claim-id",
+        userId = "test-user-id",
+        claimSubmitted = true,
+        lastUpdatedReference = UUID.randomUUID().toString,
+        claimData = models.ClaimData(
+          repaymentClaimDetails = models.RepaymentClaimDetails(
+            claimingGiftAid = true,
+            claimingTaxDeducted = false,
+            claimingUnderGiftAidSmallDonationsScheme = false,
+            claimReferenceNumber = Some("test-claim-reference-number")
+          ),
+          organisationDetails = Some(
+            models.OrganisationDetails(
+              nameOfCharityRegulator = NameOfCharityRegulator.Scottish,
+              reasonNotRegisteredWithRegulator = None,
+              charityRegistrationNumber = Some("123456"),
+              areYouACorporateTrustee = false,
+              doYouHaveCorporateTrusteeUKAddress = Some(true),
+              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
+              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
+              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
+              authorisedOfficialTrusteeTitle = Some("Mr"),
+              authorisedOfficialTrusteeFirstName = Some("John"),
+              authorisedOfficialTrusteeLastName = Some("Jones")
+            )
+          )
+        )
+      )
+
+      val currentUser = organisationUser
+
+      val submissionR68       = service.buildR68(claim, currentUser, orgName, declarationLanguage, ScheduleData.empty)
+      val submissionRegulator = service.buildRegulator(claim, CHOrganisationUser.enrolmentIdentifierValue)
+
+      submissionR68.AuthOfficial shouldBe Some(
+        AuthOfficial(
+          Trustee = None,
+          OffName = Some(
+            OffName(
+              Ttl = Some("Mr"),
+              Fore = Some("John"),
+              Sur = Some("Jones")
+            )
+          ),
+          ClaimNo = Some("test-claim-reference-number"),
+          OffID = Some(
+            OffID(
+              Postcode = Some("post-code"),
+              Overseas = None
+            )
+          ),
+          Phone = Some("1234567890")
+        )
+      )
+
+      submissionRegulator shouldBe
+        Some(
+          Regulator(
+            RegName = Some(RegulatorName.OSCR),
+            NoReg = None,
+            RegNo = None
+          )
+        )
     }
 
     "build a ChRISSubmission correctly for an agent - Regulator = None, Corporate Trustee = false and address in UK " in {
@@ -665,7 +891,7 @@ class ChRISSubmissionServiceSpec
 
       val submissionR68       =
         service.buildR68(claim, currentUser, Some("Test-Agent-Name"), declarationLanguage, ScheduleData.empty)
-      val submissionRegulator = service.buildRegulator(claim)
+      val submissionRegulator = service.buildRegulator(claim, agentUser.enrolmentIdentifierValue)
 
       submission.Body.IRenvelope.R68 shouldBe submissionR68
       submissionR68.WelshSubmission  shouldBe Some(true)

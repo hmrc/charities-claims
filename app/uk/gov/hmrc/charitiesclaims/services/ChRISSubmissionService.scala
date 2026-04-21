@@ -287,13 +287,13 @@ class ChRISSubmissionServiceImpl @Inject() (
         if currentUser.isAgent
         then "FOO" // TODO
         else currentUser.enrolmentIdentifierValue,
-      Regulator = buildRegulator(claim),
+      Regulator = buildRegulator(claim, currentUser),
       Repayment = buildRepayment(claim, scheduleData.giftAid, scheduleData.otherIncome),
       GASDS = buildGiftAidSmallDonationsScheme(claim, scheduleData.connectedCharities, scheduleData.communityBuildings),
       OtherInfo = claim.claimData.includedAnyAdjustmentsInClaimPrompt
     )
 
-  def buildRegulator(claim: models.Claim): Option[Regulator] =
+  def buildRegulator(claim: models.Claim, currentUser: models.CurrentUser): Option[Regulator] =
     claim.claimData.organisationDetails.map(organisationDetails =>
       Regulator(
         RegName = organisationDetails.nameOfCharityRegulator match {
@@ -303,10 +303,20 @@ class ChRISSubmissionServiceImpl @Inject() (
           case _                                      => None
         },
         NoReg = organisationDetails.nameOfCharityRegulator match {
-          case NameOfCharityRegulator.None => Some(true)
+          case NameOfCharityRegulator.None =>
+            if currentUser.enrolmentIdentifierValue.startsWith(
+                "CH"
+              ) || currentUser.enrolmentIdentifierValue.startsWith("CF")
+            then None
+            else Some(true)
           case _                           => None
         },
-        RegNo = organisationDetails.charityRegistrationNumber
+        RegNo =
+          if currentUser.enrolmentIdentifierValue.startsWith(
+              "CH"
+            ) || currentUser.enrolmentIdentifierValue.startsWith("CF")
+          then None
+          else organisationDetails.charityRegistrationNumber
       )
     )
 

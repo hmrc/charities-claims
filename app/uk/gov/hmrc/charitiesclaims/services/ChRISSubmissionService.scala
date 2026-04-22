@@ -293,9 +293,9 @@ class ChRISSubmissionServiceImpl @Inject() (
       OtherInfo = claim.claimData.includedAnyAdjustmentsInClaimPrompt
     )
 
-  def buildRegulator(claim: models.Claim, HMRCref: String): Option[Regulator] =
+  def buildRegulator(claim: models.Claim, hmrcRef: String): Option[Regulator] =
     claim.claimData.organisationDetails.flatMap { org =>
-      val isCASCCharity = HMRCref.startsWith("CH") || HMRCref.startsWith("CF")
+      val isCASCCharity = hmrcRef.startsWith("CH") || hmrcRef.startsWith("CF")
 
       val regName: Option[RegulatorName] = org.nameOfCharityRegulator match
         case NameOfCharityRegulator.EnglandAndWales => Some(RegulatorName.CCEW)

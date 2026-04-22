@@ -78,7 +78,7 @@ class ChRISSubmissionServiceSpec
   val CFOrganisationUser: models.CurrentUser = TestCurrentUser(
     affinityGroup = AffinityGroup.Organisation,
     userId = "test-user-id",
-    enrolmentIdentifierValue = "CH-test-enrolment-identifier-value",
+    enrolmentIdentifierValue = "CF-test-enrolment-identifier-value",
     enrolmentIdentifierKey = "test-enrolment-identifier-key"
   )
 

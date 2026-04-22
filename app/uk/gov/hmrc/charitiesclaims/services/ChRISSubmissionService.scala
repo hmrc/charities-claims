@@ -287,28 +287,38 @@ class ChRISSubmissionServiceImpl @Inject() (
         if currentUser.isAgent
         then "FOO" // TODO
         else currentUser.enrolmentIdentifierValue,
-      Regulator = buildRegulator(claim),
+      Regulator = buildRegulator(claim, currentUser.enrolmentIdentifierValue),
       Repayment = buildRepayment(claim, scheduleData.giftAid, scheduleData.otherIncome),
       GASDS = buildGiftAidSmallDonationsScheme(claim, scheduleData.connectedCharities, scheduleData.communityBuildings),
       OtherInfo = claim.claimData.includedAnyAdjustmentsInClaimPrompt
     )
 
-  def buildRegulator(claim: models.Claim): Option[Regulator] =
-    claim.claimData.organisationDetails.map(organisationDetails =>
-      Regulator(
-        RegName = organisationDetails.nameOfCharityRegulator match {
-          case NameOfCharityRegulator.EnglandAndWales => Some(RegulatorName.CCEW)
-          case NameOfCharityRegulator.NorthernIreland => Some(RegulatorName.CCNI)
-          case NameOfCharityRegulator.Scottish        => Some(RegulatorName.OSCR)
-          case _                                      => None
-        },
-        NoReg = organisationDetails.nameOfCharityRegulator match {
-          case NameOfCharityRegulator.None => Some(true)
-          case _                           => None
-        },
-        RegNo = organisationDetails.charityRegistrationNumber
-      )
-    )
+  def buildRegulator(claim: models.Claim, hmrcRef: String): Option[Regulator] =
+    claim.claimData.organisationDetails.flatMap { org =>
+      val isCASCCharity = hmrcRef.startsWith("CH") || hmrcRef.startsWith("CF")
+
+      val regName: Option[RegulatorName] = org.nameOfCharityRegulator match
+        case NameOfCharityRegulator.EnglandAndWales => Some(RegulatorName.CCEW)
+        case NameOfCharityRegulator.NorthernIreland => Some(RegulatorName.CCNI)
+        case NameOfCharityRegulator.Scottish        => Some(RegulatorName.OSCR)
+        case _                                      => None
+
+      val noReg: Option[YesNo] =
+        if org.nameOfCharityRegulator == NameOfCharityRegulator.None && !isCASCCharity
+        then Some(true: YesNo)
+        else None
+
+      val regNo: Option[String] =
+        if isCASCCharity then None
+        else org.charityRegistrationNumber
+
+      val result =
+        if org.nameOfCharityRegulator == NameOfCharityRegulator.None && isCASCCharity
+        then None
+        else Some(Regulator(regName, noReg, regNo))
+
+      result
+    }
 
   def buildRepayment(
     claim: models.Claim,

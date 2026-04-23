@@ -159,7 +159,14 @@ object OtherIncome {
 final case class GiftAidSmallDonationsSchemeDonationDetails(
   adjustmentForGiftAidOverClaimed: BigDecimal,
   claims: Seq[GiftAidSmallDonationsSchemeClaim]
-)
+) {
+  def totalAmountOfDonationsReceived: Option[BigDecimal] =
+    claims.foldLeft(None)((acc, claim) =>
+      acc
+        .map(_ + claim.amountOfDonationsReceived)
+        .orElse(Some(claim.amountOfDonationsReceived))
+    )
+}
 
 object GiftAidSmallDonationsSchemeDonationDetails {
   given Format[GiftAidSmallDonationsSchemeDonationDetails] = Json.format[GiftAidSmallDonationsSchemeDonationDetails]

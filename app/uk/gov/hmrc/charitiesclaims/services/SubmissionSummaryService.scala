@@ -56,8 +56,16 @@ class SubmissionSummaryServiceImpl @Inject() (
       claimDetails = buildClaimDetails(claim, currentUser, orgOrAgentName),
       giftAidDetails = buildGiftAidDetails(giftAidData),
       otherIncomeDetails = buildOtherIncomeDetails(otherIncomeData),
-      gasdsDetails = buildGasdsDetails(communityBuildingsData, connectedCharitiesData),
-      adjustmentDetails = buildAdjustmentDetails(giftAidData, otherIncomeData),
+      gasdsDetails = buildGasdsDetails(
+        communityBuildingsData,
+        connectedCharitiesData,
+        claim.claimData.giftAidSmallDonationsSchemeDonationDetails
+      ),
+      adjustmentDetails = buildAdjustmentDetails(
+        giftAidData,
+        otherIncomeData,
+        claim.claimData.giftAidSmallDonationsSchemeDonationDetails
+      ),
       submissionReferenceNumber = claim.submissionDetails.fold("")(_.submissionReference)
     )
 
@@ -95,11 +103,17 @@ class SubmissionSummaryServiceImpl @Inject() (
 
   private def buildGasdsDetails(
     communityBuildingsData: Option[CommunityBuildingsScheduleData],
-    connectedCharitiesData: Option[ConnectedCharitiesScheduleData]
+    connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
+    giftAidSmallDonationsSchemeDonationDetails: Option[GiftAidSmallDonationsSchemeDonationDetails]
   ): Option[GasdsDetails] =
-    Option.when(communityBuildingsData.nonEmpty || connectedCharitiesData.nonEmpty) {
+    Option.when(
+      communityBuildingsData.nonEmpty
+        || connectedCharitiesData.nonEmpty
+        || giftAidSmallDonationsSchemeDonationDetails.nonEmpty
+    ) {
       GasdsDetails(
-        totalValueGasdsNotInCommunityBuilding = None,
+        totalValueGasdsNotInCommunityBuilding =
+          giftAidSmallDonationsSchemeDonationDetails.flatMap(_.totalAmountOfDonationsReceived),
         numberCommunityBuildings = communityBuildingsData.map(_.communityBuildings.size),
         totalValueGasdsInCommunityBuilding = communityBuildingsData.map(_.totalOfAllAmounts),
         numberConnectedCharities = connectedCharitiesData.map(_.charities.size)
@@ -108,16 +122,20 @@ class SubmissionSummaryServiceImpl @Inject() (
 
   private def buildAdjustmentDetails(
     giftAidData: Option[GiftAidScheduleData],
-    otherIncomeData: Option[OtherIncomeScheduleData]
+    otherIncomeData: Option[OtherIncomeScheduleData],
+    giftAidSmallDonationsSchemeDonationDetails: Option[GiftAidSmallDonationsSchemeDonationDetails]
   ): Option[AdjustmentDetails] =
-    Option.when(giftAidData.isDefined || otherIncomeData.isDefined) {
+    Option.when(
+      giftAidData.isDefined
+        || otherIncomeData.isDefined
+        || giftAidSmallDonationsSchemeDonationDetails.isDefined
+    ) {
       val giftAidAdjustment     = giftAidData.flatMap(_.prevOverclaimedGiftAid).getOrElse(BigDecimal(0))
       val otherIncomeAdjustment =
         otherIncomeData.map(_.adjustmentForOtherIncomePreviousOverClaimed).getOrElse(BigDecimal(0))
       AdjustmentDetails(
         previouslyOverclaimedGiftAidOtherIncome = Some(giftAidAdjustment + otherIncomeAdjustment),
-        // TODO: Screens GASDS - implemented later
-        previouslyOverclaimedGasds = None
+        previouslyOverclaimedGasds = giftAidSmallDonationsSchemeDonationDetails.map(_.adjustmentForGiftAidOverClaimed)
       )
     }
 

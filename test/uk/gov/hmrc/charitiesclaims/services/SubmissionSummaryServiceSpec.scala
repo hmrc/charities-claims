@@ -297,6 +297,34 @@ class SubmissionSummaryServiceSpec extends AnyWordSpec with Matchers with Mockit
       result.gasdsDetails.get.numberConnectedCharities              shouldBe Some(4)
     }
 
+    "populate gasdsDetails details correctly when small donations scheme is present" in {
+      mockOrganisationName()
+
+      val claim =
+        baseClaim.copy(
+          claimData = baseClaim.claimData.copy(
+            giftAidSmallDonationsSchemeDonationDetails = Some(
+              GiftAidSmallDonationsSchemeDonationDetails(
+                adjustmentForGiftAidOverClaimed = BigDecimal(1234),
+                claims = Seq(
+                  GiftAidSmallDonationsSchemeClaim(taxYear = 2024, amountOfDonationsReceived = BigDecimal(100)),
+                  GiftAidSmallDonationsSchemeClaim(taxYear = 2023, amountOfDonationsReceived = BigDecimal(23)),
+                  GiftAidSmallDonationsSchemeClaim(taxYear = 2022, amountOfDonationsReceived = BigDecimal(1))
+                )
+              )
+            )
+          )
+        )
+
+      val result = service.getSummary(claim, organisationUser).futureValue
+
+      result.gasdsDetails.get.totalValueGasdsNotInCommunityBuilding shouldBe Some(BigDecimal(124))
+      result.gasdsDetails.get.numberCommunityBuildings              shouldBe None
+      result.gasdsDetails.get.totalValueGasdsInCommunityBuilding    shouldBe None
+      result.gasdsDetails.get.numberConnectedCharities              shouldBe None
+      result.adjustmentDetails.get.previouslyOverclaimedGasds       shouldBe Some(BigDecimal(1234))
+    }
+
     "calculate adjustment values correctly" in {
       val otherIncomeRef  = FileUploadReference("oi-ref-789")
       val giftAidRef      = FileUploadReference("ga-ref-123")

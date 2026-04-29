@@ -83,4 +83,7 @@ class TestClaimsService(initialClaims: Seq[Claim]) extends ClaimsService {
           )
       }.toSeq
     )
+
+  override def updateLastVisitedAt(claimId: String): Future[Unit] =
+    Future.successful(())
 }

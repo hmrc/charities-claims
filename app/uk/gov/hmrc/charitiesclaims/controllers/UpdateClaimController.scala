@@ -102,6 +102,16 @@ class UpdateClaimController @Inject() (
       }
     }
 
+  def updateLastVisitedAt(claimId: String): Action[String] =
+    whenAuthorised {
+      claimsService
+        .updateLastVisitedAt(claimId)
+        .map(_ => Ok(Json.obj("success" -> true)))
+        .recover { case e =>
+          Ok(Json.obj("success" -> false, "error" -> e.getMessage))
+        }
+    }
+
   private def deleteUploadResults(claim: Claim, updatedClaim: Claim)(using
     HeaderCarrier,
     ExecutionContext

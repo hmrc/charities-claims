@@ -26,7 +26,8 @@ final case class ClaimInfo(
   lastUpdatedReference: String,
   hmrcCharitiesReference: Option[String] = None,
   nameOfCharity: Option[String] = None,
-  claimData: Option[ClaimInfoData] = None
+  claimData: Option[ClaimInfoData] = None,
+  lastVisitedAt: Option[Long] = None
 ) {
 
   def flatten: ClaimInfo = this.copy(

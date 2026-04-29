@@ -25,7 +25,8 @@ final case class Claim(
   claimSubmitted: Boolean,
   lastUpdatedReference: String,
   claimData: ClaimData,
-  submissionDetails: Option[SubmissionDetails] = None
+  submissionDetails: Option[SubmissionDetails] = None,
+  lastVisitedAt: Option[Long] = None
 ) {
 
   def uploadReferences: Set[FileUploadReference] = Set(

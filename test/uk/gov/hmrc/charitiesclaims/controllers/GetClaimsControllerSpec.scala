@@ -72,7 +72,7 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       val firstClaim = claimsList.value.head.as[JsObject]
       (firstClaim \ "claimId").as[String] shouldBe "test-claim-submitted-2"
 
-      firstClaim.keys shouldBe Set("claimId", "hmrcCharitiesReference", "nameOfCharity")
+      firstClaim.keys shouldBe Set("claimId", "hmrcCharitiesReference", "nameOfCharity", "lastVisitedAt")
     }
 
     "return 200 with multiple claims for organisation" in new AuthorisedOrganisationFixture {
@@ -117,7 +117,7 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       )
 
       claimsList.value.foreach(c =>
-        c.as[JsObject].keys shouldBe Set("claimId", "hmrcCharitiesReference", "nameOfCharity")
+        c.as[JsObject].keys shouldBe Set("claimId", "hmrcCharitiesReference", "nameOfCharity", "lastVisitedAt")
       )
     }
 

@@ -36,7 +36,7 @@ trait ClaimsService {
   def getClaim(claimId: String): Future[Option[(Claim, Instant)]]
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit]
   def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]]
-
+  def updateLastVisitedAt(claimId: String): Future[Unit]
 }
 
 @Singleton
@@ -93,11 +93,23 @@ class ClaimsServiceImpl @Inject() (
             ClaimsRepository.lastUpdatedReferencePath,
             ClaimsRepository.claimSubmittedPath,
             ClaimsRepository.hmrcCharitiesReferencePath,
-            ClaimsRepository.nameOfCharityPath
+            ClaimsRepository.nameOfCharityPath,
+            ClaimsRepository.lastVisitedAtPath
           )
         )
       )
       .map(_.data.claim.flatten)
       .collect()
       .head()
+
+  def updateLastVisitedAt(claimId: String): Future[Unit] =
+    repository.collection
+      .updateOne(
+        filter = BsonDocument(ClaimsRepository.claimIdPath -> claimId),
+        update = BsonDocument(
+          "$set" -> BsonDocument(ClaimsRepository.lastVisitedAtPath -> System.currentTimeMillis())
+        )
+      )
+      .head()
+      .map(_ => ())
 }

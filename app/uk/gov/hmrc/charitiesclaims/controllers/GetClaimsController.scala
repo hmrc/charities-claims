@@ -44,14 +44,16 @@ class GetClaimsController @Inject() (
         .map { claims =>
           val claimsList = currentUserGroup match {
             case AffinityGroup.Agent =>
-              claims.map(c =>
-                Json.obj(
-                  "claimId"                -> c.claimId,
-                  // TODO: return error if not found once values get set from repayment claim details
-                  "hmrcCharitiesReference" -> c.hmrcCharitiesReference.getOrElse("XR1234"),
-                  "nameOfCharity"          -> c.nameOfCharity.getOrElse("Test Charity")
+              claims
+                .sortBy(c => -c.lastVisitedAt.getOrElse(0L))
+                .map(c =>
+                  Json.obj(
+                    "claimId"                -> c.claimId,
+                    "hmrcCharitiesReference" -> c.hmrcCharitiesReference,
+                    "nameOfCharity"          -> c.nameOfCharity,
+                    "lastVisitedAt"          -> c.lastVisitedAt
+                  )
                 )
-              )
             case _                   =>
               claims.map(c => Json.obj("claimId" -> c.claimId))
           }

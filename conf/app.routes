@@ -6,6 +6,7 @@ POST        /claims                 uk.gov.hmrc.charitiesclaims.controllers.Save
 GET         /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaim(claimId: String)
 DELETE      /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.DeleteClaimController.deleteClaim(claimId: String)
 PUT         /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateClaim(claimId: String)
+PATCH       /claims/:claimId/last-visited-at  uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateLastVisitedAt(claimId: String)
 
 GET         /charities/:charityReference/unregulated-donations uk.gov.hmrc.charitiesclaims.controllers.UnregulatedDonationsController.getTotalUnregulatedDonations(charityReference: String)
 
@@ -13,6 +14,5 @@ POST        /chris                   uk.gov.hmrc.charitiesclaims.controllers.ChR
 
 GET        /charities/agents/:agentRef                    uk.gov.hmrc.charitiesclaims.controllers.GetRdsDatacacheController.getAgentName(agentRef: String)
 GET        /charities/organisations/:charityRef           uk.gov.hmrc.charitiesclaims.controllers.GetRdsDatacacheController.getOrganisationName(charityRef: String)
-
 
 GET        /submission-summary/:claimId           uk.gov.hmrc.charitiesclaims.controllers.GetSubmissionSummaryController.getSummary(claimId: String)

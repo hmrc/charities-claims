@@ -75,6 +75,7 @@ object ClaimsRepository {
   val lastUpdatedReferencePath: String   = "data.claim.lastUpdatedReference"
   val hmrcCharitiesReferencePath: String = "data.claim.claimData.repaymentClaimDetails.hmrcCharitiesReference"
   val nameOfCharityPath: String          = "data.claim.claimData.repaymentClaimDetails.nameOfCharity"
+  val lastVisitedAtPath: String          = "data.claim.lastVisitedAt"
 
   case class CacheItemClaim(claim: ClaimInfo)
 

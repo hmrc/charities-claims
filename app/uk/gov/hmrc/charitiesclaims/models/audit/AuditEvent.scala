@@ -102,8 +102,7 @@ final case class AuditOtherIncome(
 )
 
 final case class AuditGiftAidSmallDonationsSchemeScheduleData(
-  // TODO: Need to know how to populate totalDonations from data model.
-  // totalDonations: BigDecimal,
+  totalDonations: BigDecimal,
   adjustmentForGiftAidOverClaimed: BigDecimal,
   claims: Seq[AuditGiftAidSmallDonationsSchemeClaim],
   connectedCharitiesScheduleData: Seq[AuditConnectedCharitiesScheduleData],

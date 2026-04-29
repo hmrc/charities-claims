@@ -162,11 +162,9 @@ final case class GiftAidSmallDonationsSchemeDonationDetails(
   claims: Seq[GiftAidSmallDonationsSchemeClaim]
 ) {
   def totalAmountOfDonationsReceived: Option[BigDecimal] =
-    claims.foldLeft(None)((acc, claim) =>
-      acc
-        .map(_ + claim.amountOfDonationsReceived)
-        .orElse(Some(claim.amountOfDonationsReceived))
-    )
+    claims
+      .map(_.amountOfDonationsReceived)
+      .reduceOption(_ + _)
 }
 
 object GiftAidSmallDonationsSchemeDonationDetails {

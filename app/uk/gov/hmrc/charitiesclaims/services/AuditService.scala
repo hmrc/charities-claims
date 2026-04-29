@@ -180,6 +180,8 @@ class AuditService @Inject() (
       odGiftAidSmallDonationsSchemeDonationDetails
         .map { dGiftAidSmallDonationsSchemeDonationDetails =>
           AuditGiftAidSmallDonationsSchemeScheduleData(
+            totalDonations =
+              dGiftAidSmallDonationsSchemeDonationDetails.totalAmountOfDonationsReceived.getOrElse(BigDecimal(0)),
             adjustmentForGiftAidOverClaimed =
               dGiftAidSmallDonationsSchemeDonationDetails.adjustmentForGiftAidOverClaimed,
             claims = auditGiftAidSmallDonationsSchemeClaim,

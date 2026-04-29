@@ -53,6 +53,15 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
           claimingGiftAid = false,
           claimingTaxDeducted = false,
           claimingUnderGiftAidSmallDonationsScheme = true
+        ),
+        giftAidSmallDonationsSchemeDonationDetails = Some(
+          GiftAidSmallDonationsSchemeDonationDetails(
+            adjustmentForGiftAidOverClaimed = BigDecimal(99.99),
+            claims = Seq(
+              GiftAidSmallDonationsSchemeClaim(2024, BigDecimal(11.11)),
+              GiftAidSmallDonationsSchemeClaim(2025, BigDecimal(22.22))
+            )
+          )
         )
       ),
       submissionDetails = None

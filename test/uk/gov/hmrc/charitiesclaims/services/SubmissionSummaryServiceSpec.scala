@@ -161,11 +161,10 @@ class SubmissionSummaryServiceSpec extends AnyWordSpec with Matchers with Mockit
 
       val result = service.getSummary(claim, organisationUser).futureValue
 
-      result.claimDetails.submittedBy                                      shouldBe "Mr Test User"
-      result.giftAidDetails.get.numberGiftAidDonations                     shouldBe 2
-      result.giftAidDetails.get.totalValueGiftAidDonations                 shouldBe 100
-      result.adjustmentDetails.get.previouslyOverclaimedGiftAidOtherIncome shouldBe Some(0)
-      result.adjustmentDetails.get.previouslyOverclaimedGasds              shouldBe None
+      result.claimDetails.submittedBy                      shouldBe "Mr Test User"
+      result.giftAidDetails.get.numberGiftAidDonations     shouldBe 2
+      result.giftAidDetails.get.totalValueGiftAidDonations shouldBe 100
+      result.adjustmentDetails                             shouldBe None
     }
 
     "populate other income details correctly with no other income adjustment" in {
@@ -190,10 +189,9 @@ class SubmissionSummaryServiceSpec extends AnyWordSpec with Matchers with Mockit
 
       val result = service.getSummary(claim, organisationUser).futureValue
 
-      result.otherIncomeDetails.get.numberOtherIncomeItems                 shouldBe 1
-      result.otherIncomeDetails.get.totalValueOtherIncomeItems             shouldBe 20
-      result.adjustmentDetails.get.previouslyOverclaimedGiftAidOtherIncome shouldBe Some(0)
-      result.adjustmentDetails.get.previouslyOverclaimedGasds              shouldBe None
+      result.otherIncomeDetails.get.numberOtherIncomeItems     shouldBe 1
+      result.otherIncomeDetails.get.totalValueOtherIncomeItems shouldBe 20
+      result.adjustmentDetails                                 shouldBe None
     }
 
     "populate gasdsDetails details correctly when both connected charities and community building is present" in {

@@ -260,10 +260,10 @@ class ChRISSubmissionServiceImpl @Inject() (
         Postcode =
           if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveCorporateTrusteeUKAddress
               .contains(true)
-          then organisationDetails.corporateTrusteePostcode
+          then organisationDetails.corporateTrusteePostcode.map(_.toUpperCase)
           else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveAuthorisedOfficialTrusteeUKAddress
               .contains(true)
-          then organisationDetails.authorisedOfficialTrusteePostcode
+          then organisationDetails.authorisedOfficialTrusteePostcode.map(_.toUpperCase)
           else None
       )
     )
@@ -439,17 +439,24 @@ class ChRISSubmissionServiceImpl @Inject() (
         communityBuildingsData
           .map(_.communityBuildings)
           .getOrElse(Seq.empty)
-          .map { b =>
-            val year1Claim = List(BldgClaim(Year = b.taxYear1.toString, Amount = b.amountYear1))
-            val year2Claim = (b.taxYear2, b.amountYear2) match
-              case (Some(year), Some(amount)) => List(BldgClaim(Year = year.toString, Amount = amount))
-              case _                          => Nil
+          .groupBy(b => (b.buildingName, b.firstLineOfAddress, b.postcode))
+          .values
+          .map { group =>
+            println("*************** " + group.head + " *********")
+            val head   = group.head
+            val claims = group.flatMap { b =>
+              val year1Claim = List(BldgClaim(Year = b.taxYear1.toString, Amount = b.amountYear1))
+              val year2Claim = (b.taxYear2, b.amountYear2) match
+                case (Some(year), Some(amount)) => List(BldgClaim(Year = year.toString, Amount = amount))
+                case _                          => Nil
+              year1Claim ++ year2Claim
+            }
 
             Building(
-              BldgName = b.buildingName,
-              Address = b.firstLineOfAddress,
-              Postcode = b.postcode,
-              BldgClaim = year1Claim ++ year2Claim
+              BldgName = head.buildingName,
+              Address = head.firstLineOfAddress,
+              Postcode = head.postcode,
+              BldgClaim = claims.toList
             )
           }
           .toList match
@@ -463,7 +470,7 @@ class ChRISSubmissionServiceImpl @Inject() (
               .map(c =>
                 GASDSClaim(
                   Year = Some(c.taxYear.toString),
-                  Amount = Some(c.amountOfDonationsReceived)
+                  Amount = Some(c.amountOfDonationsReceived.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble)
                 )
               )
               .toList match {

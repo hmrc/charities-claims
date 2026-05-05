@@ -338,8 +338,8 @@ class ChRISSubmissionServiceImpl @Inject() (
             OtherInc(
               Payer = p.payerName,
               OIDate = p.paymentDate,
-              Gross = p.grossPayment,
-              Tax = p.taxDeducted
+              Gross = p.grossPayment.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble,
+              Tax = p.taxDeducted.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
             )
           )
           .toList match
@@ -348,7 +348,9 @@ class ChRISSubmissionServiceImpl @Inject() (
 
       // get prev overclaim adjustment for other income
       val adjOtherIncome: Option[BigDecimal] =
-        otherIncomeData.map(data => data.adjustmentForOtherIncomePreviousOverClaimed)
+        otherIncomeData.map(data =>
+          data.adjustmentForOtherIncomePreviousOverClaimed.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+        )
 
       if claim.claimData.repaymentClaimDetails.claimingTaxDeducted && !claim.claimData.repaymentClaimDetails.claimingGiftAid
       then {
@@ -398,7 +400,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         else Some(buildDonor(donation)),
       Sponsored = donation.sponsoredEvent.collect { case true => true },
       Date = donation.donationDate,
-      Total = donation.donationAmount.toString
+      Total = donation.donationAmount.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble.toString
     )
 
   private def buildDonor(donation: Donation): Donor =
@@ -409,7 +411,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       Sur = donation.donorLastName,
       House = donation.donorHouse,
       Overseas = if isOverseas then Some(true) else None,
-      Postcode = if isOverseas then None else donation.donorPostcode
+      Postcode = if isOverseas then None else donation.donorPostcode.map(_.toUpperCase)
     )
 
   def buildGiftAidSmallDonationsScheme(
@@ -444,7 +446,12 @@ class ChRISSubmissionServiceImpl @Inject() (
           .map { group =>
             val head   = group.head
             val claims = group.flatMap { b =>
-              val year1Claim = List(BldgClaim(Year = b.taxYear1.toString, Amount = b.amountYear1))
+              val year1Claim = List(
+                BldgClaim(
+                  Year = b.taxYear1.toString,
+                  Amount = b.amountYear1.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+                )
+              )
               val year2Claim = (b.taxYear2, b.amountYear2) match
                 case (Some(year), Some(amount)) => List(BldgClaim(Year = year.toString, Amount = amount))
                 case _                          => Nil
@@ -454,7 +461,7 @@ class ChRISSubmissionServiceImpl @Inject() (
             Building(
               BldgName = head.buildingName,
               Address = head.firstLineOfAddress,
-              Postcode = head.postcode,
+              Postcode = head.postcode.toUpperCase,
               BldgClaim = claims.toList
             )
           }
@@ -482,7 +489,10 @@ class ChRISSubmissionServiceImpl @Inject() (
         claim.claimData.giftAidSmallDonationsSchemeDonationDetails
           .flatMap { gasdsDetails =>
             Option.when(gasdsDetails.adjustmentForGiftAidOverClaimed > 0)(
-              gasdsDetails.adjustmentForGiftAidOverClaimed.toString
+              gasdsDetails.adjustmentForGiftAidOverClaimed
+                .setScale(2, BigDecimal.RoundingMode.HALF_UP)
+                .toDouble
+                .toString
             )
           }
 

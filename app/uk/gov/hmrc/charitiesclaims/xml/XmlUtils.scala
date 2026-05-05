@@ -38,7 +38,7 @@ object XmlUtils {
 
   val chrisSubmissionSchemaSourceMap = List(
     ("/xsd/xmldsig-core-schema.xsd", new URI("http://www.w3.org/2000/09/xmldsig#").toURL),
-    ("/xsd/r68-v0-3.xsd", new URI("http://www.govtalk.gov.uk/taxation/charities/r68/1").toURL),
+    ("/xsd/r68-v2-0.xsd", new URI("http://www.govtalk.gov.uk/taxation/charities/r68/2").toURL),
     ("/xsd/envelope-v2-0-HMRC.xsd", new URI("http://www.govtalk.gov.uk/CM/envelope").toURL)
   )
 

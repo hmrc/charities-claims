@@ -38,7 +38,7 @@ class XmlUtilSpec extends AnyFreeSpec with Matchers {
     "should load available XSD schemas" in {
       val schemaSoourceMap = List(
         ("/xsd/xmldsig-core-schema.xsd", new URL("http://www.w3.org/2000/09/xmldsig#")),
-        ("/xsd/r68-v0-3.xsd", new URL("http://www.govtalk.gov.uk/taxation/charities/r68/1")),
+        ("/xsd/r68-v2-0.xsd", new URL("http://www.govtalk.gov.uk/taxation/charities/r68/2")),
         ("/xsd/envelope-v2-0-HMRC.xsd", new URL("http://www.govtalk.gov.uk/CM/envelope"))
       )
       val schema           = XmlUtils.loadSchema(schemaSoourceMap)
@@ -46,11 +46,11 @@ class XmlUtilSpec extends AnyFreeSpec with Matchers {
     }
 
     "should fail to load an incomplete XSD schema" in {
-      val schemaSoourceMap = List(
-        ("/xsd/r68-v0-3.xsd", new URL("http://www.govtalk.gov.uk/taxation/charities/r68/1")),
+      val schemaSourceMap = List(
+        ("/xsd/r68-v2-0.xsd", new URL("http://www.govtalk.gov.uk/taxation/charities/r68/2")),
         ("/xsd/envelope-v2-0-HMRC.xsd", new URL("http://www.govtalk.gov.uk/CM/envelope"))
       )
-      val schema           = XmlUtils.loadSchema(schemaSoourceMap)
+      val schema          = XmlUtils.loadSchema(schemaSourceMap)
       schema.isFailure shouldBe true
     }
 
@@ -65,6 +65,18 @@ class XmlUtilSpec extends AnyFreeSpec with Matchers {
       XmlUtils.validateChRISSubmission(document.get).isSuccess shouldBe true
     }
 
+    "should validate an example valid ChRIS submission XML document with max occurs" in {
+      val xml = scala.io.Source
+        .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-9.xml"))
+        .getLines()
+        .mkString("\n")
+
+      val document = XmlUtils.parseDocument(xml)
+      document.isSuccess shouldBe true
+      val result = XmlUtils.validateChRISSubmission(document.get)
+      result.isSuccess shouldBe true
+    }
+
     "should fail to validate an example invalid ChRIS submission XML document" in {
       val xml = scala.io.Source
         .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-invalid.xml"))
@@ -72,8 +84,31 @@ class XmlUtilSpec extends AnyFreeSpec with Matchers {
         .mkString("\n")
 
       val document = XmlUtils.parseDocument(xml)
-      document.isSuccess                                       shouldBe true
-      XmlUtils.validateChRISSubmission(document.get).isSuccess shouldBe false
+      document.isSuccess shouldBe true
+      val result = XmlUtils.validateChRISSubmission(document.get)
+      result.isSuccess shouldBe false
+      result.fold(
+        exception =>
+          exception.getMessage shouldBe """Invalid XML: ERROR: cvc-complex-type.2.4.a: Invalid content was found starting with element '{"http://www.govtalk.gov.uk/CM/envelope":Body}'. One of '{"http://www.govtalk.gov.uk/CM/envelope":GovTalkDetails}' is expected.""",
+        _ => fail("Expected errors")
+      )
+    }
+
+    "should fail to validate an example invalid ChRIS submission XML document with max occurs" in {
+      val xml = scala.io.Source
+        .fromInputStream(this.getClass.getResourceAsStream("/test-chris-submission-invalid-max-occurs.xml"))
+        .getLines()
+        .mkString("\n")
+
+      val document = XmlUtils.parseDocument(xml)
+      document.isSuccess shouldBe true
+      val result = XmlUtils.validateChRISSubmission(document.get)
+      result.isSuccess shouldBe false
+      result.fold(
+        exception =>
+          exception.getMessage shouldBe """Invalid XML: ERROR: cvc-complex-type.2.4.e: 'GASDSClaimed' can occur a maximum of '3' times in the current sequence. This limit was exceeded. At this point one of '{"http://www.govtalk.gov.uk/taxation/charities/r68/2":CommBldgs}' is expected. ERROR: cvc-complex-type.2.4.a: Invalid content was found starting with element '{"http://www.govtalk.gov.uk/taxation/charities/r68/2":Address}'. One of '{"http://www.govtalk.gov.uk/taxation/charities/r68/2":Postcode}' is expected.""",
+        _ => fail("Expected errors")
+      )
     }
 
     "should fail to validate a random XML document" in {

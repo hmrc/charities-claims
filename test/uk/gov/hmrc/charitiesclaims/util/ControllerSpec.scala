@@ -57,7 +57,7 @@ trait ControllerSpec extends BaseSpec with TestUsers {
 
     val orgEnrolment = Enrolment(
       key = "HMRC-CHAR-ORG",
-      identifiers = Seq(EnrolmentIdentifier("CHARID", "ORG123")),
+      identifiers = Seq(EnrolmentIdentifier("CHARID", "OR123")),
       state = "Activated"
     )
 

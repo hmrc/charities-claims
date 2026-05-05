@@ -120,24 +120,31 @@ class SubmissionSummaryServiceImpl @Inject() (
       )
     }
 
+  extension (option: Option[BigDecimal]) {
+    def nonZeroOption: Option[BigDecimal] = option.filter(_ > BigDecimal(0))
+  }
+
   private def buildAdjustmentDetails(
     giftAidData: Option[GiftAidScheduleData],
     otherIncomeData: Option[OtherIncomeScheduleData],
     giftAidSmallDonationsSchemeDonationDetails: Option[GiftAidSmallDonationsSchemeDonationDetails]
-  ): Option[AdjustmentDetails] =
+  ): Option[AdjustmentDetails] = {
+    val giftAidAdjustment     = giftAidData.flatMap(_.prevOverclaimedGiftAid).nonZeroOption
+    val otherIncomeAdjustment = otherIncomeData.map(_.adjustmentForOtherIncomePreviousOverClaimed).nonZeroOption
+    val gasdsAdjustment       =
+      giftAidSmallDonationsSchemeDonationDetails.map(_.adjustmentForGiftAidOverClaimed).nonZeroOption
+
     Option.when(
-      giftAidData.isDefined
-        || otherIncomeData.isDefined
-        || giftAidSmallDonationsSchemeDonationDetails.isDefined
+      giftAidAdjustment.isDefined || otherIncomeAdjustment.isDefined || gasdsAdjustment.isDefined
     ) {
-      val giftAidAdjustment     = giftAidData.flatMap(_.prevOverclaimedGiftAid).getOrElse(BigDecimal(0))
-      val otherIncomeAdjustment =
-        otherIncomeData.map(_.adjustmentForOtherIncomePreviousOverClaimed).getOrElse(BigDecimal(0))
       AdjustmentDetails(
-        previouslyOverclaimedGiftAidOtherIncome = Some(giftAidAdjustment + otherIncomeAdjustment),
-        previouslyOverclaimedGasds = giftAidSmallDonationsSchemeDonationDetails.map(_.adjustmentForGiftAidOverClaimed)
+        previouslyOverclaimedGiftAidOtherIncome = Some(
+          giftAidAdjustment.getOrElse(BigDecimal(0)) + otherIncomeAdjustment.getOrElse(BigDecimal(0))
+        ).nonZeroOption,
+        previouslyOverclaimedGasds = gasdsAdjustment
       )
     }
+  }
 
   private def getCharityRef(currentUser: CurrentUser): String =
     // TODO: It will be implemented as part of Agent flow

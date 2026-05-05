@@ -442,7 +442,6 @@ class ChRISSubmissionServiceImpl @Inject() (
           .groupBy(b => (b.buildingName, b.firstLineOfAddress, b.postcode))
           .values
           .map { group =>
-            println("*************** " + group.head + " *********")
             val head   = group.head
             val claims = group.flatMap { b =>
               val year1Claim = List(BldgClaim(Year = b.taxYear1.toString, Amount = b.amountYear1))

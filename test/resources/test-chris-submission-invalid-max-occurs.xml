@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<GovTalkMessage xmlns="http://www.govtalk.gov.uk/CM/envelope">
+    <EnvelopeVersion>2.0</EnvelopeVersion>
+    <Header>
+        <MessageDetails>
+            <Class>HMRC-CHAR-CLM</Class>
+            <Qualifier>request</Qualifier>
+            <Function>submit</Function>
+            <CorrelationID>19A39A672E6D48DA95CD6022FE6AAE9C</CorrelationID>
+            <GatewayTimestamp>2026-05-01T05:51:27.645</GatewayTimestamp>
+        </MessageDetails>
+        <SenderDetails />
+    </Header>
+    <GovTalkDetails>
+        <Keys>
+            <Key Type="CredentialID">1234567890</Key>
+            <Key Type="CHARID">OR123</Key>
+            <Key Type="SessionID">session-fb33488d-20e6-492e-9a97-3d41b4623b66</Key>
+        </Keys>
+        <ChannelRouting>
+            <Channel>
+                <URI>9998</URI>
+                <Product>Charities Portal</Product>
+                <Version>1.0</Version>
+            </Channel>
+        </ChannelRouting>
+    </GovTalkDetails>
+    <Body>
+        <IRenvelope xmlns="http://www.govtalk.gov.uk/taxation/charities/r68/2">
+            <IRheader>
+                <Keys>
+                    <Key Type="CHARID">OR123</Key>
+                </Keys>
+                <PeriodEnd>2012-01-01</PeriodEnd>
+                <IRmark Type="generic">rdlLfT1Iw42X8C7wrbxBW4intiU=</IRmark>
+                <Sender>Other</Sender>
+            </IRheader>
+            <R68>
+                <AuthOfficial>
+                    <OffName>
+                        <Ttl>Mr</Ttl>
+                        <Fore>John</Fore>
+                        <Sur>Doe</Sur>
+                    </OffName>
+                    <OffID>
+                        <Overseas>yes</Overseas>
+                    </OffID>
+                    <Phone>78291848219382</Phone>
+                </AuthOfficial>
+                <Declaration>yes</Declaration>
+                <Claim>
+                    <OrgName>Organisation OR123</OrgName>
+                    <HMRCref>OR123</HMRCref>
+                    <Regulator>
+                        <NoReg>yes</NoReg>
+                    </Regulator>
+                    <Repayment>
+                        <GAD>
+                            <Donor>
+                                <Ttl>Prof</Ttl>
+                                <Fore>Henry</Fore>
+                                <Sur>House Martin</Sur>
+                                <House>152A</House>
+                                <Postcode>M99 2QD</Postcode>
+                            </Donor>
+                            <Date>2015-03-24</Date>
+                            <Total>240.00</Total>
+                        </GAD>
+                        <GAD>
+                            <Donor>
+                                <Ttl>Mr</Ttl>
+                                <Fore>John</Fore>
+                                <Sur>Smith</Sur>
+                                <House>100 Champs Elysees, Paris</House>
+                                <Overseas>yes</Overseas>
+                            </Donor>
+                            <Date>2015-06-24</Date>
+                            <Total>250.00</Total>
+                        </GAD>
+                        <GAD>
+                            <AggDonation>One off Gift Aid donations</AggDonation>
+                            <Date>2015-03-31</Date>
+                            <Total>880.00</Total>
+                        </GAD>
+                        <GAD>
+                            <Donor>
+                                <Ttl>Miss</Ttl>
+                                <Fore>B</Fore>
+                                <Sur>Chaudry</Sur>
+                                <House>21</House>
+                                <Postcode>L43 4FB</Postcode>
+                            </Donor>
+                            <Sponsored>yes</Sponsored>
+                            <Date>2015-04-26</Date>
+                            <Total>80.00</Total>
+                        </GAD>
+                        <EarliestGAdate>2017-11-10</EarliestGAdate>
+                        <Adjustment>4321.00</Adjustment>
+                    </Repayment>
+                    <GASDS>
+                        <ConnectedCharities>no</ConnectedCharities>
+                        <GASDSClaim>
+                            <Year>2025</Year>
+                            <Amount>123.45</Amount>
+                        </GASDSClaim>
+                        <GASDSClaim>
+                            <Year>2024</Year>
+                            <Amount>789.90</Amount>
+                        </GASDSClaim>
+                        <GASDSClaim>
+                            <Year>2026</Year>
+                            <Amount>111111.00</Amount>
+                        </GASDSClaim>
+                        <GASDSClaimed>
+                            <Year>2027</Year>
+                            <Amount>222222</Amount>
+                        </GASDSClaimed>
+                        <CommBldgs>yes</CommBldgs>
+                        <Building>
+                            <BldgName>The Vault 1</BldgName>
+                            <Address>22 Liberty Place</Address>
+                            <Postcode>L20 3UD</Postcode>
+                            <BldgClaim>
+                                <Year>2025</Year>
+                                <Amount>1500.00</Amount>
+                            </BldgClaim>
+                            <BldgClaim>
+                                <Year>2024</Year>
+                                <Amount>2500.00</Amount>
+                            </BldgClaim>
+                        </Building>
+                        <Building>
+                            <BldgName>The Vault 2</BldgName>
+                            <Address>23 Liberty Place</Address>
+                            <Postcode>L20 3UD</Postcode>
+                            <BldgClaim>
+                                <Year>2025</Year>
+                                <Amount>2000.00</Amount>
+                            </BldgClaim>
+                        </Building>
+                        <Building>
+                            <BldgName>Bootle Village Hall</BldgName>
+                            <Address>11A Grange Road</Address>
+                            <Address>11B Grange Road</Address>
+                            <Postcode>L20 1KL</Postcode>
+                            <BldgClaim>
+                                <Year>2025</Year>
+                                <Amount>1750.00</Amount>
+                            </BldgClaim>
+                        </Building>
+                    </GASDS>
+                    <OtherInfo>Hello!</OtherInfo>
+                </Claim>
+            </R68>
+        </IRenvelope>
+    </Body>
+</GovTalkMessage>

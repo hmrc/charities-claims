@@ -25,6 +25,7 @@ import scala.collection.View
 import scala.annotation.nowarn
 import javax.xml.parsers.DocumentBuilderFactory
 import XmlUtils.*
+import java.math.RoundingMode
 
 trait XmlWriter[A] {
   def label: String
@@ -81,12 +82,18 @@ object XmlWriter {
       builder.appendText(value)
   }
 
-  @nowarn
-  given [A : Numeric] => XmlWriter[A] = new XmlWriter[A] {
-    def label: String                                                        = "Number"
-    override def isPrimitive: Boolean                                        = true
-    def write(name: String, value: A)(using builder: XmlOutputBuilder): Unit =
+  given XmlWriter[Int] = new XmlWriter[Int] {
+    def label: String                                                          = "Number"
+    override def isPrimitive: Boolean                                          = true
+    def write(name: String, value: Int)(using builder: XmlOutputBuilder): Unit =
       builder.appendText(value.toString)
+  }
+
+  given XmlWriter[BigDecimal] = new XmlWriter[BigDecimal] {
+    def label: String                                                                 = "Number"
+    override def isPrimitive: Boolean                                                 = true
+    def write(name: String, value: BigDecimal)(using builder: XmlOutputBuilder): Unit =
+      builder.appendText(value.underlying().setScale(2, RoundingMode.HALF_UP).toPlainString())
   }
 
   given XmlWriter[Boolean] = new XmlWriter[Boolean] {

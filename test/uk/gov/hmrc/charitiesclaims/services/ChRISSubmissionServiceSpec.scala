@@ -176,7 +176,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("post-code"),
+              Postcode = Some("POST-CODE"),
               Overseas = None
             )
           ),
@@ -196,7 +196,7 @@ class ChRISSubmissionServiceSpec
 
       submissionOffId shouldBe Some(
         OffID(
-          Postcode = Some("post-code"),
+          Postcode = Some("POST-CODE"),
           Overseas = None
         )
       )
@@ -326,7 +326,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("post-code"),
+              Postcode = Some("POST-CODE"),
               Overseas = None
             )
           ),
@@ -463,7 +463,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("post-code"),
+              Postcode = Some("POST-CODE"),
               Overseas = None
             )
           ),
@@ -536,7 +536,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("post-code"),
+              Postcode = Some("POST-CODE"),
               Overseas = None
             )
           ),
@@ -613,7 +613,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("post-code"),
+              Postcode = Some("POST-CODE"),
               Overseas = None
             )
           ),
@@ -688,7 +688,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("post-code"),
+              Postcode = Some("POST-CODE"),
               Overseas = None
             )
           ),
@@ -757,7 +757,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("post-code"),
+              Postcode = Some("POST-CODE"),
               Overseas = None
             )
           ),
@@ -824,7 +824,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("post-code"),
+              Postcode = Some("POST-CODE"),
               Overseas = None
             )
           ),

@@ -30,6 +30,7 @@ import scala.concurrent.ExecutionContext
 import cats.syntax.traverse.*
 import cats.instances.future.*
 import cats.instances.option.*
+import java.math.RoundingMode
 
 @ImplementedBy(classOf[ChRISSubmissionServiceImpl])
 trait ChRISSubmissionService {
@@ -50,6 +51,10 @@ class ChRISSubmissionServiceImpl @Inject() (
   claimsValidationConnector: ClaimsValidationConnector
 )(using ExecutionContext)
     extends ChRISSubmissionService {
+
+  extension (value: BigDecimal) {
+    def formatted: String = value.underlying().setScale(2, RoundingMode.HALF_UP).toPlainString()
+  }
 
   def buildChRISSubmission(
     claim: models.Claim,
@@ -338,8 +343,8 @@ class ChRISSubmissionServiceImpl @Inject() (
             OtherInc(
               Payer = p.payerName,
               OIDate = p.paymentDate,
-              Gross = p.grossPayment.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble,
-              Tax = p.taxDeducted.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+              Gross = p.grossPayment,
+              Tax = p.taxDeducted
             )
           )
           .toList match
@@ -348,9 +353,7 @@ class ChRISSubmissionServiceImpl @Inject() (
 
       // get prev overclaim adjustment for other income
       val adjOtherIncome: Option[BigDecimal] =
-        otherIncomeData.map(data =>
-          data.adjustmentForOtherIncomePreviousOverClaimed.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
-        )
+        otherIncomeData.map(data => data.adjustmentForOtherIncomePreviousOverClaimed)
 
       if claim.claimData.repaymentClaimDetails.claimingTaxDeducted && !claim.claimData.repaymentClaimDetails.claimingGiftAid
       then {
@@ -400,7 +403,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         else Some(buildDonor(donation)),
       Sponsored = donation.sponsoredEvent.collect { case true => true },
       Date = donation.donationDate,
-      Total = donation.donationAmount.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble.toString
+      Total = donation.donationAmount.formatted
     )
 
   private def buildDonor(donation: Donation): Donor =
@@ -449,7 +452,7 @@ class ChRISSubmissionServiceImpl @Inject() (
               val year1Claim = List(
                 BldgClaim(
                   Year = b.taxYear1.toString,
-                  Amount = b.amountYear1.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+                  Amount = b.amountYear1
                 )
               )
               val year2Claim = (b.taxYear2, b.amountYear2) match
@@ -476,7 +479,7 @@ class ChRISSubmissionServiceImpl @Inject() (
               .map(c =>
                 GASDSClaim(
                   Year = Some(c.taxYear.toString),
-                  Amount = Some(c.amountOfDonationsReceived.setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble)
+                  Amount = Some(c.amountOfDonationsReceived)
                 )
               )
               .toList match {
@@ -489,10 +492,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         claim.claimData.giftAidSmallDonationsSchemeDonationDetails
           .flatMap { gasdsDetails =>
             Option.when(gasdsDetails.adjustmentForGiftAidOverClaimed > 0)(
-              gasdsDetails.adjustmentForGiftAidOverClaimed
-                .setScale(2, BigDecimal.RoundingMode.HALF_UP)
-                .toDouble
-                .toString
+              gasdsDetails.adjustmentForGiftAidOverClaimed.formatted
             )
           }
 

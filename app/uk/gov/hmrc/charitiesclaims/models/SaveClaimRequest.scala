@@ -27,7 +27,9 @@ final case class SaveClaimRequest(
   claimingDonationsNotFromCommunityBuilding: Option[Boolean] = None,
   claimingDonationsCollectedInCommunityBuildings: Option[Boolean] = None,
   connectedToAnyOtherCharities: Option[Boolean] = None,
-  makingAdjustmentToPreviousClaim: Option[Boolean] = None
+  makingAdjustmentToPreviousClaim: Option[Boolean] = None,
+  hmrcCharitiesReference: Option[String] = None,
+  nameOfCharity: Option[String] = None
 )
 
 object SaveClaimRequest {

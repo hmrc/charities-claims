@@ -110,7 +110,9 @@ class SaveClaimController @Inject() (
           claimingDonationsCollectedInCommunityBuildings =
             saveClaimRequest.claimingDonationsCollectedInCommunityBuildings,
           connectedToAnyOtherCharities = saveClaimRequest.connectedToAnyOtherCharities,
-          makingAdjustmentToPreviousClaim = saveClaimRequest.makingAdjustmentToPreviousClaim
+          makingAdjustmentToPreviousClaim = saveClaimRequest.makingAdjustmentToPreviousClaim,
+          hmrcCharitiesReference = saveClaimRequest.hmrcCharitiesReference,
+          nameOfCharity = saveClaimRequest.nameOfCharity
         )
       )
     )

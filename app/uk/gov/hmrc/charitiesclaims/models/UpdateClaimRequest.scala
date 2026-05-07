@@ -23,6 +23,7 @@ final case class UpdateClaimRequest(
   lastUpdatedReference: String,
   repaymentClaimDetails: RepaymentClaimDetails,
   organisationDetails: Option[OrganisationDetails] = None,
+  agentUserOrganisationDetails: Option[AgentUserOrganisationDetails] = None,
   giftAidSmallDonationsSchemeDonationDetails: Option[GiftAidSmallDonationsSchemeDonationDetails] = None,
   understandFalseStatements: Option[Boolean] = None,
   includedAnyAdjustmentsInClaimPrompt: Option[String] = None,

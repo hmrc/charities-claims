@@ -44,6 +44,7 @@ object Claim {
 final case class ClaimData(
   repaymentClaimDetails: RepaymentClaimDetails,
   organisationDetails: Option[OrganisationDetails] = None,
+  agentUserOrganisationDetails: Option[AgentUserOrganisationDetails] = None,
   understandFalseStatements: Option[Boolean] = None,
   includedAnyAdjustmentsInClaimPrompt: Option[String] = None,
   giftAidSmallDonationsSchemeDonationDetails: Option[GiftAidSmallDonationsSchemeDonationDetails] = None,
@@ -95,6 +96,20 @@ final case class OrganisationDetails(
 
 object OrganisationDetails {
   given Format[OrganisationDetails] = Json.format[OrganisationDetails]
+}
+
+final case class AgentUserOrganisationDetails(
+  whoShouldHmrcSendPaymentTo: String,
+  daytimeTelephoneNumber: String,
+  doYouHaveAgentUKAddress: Boolean,
+  postcode: Option[String] = None,
+  nameOfCharityRegulator: NameOfCharityRegulator,
+  charityRegistrationNumber: Option[String] = None,
+  unregulatedReason: Option[ReasonNotRegisteredWithRegulator] = None
+)
+
+object AgentUserOrganisationDetails {
+  given Format[AgentUserOrganisationDetails] = Json.format[AgentUserOrganisationDetails]
 }
 
 final case class GiftAidScheduleData(

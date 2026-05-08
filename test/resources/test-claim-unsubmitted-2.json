@@ -8,7 +8,9 @@
             "claimingGiftAid": true,
             "claimingTaxDeducted": false,
             "claimingUnderGiftAidSmallDonationsScheme": false,
-            "claimReferenceNumber": "New GA Claim"
+            "claimReferenceNumber": "New GA Claim",
+            "hmrcCharitiesReference": "AB123",
+            "nameOfCharity": "Test Charity"
         },
         "organisationDetails": {
             "nameOfCharityRegulator": "EnglandAndWales",

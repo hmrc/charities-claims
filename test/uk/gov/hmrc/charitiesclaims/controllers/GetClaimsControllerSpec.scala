@@ -209,4 +209,28 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       errorResponse.value.get("errorCode")    shouldBe Some(JsString("CLAIM_SERVICE_ERROR"))
     }
   }
+
+  "GET /claims/charities/:charityReference/unsubmitted" - {
+    "return 204 when the claim exists" in new AuthorisedAgentFixture {
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
+
+      val request = testRequest("GET", "/claims/charities/AB123")
+
+      claimsService.hasUnsubmittedClaim(userId = agent1, hmrcCharitiesReference = "AB123").futureValue shouldBe true
+
+      val result = controller.hasUnsubmittedClaim(charityReference = "AB123")(request)
+      status(result) shouldBe Status.NO_CONTENT
+    }
+
+    "return 404 when the claim does not exist" in new AuthorisedAgentFixture {
+      val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
+
+      val request = testRequest("GET", "/claims/charities/OR123/unsubmitted")
+
+      claimsService.hasUnsubmittedClaim(userId = agent1, hmrcCharitiesReference = "AB123").futureValue shouldBe true
+
+      val result = controller.hasUnsubmittedClaim(charityReference = "OR123")(request)
+      status(result) shouldBe Status.NOT_FOUND
+    }
+  }
 }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.charitiesclaims.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents}
 import play.api.mvc.Results.InternalServerError
-import play.api.mvc.Results.{NotFound, Ok}
+import play.api.mvc.Results.{NoContent, NotFound, Ok}
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.charitiesclaims.models.GetClaimResponse
@@ -84,6 +84,24 @@ class GetClaimsController @Inject() (
 
           case Some((claim, createdAt)) =>
             Ok(Json.toJson(GetClaimResponse(claim, createdAt)))
+        }
+        .recover { case e =>
+          InternalServerError(
+            Json.obj(
+              "errorMessage" -> e.getMessage,
+              "errorCode"    -> "CLAIM_SERVICE_ERROR"
+            )
+          )
+        }
+    }
+
+  def hasUnsubmittedClaim(charityReference: String): Action[String] =
+    whenAuthorised {
+      claimsService
+        .hasUnsubmittedClaim(currentUserId, charityReference)
+        .map {
+          case false => NotFound
+          case true  => NoContent
         }
         .recover { case e =>
           InternalServerError(

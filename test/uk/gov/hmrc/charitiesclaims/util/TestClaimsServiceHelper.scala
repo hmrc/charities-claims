@@ -86,4 +86,13 @@ class TestClaimsService(initialClaims: Seq[Claim]) extends ClaimsService {
 
   override def updateLastVisitedAt(claimId: String): Future[Unit] =
     Future.successful(())
+
+  override def hasUnsubmittedClaim(userId: String, hmrcCharitiesReference: String): Future[Boolean] =
+    Future.successful(
+      claims.exists((c, _) =>
+        c.userId == userId
+          && c.claimSubmitted == false
+          && c.claimData.repaymentClaimDetails.hmrcCharitiesReference.contains(hmrcCharitiesReference)
+      )
+    )
 }

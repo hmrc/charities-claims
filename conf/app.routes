@@ -7,6 +7,7 @@ GET         /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.GetC
 DELETE      /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.DeleteClaimController.deleteClaim(claimId: String)
 PUT         /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateClaim(claimId: String)
 PATCH       /claims/:claimId/last-visited-at  uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateLastVisitedAt(claimId: String)
+GET         /claims/charities/:charityReference/unsubmitted        uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.hasUnsubmittedClaim(charityReference: String)
 
 GET         /charities/:charityReference/unregulated-donations uk.gov.hmrc.charitiesclaims.controllers.UnregulatedDonationsController.getTotalUnregulatedDonations(charityReference: String)
 

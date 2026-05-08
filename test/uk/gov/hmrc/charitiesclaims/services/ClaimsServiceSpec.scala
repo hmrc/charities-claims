@@ -81,10 +81,12 @@ class ClaimsServiceSpec
           info("create and store a submitted claim for the first user")
           val claim     = claims.head.copy(claimId = UUID.randomUUID().toString, UUID.randomUUID().toString)
           val claimInfo = ClaimInfo(
-            claim.claimId,
-            claim.userId,
-            claim.claimSubmitted,
-            claim.lastUpdatedReference
+            claimId = claim.claimId,
+            userId = claim.userId,
+            claimSubmitted = claim.claimSubmitted,
+            lastUpdatedReference = claim.lastUpdatedReference,
+            hmrcCharitiesReference = claim.claimData.repaymentClaimDetails.hmrcCharitiesReference,
+            nameOfCharity = claim.claimData.repaymentClaimDetails.nameOfCharity
           )
 
           claim.claimSubmitted shouldBe true
@@ -99,13 +101,19 @@ class ClaimsServiceSpec
           claimsService.listClaims(claim.userId, claimSubmitted = true).futureValue  shouldBe Seq(claimInfo)
           claimsService.listClaims(claim.userId, claimSubmitted = false).futureValue shouldBe Seq.empty
 
+          claimsService
+            .hasUnsubmittedClaim(claim.userId, "OR123")
+            .futureValue shouldBe false
+
           info("add a new submitted claim for the second user")
           val claim2     = claim.copy(userId = UUID.randomUUID().toString)
           val claimInfo2 = ClaimInfo(
-            claim2.claimId,
-            claim2.userId,
-            claim2.claimSubmitted,
-            claim2.lastUpdatedReference
+            claimId = claim2.claimId,
+            userId = claim2.userId,
+            claimSubmitted = claim2.claimSubmitted,
+            lastUpdatedReference = claim2.lastUpdatedReference,
+            hmrcCharitiesReference = claim2.claimData.repaymentClaimDetails.hmrcCharitiesReference,
+            nameOfCharity = claim2.claimData.repaymentClaimDetails.nameOfCharity
           )
 
           claimsService.putClaim(claim2).futureValue
@@ -146,12 +154,12 @@ class ClaimsServiceSpec
           info("add a new unsubmitted claim for the second user")
           val claim4     = claim3.copy(claimId = UUID.randomUUID().toString, claimSubmitted = false)
           val claimInfo4 = ClaimInfo(
-            claim4.claimId,
-            claim4.userId,
-            claim4.claimSubmitted,
-            claim4.lastUpdatedReference,
-            claim4.claimData.repaymentClaimDetails.hmrcCharitiesReference,
-            claim4.claimData.repaymentClaimDetails.nameOfCharity
+            claimId = claim4.claimId,
+            userId = claim4.userId,
+            claimSubmitted = claim4.claimSubmitted,
+            lastUpdatedReference = claim4.lastUpdatedReference,
+            hmrcCharitiesReference = claim4.claimData.repaymentClaimDetails.hmrcCharitiesReference,
+            nameOfCharity = claim4.claimData.repaymentClaimDetails.nameOfCharity
           )
           claimsService.putClaim(claim4).futureValue
 
@@ -161,6 +169,14 @@ class ClaimsServiceSpec
             claimInfo3
           )
           claimsService.listClaims(claim4.userId, claimSubmitted = false).futureValue shouldBe Seq(claimInfo4)
+
+          claimsService
+            .hasUnsubmittedClaim(claim4.userId, "OR123")
+            .futureValue shouldBe false
+
+          claimsService
+            .hasUnsubmittedClaim(claim4.userId, "XR1234")
+            .futureValue shouldBe true
 
           info("delete the claims")
           claimsService.deleteClaim(claim.claimId).futureValue

@@ -37,6 +37,7 @@ trait ClaimsService {
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit]
   def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]]
   def updateLastVisitedAt(claimId: String): Future[Unit]
+  def hasUnsubmittedClaim(userId: String, hmrcCharitiesReference: String): Future[Boolean]
 }
 
 @Singleton
@@ -101,6 +102,18 @@ class ClaimsServiceImpl @Inject() (
       .map(_.data.claim.flatten)
       .collect()
       .head()
+
+  def hasUnsubmittedClaim(userId: String, hmrcCharitiesReference: String): Future[Boolean] =
+    repository.collection
+      .countDocuments(
+        BsonDocument(
+          ClaimsRepository.userIdPath                 -> userId,
+          ClaimsRepository.claimSubmittedPath         -> false,
+          ClaimsRepository.hmrcCharitiesReferencePath -> hmrcCharitiesReference
+        )
+      )
+      .head()
+      .map(count => count > 0)
 
   def updateLastVisitedAt(claimId: String): Future[Unit] =
     repository.collection

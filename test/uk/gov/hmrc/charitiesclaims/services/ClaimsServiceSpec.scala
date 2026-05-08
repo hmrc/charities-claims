@@ -170,8 +170,6 @@ class ClaimsServiceSpec
           )
           claimsService.listClaims(claim4.userId, claimSubmitted = false).futureValue shouldBe Seq(claimInfo4)
 
-          println(claimInfo4)
-
           claimsService
             .hasUnsubmittedClaim(claim4.userId, "OR123")
             .futureValue shouldBe false

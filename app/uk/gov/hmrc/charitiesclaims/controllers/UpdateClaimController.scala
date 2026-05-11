@@ -130,6 +130,7 @@ class UpdateClaimController @Inject() (
     val newClaimData = ClaimData(
       repaymentClaimDetails = update.repaymentClaimDetails,
       organisationDetails = update.organisationDetails,
+      agentUserOrganisationDetails = update.agentUserOrganisationDetails,
       giftAidSmallDonationsSchemeDonationDetails = update.giftAidSmallDonationsSchemeDonationDetails,
       understandFalseStatements = update.understandFalseStatements,
       includedAnyAdjustmentsInClaimPrompt = update.includedAnyAdjustmentsInClaimPrompt,

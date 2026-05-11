@@ -171,12 +171,12 @@ final case class AgtOrNom(
     None, // If a "Claim Reference Number" is given, then set to this value Else omit this element.
   PayToAoN: Option[YesNo] =
     None, // If "Who should HMRC send payment to" is "Tax Agent", then set to the value of "yes" Else omit this element.
-  AoNID: Option[AoNin] = None,
+  AoNID: Option[AoNID] = None,
   Phone: String
 ) derives XmlWriter
 
 // to check
-final case class AoNin(
+final case class AoNID(
   Overseas: Option[YesNo] =
     None, // If "Is your Address In The UK" is "No", then set to the value of "yes" Else omit this element.
   Postcode: Option[String] =

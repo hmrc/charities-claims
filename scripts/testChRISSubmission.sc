@@ -67,7 +67,7 @@ def authenticateOrganisationUser(userId: String): Response[String] =
   basicRequest  
   .response(asStringAlways)
   .post(uri"http://localhost:9949/auth-login-stub/gg-sign-in")
-  .body(s"""authorityId=$userId&redirectionUrl=%2Fauth-login-stub%2Fsession&credentialStrength=strong&confidenceLevel=50&affinityGroup=Organisation&usersName=&email=user%40test.com&credentialRole=User&enrolment%5B0%5D.name=HMRC-CHAR-ORG&enrolment%5B0%5D.taxIdentifier%5B0%5D.name=CHARID&enrolment%5B0%5D.taxIdentifier%5B0%5D.value=org-123&enrolment%5B0%5D.state=Activated&enrolment%5B1%5D.name=&enrolment%5B1%5D.taxIdentifier%5B0%5D.name=&enrolment%5B1%5D.taxIdentifier%5B0%5D.value=&enrolment%5B1%5D.state=Activated&enrolment%5B2%5D.name=&enrolment%5B2%5D.taxIdentifier%5B0%5D.name=&enrolment%5B2%5D.taxIdentifier%5B0%5D.value=&enrolment%5B2%5D.state=Activated&enrolment%5B3%5D.name=&enrolment%5B3%5D.taxIdentifier%5B0%5D.name=&enrolment%5B3%5D.taxIdentifier%5B0%5D.value=&enrolment%5B3%5D.state=Activated""")
+  .body(s"""authorityId=$userId&redirectionUrl=%2Fauth-login-stub%2Fsession&credentialStrength=strong&confidenceLevel=50&affinityGroup=Organisation&usersName=&email=user%40test.com&credentialRole=User&enrolment%5B0%5D.name=HMRC-CHAR-ORG&enrolment%5B0%5D.taxIdentifier%5B0%5D.name=CHARID&enrolment%5B0%5D.taxIdentifier%5B0%5D.value=OR123&enrolment%5B0%5D.state=Activated&enrolment%5B1%5D.name=&enrolment%5B1%5D.taxIdentifier%5B0%5D.name=&enrolment%5B1%5D.taxIdentifier%5B0%5D.value=&enrolment%5B1%5D.state=Activated&enrolment%5B2%5D.name=&enrolment%5B2%5D.taxIdentifier%5B0%5D.name=&enrolment%5B2%5D.taxIdentifier%5B0%5D.value=&enrolment%5B2%5D.state=Activated&enrolment%5B3%5D.name=&enrolment%5B3%5D.taxIdentifier%5B0%5D.name=&enrolment%5B3%5D.taxIdentifier%5B0%5D.value=&enrolment%5B3%5D.state=Activated""")
   .contentType("application/x-www-form-urlencoded")
   .followRedirects(false)
   .send("authenticate as organisation user")
@@ -311,6 +311,7 @@ val updateClaimResponse: UpdateClaimResponse =
   lastUpdatedReference = saveClaimResponse.lastUpdatedReference,
   repaymentClaimDetails = claim.claimData.repaymentClaimDetails,
   organisationDetails = claim.claimData.organisationDetails,
+  agentUserOrganisationDetails = claim.claimData.agentUserOrganisationDetails,
   giftAidSmallDonationsSchemeDonationDetails = claim.claimData.giftAidSmallDonationsSchemeDonationDetails,
   understandFalseStatements = claim.claimData.understandFalseStatements,
   includedAnyAdjustmentsInClaimPrompt = claim.claimData.includedAnyAdjustmentsInClaimPrompt,

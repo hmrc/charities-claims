@@ -182,6 +182,7 @@ for(i <- 1 to numberOfClaims) {
     lastUpdatedReference = saveClaimResponse.lastUpdatedReference,
     repaymentClaimDetails = claim.claimData.repaymentClaimDetails,
     organisationDetails = claim.claimData.organisationDetails,
+    agentUserOrganisationDetails = claim.claimData.agentUserOrganisationDetails,
     giftAidSmallDonationsSchemeDonationDetails = claim.claimData.giftAidSmallDonationsSchemeDonationDetails,
     understandFalseStatements = claim.claimData.understandFalseStatements,
     includedAnyAdjustmentsInClaimPrompt = claim.claimData.includedAnyAdjustmentsInClaimPrompt,

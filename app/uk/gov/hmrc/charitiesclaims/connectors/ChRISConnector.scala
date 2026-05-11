@@ -36,6 +36,7 @@ import org.apache.pekko.util.ByteString
 import uk.gov.hmrc.charitiesclaims.xml.XmlUtils
 import uk.gov.hmrc.charitiesclaims.validation.{SchematronValidationException, SchematronValidator}
 import uk.gov.hmrc.charitiesclaims.xml.XmlUtils.*
+import scala.util.{Failure, Success}
 
 @ImplementedBy(classOf[ChRISConnectorImpl])
 trait ChRISConnector {
@@ -97,6 +98,13 @@ class ChRISConnectorImpl @Inject() (
             )
           }
         )
+      }
+      .transform {
+        case Success(value)     => Success(value)
+        case Failure(exception) =>
+          logger.error(s"ChRIS submission failed: ${exception.getMessage}")
+          logger.error(document.prettyPrint())
+          Failure(exception)
       }
 
 }

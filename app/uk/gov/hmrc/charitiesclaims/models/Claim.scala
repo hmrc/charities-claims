@@ -105,7 +105,7 @@ final case class AgentUserOrganisationDetails(
   postcode: Option[String] = None,
   nameOfCharityRegulator: NameOfCharityRegulator,
   charityRegistrationNumber: Option[String] = None,
-  unregulatedReason: Option[ReasonNotRegisteredWithRegulator] = None
+  reasonNotRegisteredWithRegulator: Option[ReasonNotRegisteredWithRegulator] = None
 )
 
 object AgentUserOrganisationDetails {

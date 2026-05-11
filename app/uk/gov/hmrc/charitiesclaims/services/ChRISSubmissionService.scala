@@ -66,16 +66,18 @@ class ChRISSubmissionServiceImpl @Inject() (
       orgName      <- getOrganisationName(currentUser)
       scheduleData <- getScheduleData(claim)
     yield GovTalkMessage(
-      GovTalkDetails = buildGovTalkDetails(currentUser),
+      GovTalkDetails = buildGovTalkDetails(currentUser, claim.claimData.repaymentClaimDetails.hmrcCharitiesReference),
       Body = Body(
         IRenvelope = IRenvelope(
-          IRheader = buildIRheader(currentUser),
-          R68 = buildR68(claim, currentUser, orgName, declarationLanguage, scheduleData)
+          IRheader = buildIRheader(currentUser, claim.claimData.repaymentClaimDetails.hmrcCharitiesReference),
+          R68 = buildR68(claim, currentUser, orgName.getOrElse(""), declarationLanguage, scheduleData)
         )
       )
     ).withLiteIRmark
 
-  def getOrganisationName(currentUser: models.CurrentUser)(using HeaderCarrier): Future[Option[String]] =
+  def getOrganisationName(currentUser: models.CurrentUser)(using
+    HeaderCarrier
+  ): Future[Option[String]] =
     if currentUser.isAgent
     then
       rdsConnector
@@ -159,23 +161,25 @@ class ChRISSubmissionServiceImpl @Inject() (
       otherIncome = otherIncomeData
     )
 
-  def buildGovTalkDetails(currentUser: models.CurrentUser)(using hc: HeaderCarrier): GovTalkDetails =
+  def buildGovTalkDetails(currentUser: models.CurrentUser, hmrcCharitiesReference: Option[String])(using
+    hc: HeaderCarrier
+  ): GovTalkDetails =
     GovTalkDetails(
       Keys = List(
         Key(Type = "CredentialID", Value = currentUser.userId),
         if currentUser.isAgent
-        then Key(Type = "CHARID", Value = "FOO") // TODO
-        else Key(Type = currentUser.enrolmentIdentifierKey, Value = currentUser.enrolmentIdentifierValue),
+        then Key(Type = "CHARID", Value = hmrcCharitiesReference.getOrElse(""))
+        else Key(Type = "CHARID", Value = currentUser.enrolmentIdentifierValue),
         Key(Type = "SessionID", Value = hc.sessionId.map(_.value).getOrElse("unknown"))
       )
     )
 
-  def buildIRheader(currentUser: models.CurrentUser): IRheader =
+  def buildIRheader(currentUser: models.CurrentUser, hmrcCharitiesReference: Option[String]): IRheader =
     IRheader(
       Keys = List(
         if currentUser.isAgent
-        then Key(Type = "CHARID", Value = "FOO") // TODO
-        else Key(Type = currentUser.enrolmentIdentifierKey, Value = currentUser.enrolmentIdentifierValue)
+        then Key(Type = "CHARID", Value = hmrcCharitiesReference.getOrElse(""))
+        else Key(Type = "CHARID", Value = currentUser.enrolmentIdentifierValue)
       ),
       PeriodEnd = "2012-01-01",
       Sender = "Other" // constant value
@@ -184,7 +188,7 @@ class ChRISSubmissionServiceImpl @Inject() (
   def buildR68(
     claim: models.Claim,
     currentUser: models.CurrentUser,
-    orgName: Option[String],
+    orgName: String,
     declarationLanguage: String,
     scheduleData: ScheduleData
   ): R68 =
@@ -192,7 +196,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       WelshSubmission = if declarationLanguage == "cy" then Some(true) else None,
       AgtOrNom =
         if currentUser.isAgent
-        then buildAgtOrNom(claim, orgName, currentUser.enrolmentIdentifierValue)
+        then Some(buildAgtOrNom(claim, orgName, currentUser.enrolmentIdentifierValue))
         else None,
       AuthOfficial =
         if currentUser.isAgent
@@ -218,18 +222,35 @@ class ChRISSubmissionServiceImpl @Inject() (
       )
     )
 
-  def buildAgtOrNom(claim: models.Claim, orgName: Option[String], refNo: String): Option[AgtOrNom] =
-    for {
-      o <- orgName
-    } yield AgtOrNom(
-      OrgName = o,
+  def buildAgtOrNom(claim: models.Claim, orgName: String, refNo: String): AgtOrNom =
+    AgtOrNom(
+      // Set to the Agent name returned from I3 - RDS DataCache Proxy Microservice - GetAgentNamebyAgentReference
+      OrgName = orgName,
+      // Set to Agent's Charity Reference (derived from their HMRC-CHAR-AGENT enrolment and AGENTCHARID identifier)
       RefNo = refNo,
-      ClaimNo = claim.claimData.repaymentClaimDetails.hmrcCharitiesReference, // TODO
+      // If a R1.6 - Claim reference number check is 'Yes' , then set to the value ofR1.3 - Claim reference number input else omit this element.
+      ClaimNo = claim.claimData.repaymentClaimDetails.claimReferenceNumber,
+      // If A2.18 - Send payment to is "taxAgent", then set to the value of "yes" else omit this element.
       PayToAoN =
-        if claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.contains("Tax Agent") then Some(true)
-        else None, // TODO
-      AoNID = None, // TODO
-      Phone = "1234567890" // TODO
+        if claim.claimData.agentUserOrganisationDetails
+            .contains("taxAgent")
+        then Some(true)
+        else None,
+      AoNID = Some(buildAoNID(claim)),
+      Phone = claim.claimData.agentUserOrganisationDetails.map(_.daytimeTelephoneNumber).getOrElse("")
+    )
+
+  def buildAoNID(claim: models.Claim): AoNID =
+    AoNID(
+      Overseas =
+        if claim.claimData.agentUserOrganisationDetails
+            .map(_.doYouHaveAgentUKAddress)
+            .contains(false)
+        then Some(true)
+        else None,
+      Postcode = claim.claimData.agentUserOrganisationDetails
+        .flatMap(_.postcode)
+        .map(_.toUpperCase)
     )
 
   def buildOffName(claim: models.Claim): Option[OffName] =
@@ -274,7 +295,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     )
 
   def buildClaim(
-    orgName: Option[String],
+    orgName: String,
     claim: models.Claim,
     currentUser: models.CurrentUser,
     scheduleData: ScheduleData
@@ -284,13 +305,13 @@ class ChRISSubmissionServiceImpl @Inject() (
       // Else set to the Organisation name returned from I3 - RDS DataCache Proxy Microservice - GetOrganisationNamebyCharityReference
       OrgName =
         if currentUser.isAgent
-        then "CASC" // TODO
-        else orgName.getOrElse(" "),
+        then claim.claimData.repaymentClaimDetails.nameOfCharity.getOrElse("")
+        else orgName,
       // If user has an affinity group of "Agent", then set to the value of "HMRC Charities Reference"
       // Else set to the Charities Reference (derived from their HMRC-CHAR-ORG enrolment and CHARID identifier)
       HMRCref =
         if currentUser.isAgent
-        then "FOO" // TODO
+        then claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.getOrElse("")
         else currentUser.enrolmentIdentifierValue,
       Regulator = buildRegulator(claim, currentUser.enrolmentIdentifierValue),
       Repayment = buildRepayment(claim, scheduleData.giftAid, scheduleData.otherIncome),
@@ -299,31 +320,45 @@ class ChRISSubmissionServiceImpl @Inject() (
     )
 
   def buildRegulator(claim: models.Claim, hmrcRef: String): Option[Regulator] =
-    claim.claimData.organisationDetails.flatMap { org =>
-      val isCASCCharity = hmrcRef.startsWith("CH") || hmrcRef.startsWith("CF")
+    claim.claimData.organisationDetails
+      .flatMap { org =>
+        buildRegulator(org.nameOfCharityRegulator, org.charityRegistrationNumber, hmrcRef)
+      }
+      .orElse(
+        claim.claimData.agentUserOrganisationDetails.flatMap { org =>
+          buildRegulator(org.nameOfCharityRegulator, org.charityRegistrationNumber, hmrcRef)
+        }
+      )
 
-      val regName: Option[RegulatorName] = org.nameOfCharityRegulator match
-        case NameOfCharityRegulator.EnglandAndWales => Some(RegulatorName.CCEW)
-        case NameOfCharityRegulator.NorthernIreland => Some(RegulatorName.CCNI)
-        case NameOfCharityRegulator.Scottish        => Some(RegulatorName.OSCR)
-        case _                                      => None
+  def buildRegulator(
+    nameOfCharityRegulator: NameOfCharityRegulator,
+    charityRegistrationNumber: Option[String],
+    hmrcRef: String
+  ): Option[Regulator] = {
+    val isCASCCharity = hmrcRef.startsWith("CH") || hmrcRef.startsWith("CF")
 
-      val noReg: Option[YesNo] =
-        if org.nameOfCharityRegulator == NameOfCharityRegulator.None && !isCASCCharity
-        then Some(true: YesNo)
-        else None
+    val regName: Option[RegulatorName] = nameOfCharityRegulator match
+      case NameOfCharityRegulator.EnglandAndWales => Some(RegulatorName.CCEW)
+      case NameOfCharityRegulator.NorthernIreland => Some(RegulatorName.CCNI)
+      case NameOfCharityRegulator.Scottish        => Some(RegulatorName.OSCR)
+      case _                                      => None
 
-      val regNo: Option[String] =
-        if isCASCCharity then None
-        else org.charityRegistrationNumber
+    val noReg: Option[YesNo] =
+      if nameOfCharityRegulator == NameOfCharityRegulator.None && !isCASCCharity
+      then Some(true: YesNo)
+      else None
 
-      val result =
-        if org.nameOfCharityRegulator == NameOfCharityRegulator.None && isCASCCharity
-        then None
-        else Some(Regulator(regName, noReg, regNo))
+    val regNo: Option[String] =
+      if isCASCCharity then None
+      else charityRegistrationNumber
 
-      result
-    }
+    val result =
+      if nameOfCharityRegulator == NameOfCharityRegulator.None && isCASCCharity
+      then None
+      else Some(Regulator(regName, noReg, regNo))
+
+    result
+  }
 
   def buildRepayment(
     claim: models.Claim,

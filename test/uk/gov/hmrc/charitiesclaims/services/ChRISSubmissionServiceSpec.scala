@@ -58,7 +58,7 @@ class ChRISSubmissionServiceSpec
     enrolmentIdentifierKey = "test-enrolment-identifier-key"
   )
 
-  val orgName: Option[String]     = Some("test-session-id")
+  val orgName: String             = "test-session-id"
   val declarationLanguage: String = "cy"
 
   val agentUser: models.CurrentUser = TestCurrentUser(
@@ -110,15 +110,15 @@ class ChRISSubmissionServiceSpec
         .getOrganisationName(_: String)(using _: HeaderCarrier))
         .expects(currentUser.enrolmentIdentifierValue, *)
         .returns(
-          Future.successful(orgName)
+          Future.successful(Some(orgName))
         )
 
       val submission = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
-      submission.GovTalkDetails shouldBe GovTalkDetails(
+      submission.GovTalkDetails shouldEqual GovTalkDetails(
         Keys = List(
           Key(Type = "CredentialID", Value = "test-user-id"),
-          Key(Type = "test-enrolment-identifier-key", Value = "test-enrolment-identifier-value"),
+          Key(Type = "CHARID", Value = "test-enrolment-identifier-value"),
           Key(Type = "SessionID", Value = "test-session-id")
         )
       )
@@ -864,22 +864,15 @@ class ChRISSubmissionServiceSpec
             claimingUnderGiftAidSmallDonationsScheme = false,
             claimReferenceNumber = Some("test-claim-reference-number")
           ),
-          organisationDetails = Some(
-            models.OrganisationDetails(
+          agentUserOrganisationDetails = Some(
+            models.AgentUserOrganisationDetails(
+              whoShouldHmrcSendPaymentTo = "taxAgent",
+              daytimeTelephoneNumber = "1234567890",
+              doYouHaveAgentUKAddress = true,
+              postcode = Some("AA1 1AA"),
               nameOfCharityRegulator = NameOfCharityRegulator.None,
               reasonNotRegisteredWithRegulator = None,
-              charityRegistrationNumber = Some("123456"),
-              areYouACorporateTrustee = false,
-              doYouHaveCorporateTrusteeUKAddress = Some(true),
-              doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
-              nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
-              corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
-              authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteeTitle = Some("Mr"),
-              authorisedOfficialTrusteeFirstName = Some("John"),
-              authorisedOfficialTrusteeLastName = Some("Jones")
+              charityRegistrationNumber = Some("123456")
             )
           )
         )
@@ -890,7 +883,7 @@ class ChRISSubmissionServiceSpec
       val submission = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
       val submissionR68       =
-        service.buildR68(claim, currentUser, Some("Test-Agent-Name"), declarationLanguage, ScheduleData.empty)
+        service.buildR68(claim, currentUser, "Test-Agent-Name", declarationLanguage, ScheduleData.empty)
       val submissionRegulator = service.buildRegulator(claim, agentUser.enrolmentIdentifierValue)
 
       submission.Body.IRenvelope.R68 shouldBe submissionR68
@@ -900,9 +893,9 @@ class ChRISSubmissionServiceSpec
         AgtOrNom(
           OrgName = "Test-Agent-Name",
           RefNo = "test-enrolment-identifier-value",
-          ClaimNo = None,
+          ClaimNo = Some("test-claim-reference-number"),
           PayToAoN = None,
-          AoNID = None,
+          AoNID = Some(AoNID(None, Some("AA1 1AA"))),
           Phone = "1234567890"
         )
       )
@@ -1049,7 +1042,7 @@ class ChRISSubmissionServiceSpec
         .getOrganisationName(_: String)(using _: HeaderCarrier))
         .expects(currentUser.enrolmentIdentifierValue, *)
         .returns(
-          Future.successful(orgName)
+          Future.successful(Some(orgName))
         )
 
       val result = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
@@ -1137,7 +1130,7 @@ class ChRISSubmissionServiceSpec
         .getOrganisationName(_: String)(using _: HeaderCarrier))
         .expects(currentUser.enrolmentIdentifierValue, *)
         .returns(
-          Future.successful(orgName)
+          Future.successful(Some(orgName))
         )
 
       val result = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
@@ -1222,7 +1215,7 @@ class ChRISSubmissionServiceSpec
         .getOrganisationName(_: String)(using _: HeaderCarrier))
         .expects(currentUser.enrolmentIdentifierValue, *)
         .returns(
-          Future.successful(orgName)
+          Future.successful(Some(orgName))
         )
 
       val result = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue

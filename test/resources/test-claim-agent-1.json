@@ -1,0 +1,44 @@
+{
+  "claimId": "test-claim-id",
+  "userId": "agent-009",
+  "claimSubmitted": false,
+  "lastUpdatedReference": "4ceb3abb-a48e-4af7-8421-44b2578fecbf",
+  "claimData": {
+    "repaymentClaimDetails": {
+      "claimingGiftAid": true,
+      "claimingTaxDeducted": true,
+      "claimingUnderGiftAidSmallDonationsScheme": true,
+      "claimingDonationsNotFromCommunityBuilding": true,
+      "claimingDonationsCollectedInCommunityBuildings": true,
+      "connectedToAnyOtherCharities": true,
+      "makingAdjustmentToPreviousClaim": false,
+      "hmrcCharitiesReference": "OR123",
+      "nameOfCharity": "Test Charity"
+    },
+    "agentUserOrganisationDetails": {
+      "whoShouldHmrcSendPaymentTo": "business",
+      "daytimeTelephoneNumber": "22323233",
+      "doYouHaveAgentUKAddress": true,
+      "postcode": "BN14 7BU",
+      "nameOfCharityRegulator": "EnglandAndWales",
+      "charityRegistrationNumber": "23232323"
+    },
+    "giftAidSmallDonationsSchemeDonationDetails": {
+      "adjustmentForGiftAidOverClaimed": 0,
+      "claims": [
+        {
+          "taxYear": 2025,
+          "amountOfDonationsReceived": 1234.56
+        }
+      ]
+    },
+    "understandFalseStatements": true,
+    "includedAnyAdjustmentsInClaimPrompt": "none",
+    "giftAidScheduleFileUploadReference": "91c1a037-391a-429b-ad48-751301dd90e9",
+    "otherIncomeScheduleFileUploadReference": "ed21f68c-d02e-4a36-8f06-e11a5cb0023d",
+    "communityBuildingsScheduleFileUploadReference": "e2048729-09a0-445e-a182-b4d4f05a77cb",
+    "connectedCharitiesScheduleFileUploadReference": "941ffe30-9459-48e9-8d51-c06b730de256",
+    "adjustmentForOtherIncomePreviousOverClaimed": 78,
+    "prevOverclaimedGiftAid": 4321
+  }
+}

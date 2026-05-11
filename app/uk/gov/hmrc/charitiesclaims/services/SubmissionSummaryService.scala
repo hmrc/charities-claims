@@ -76,9 +76,9 @@ class SubmissionSummaryServiceImpl @Inject() (
   ): ClaimDetails =
     ClaimDetails(
       charityName = orgOrAgentName,
-      hmrcCharityReference = getCharityRef(currentUser),
+      hmrcCharityReference = getCharityRef(currentUser, claim),
       submissionTimestamp = claim.submissionDetails.map(_.submissionTimestamp).getOrElse(""),
-      submittedBy = getSubmittedBy(claim)
+      submittedBy = getSubmittedBy(currentUser, claim, orgOrAgentName)
     )
 
   private def buildGiftAidDetails(
@@ -146,40 +146,50 @@ class SubmissionSummaryServiceImpl @Inject() (
     }
   }
 
-  private def getCharityRef(currentUser: CurrentUser): String =
-    // TODO: It will be implemented as part of Agent flow
-    if currentUser.isAgent then "HMRC Charities Reference"
+  private def getCharityRef(currentUser: CurrentUser, claim: Claim): String =
+    if currentUser.isAgent then claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.getOrElse("")
     else currentUser.enrolmentIdentifierValue
 
-  private def getSubmittedBy(claim: Claim): String =
-    claim.claimData.organisationDetails
-      .flatMap { org =>
-        if org.areYouACorporateTrustee then org.nameOfCorporateTrustee
-        else {
-          val name =
-            Seq(
-              org.authorisedOfficialTrusteeTitle,
-              org.authorisedOfficialTrusteeFirstName,
-              org.authorisedOfficialTrusteeLastName
-            ).flatten.mkString(" ")
-
-          Option.when(name.nonEmpty)(name)
-        }
-      }
-      .getOrElse("")
-
-  private def getAgentOrOrgName(currentUser: CurrentUser)(using HeaderCarrier): Future[String] =
-    if currentUser.isAgent then Future.successful("CASC")
+  private def getSubmittedBy(currentUser: CurrentUser, claim: Claim, agentName: String): String =
+    if currentUser.isAgent then agentName
     else
-      rdsConnector
-        .getOrganisationName(currentUser.enrolmentIdentifierValue)
-        .map(
-          _.getOrElse(
-            throw new Exception(
-              s"No org name found for ${currentUser.enrolmentIdentifierValue}"
-            )
-          )
+      claim.claimData.organisationDetails
+        .flatMap { org =>
+          if org.areYouACorporateTrustee then org.nameOfCorporateTrustee
+          else {
+            val name =
+              Seq(
+                org.authorisedOfficialTrusteeTitle,
+                org.authorisedOfficialTrusteeFirstName,
+                org.authorisedOfficialTrusteeLastName
+              ).flatten.mkString(" ")
+
+            Option.when(name.nonEmpty)(name)
+          }
+        }
+        .getOrElse("")
+
+  private def getAgentOrOrgName(currentUser: CurrentUser)(using HeaderCarrier): Future[String] = {
+
+    val identifier = currentUser.enrolmentIdentifierValue
+
+    val (nameF, errorMessage) =
+      if currentUser.isAgent then
+        (
+          rdsConnector.getAgentName(identifier),
+          s"No agent name found for $identifier from rds data cache"
         )
+      else
+        (
+          rdsConnector.getOrganisationName(identifier),
+          s"No organisation name found for $identifier from rds data cache"
+        )
+
+    nameF.flatMap {
+      case Some(name) => Future.successful(name)
+      case None       => Future.failed(new Exception(errorMessage))
+    }
+  }
 
   def getCommunityBuildingsUploadData(
     claim: Claim

@@ -123,11 +123,27 @@ class SubmissionSummaryServiceSpec extends AnyWordSpec with Matchers with Mockit
       result.submissionReferenceNumber         shouldBe "SUB123"
     }
 
-    "return charity name and charity ref when user is an agent" in {
-      val result = service.getSummary(baseClaim, agentUser).futureValue
+    "populate claim details correctly when submitted by an agent" in {
+      when(mockRdsConnector.getAgentName(eqTo("AGENT123"))(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some("Test Agent")))
 
-      result.claimDetails.charityName          shouldBe "CASC"
-      result.claimDetails.hmrcCharityReference shouldBe "HMRC Charities Reference"
+      val claim =
+        baseClaim.copy(
+          claimData = baseClaim.claimData.copy(
+            repaymentClaimDetails = baseClaim.claimData.repaymentClaimDetails.copy(
+              hmrcCharitiesReference = Some("Hmrc-ref-123")
+            )
+          )
+        )
+
+      val result = service.getSummary(claim, agentUser).futureValue
+
+      result.claimDetails shouldBe ClaimDetails(
+        charityName = "Test Agent",
+        hmrcCharityReference = "Hmrc-ref-123",
+        submissionTimestamp = "2025-01-01T12:00:00Z",
+        submittedBy = "Test Agent"
+      )
     }
 
     "populate gift aid details correctly for the claim submitted by an authorised official with no gift aid adjustment" in {

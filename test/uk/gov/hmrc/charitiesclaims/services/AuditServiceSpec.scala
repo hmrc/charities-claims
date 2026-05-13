@@ -93,7 +93,7 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         )
         .returning(Future.successful(AuditResult.Success))
 
-      val result = service.sendEvent(claim, scheduleData, creationTimestamp)
+      val result = service.sendEvent(claim, scheduleData, creationTimestamp, "en")
 
       whenReady(result) { res =>
         res shouldBe AuditResult.Success
@@ -111,7 +111,7 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         .expects(*, *, *)
         .returning(Future.failed(new RuntimeException("Audit failed")))
 
-      whenReady(service.sendEvent(claim, scheduleData, creationTimestamp).failed) { ex =>
+      whenReady(service.sendEvent(claim, scheduleData, creationTimestamp, "en").failed) { ex =>
         ex            shouldBe a[RuntimeException]
         ex.getMessage shouldBe "Audit failed"
       }
@@ -140,7 +140,7 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         )
         .returning(Future.successful(AuditResult.Success))
 
-      val result = service.sendEvent(claim, scheduleData, creationTimestamp)
+      val result = service.sendEvent(claim, scheduleData, creationTimestamp, "cy")
 
       whenReady(result) { res =>
         res shouldBe AuditResult.Success

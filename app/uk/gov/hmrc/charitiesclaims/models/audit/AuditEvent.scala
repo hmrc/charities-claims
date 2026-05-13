@@ -17,6 +17,7 @@
 package uk.gov.hmrc.charitiesclaims.models.audit
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.charitiesclaims.models.ReasonNotRegisteredWithRegulator
 
 final case class AuditEvent(
   claimId: String,
@@ -30,6 +31,7 @@ final case class AuditEvent(
 final case class AuditClaimData(
   repaymentClaimDetails: AuditRepaymentClaimDetails,
   organisationDetails: Option[AuditOrganisationDetails],
+  agentUserOrganisationDetails: Option[AuditAgentUserOrganisationDetails],
   giftAidScheduleData: Option[AuditGiftAidScheduleData],
   otherIncomeScheduleData: Option[AuditOtherIncomeScheduleData],
   giftAidSmallDonationsSchemeScheduleData: Option[AuditGiftAidSmallDonationsSchemeScheduleData],
@@ -56,14 +58,23 @@ final case class AuditOrganisationDetails(
   areYouACorporateTrustee: Boolean,
   nameOfCorporateTrustee: Option[String] = None,
   corporateTrusteePostcode: Option[String] = None,
-  // TODO: It doesn't exist in data model. Need to build it.
-  // notCorporateTrusteePostcode: Option[Boolean] = None,
+  notCorporateTrusteePostcode: Option[Boolean] = None,
   corporateTrusteeDaytimeTelephoneNumber: Option[String] = None,
   authorisedOfficialTrusteeTitle: Option[String] = None,
   authorisedOfficialTrusteeFirstName: Option[String] = None,
   authorisedOfficialTrusteeLastName: Option[String] = None,
   authorisedOfficialTrusteePostcode: Option[String] = None,
   authorisedOfficialTrusteeDaytimeTelephoneNumber: Option[String] = None
+)
+
+final case class AuditAgentUserOrganisationDetails(
+  whoShouldHmrcSendPaymentTo: String,
+  daytimeTelephoneNumber: String,
+  doYouHaveAgentUKAddress: Boolean,
+  postcode: Option[String] = None,
+  nameOfCharityRegulator: String,
+  charityRegistrationNumber: Option[String] = None,
+  reasonNotRegisteredWithRegulator: Option[ReasonNotRegisteredWithRegulator] = None
 )
 
 final case class AuditGiftAidScheduleData(
@@ -136,9 +147,8 @@ final case class AuditCommunityBuildingsScheduleData(
 
 final case class AuditDeclarationDetails(
   understandFalseStatements: Option[Boolean] = None,
-  includedAnyAdjustmentsInClaimPrompt: Option[String] = None
-  // TODO: Doesn't exist in data model.
-  // language: String
+  includedAnyAdjustmentsInClaimPrompt: Option[String] = None,
+  language: String
 )
 
 final case class AuditSubmissionDetails(
@@ -178,6 +188,9 @@ object AuditEventFormats {
 
   implicit val auditOrganisationDetailsFormat: OFormat[AuditOrganisationDetails] =
     Json.format[AuditOrganisationDetails]
+
+  implicit val auditAgentUserOrganisationDetailsFormat: OFormat[AuditAgentUserOrganisationDetails] =
+    Json.format[AuditAgentUserOrganisationDetails]
 
   implicit val auditDeclarationDetailsFormat: OFormat[AuditDeclarationDetails] =
     Json.format[AuditDeclarationDetails]

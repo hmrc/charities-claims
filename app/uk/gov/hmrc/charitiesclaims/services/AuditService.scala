@@ -19,11 +19,11 @@ package uk.gov.hmrc.charitiesclaims.services
 import javax.inject.Inject
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.charitiesclaims.models.{Claim, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, GiftAidScheduleData, GiftAidSmallDonationsSchemeDonationDetails, OrganisationDetails, OtherIncomeScheduleData, RepaymentClaimDetails, ScheduleData, SubmissionDetails}
-import uk.gov.hmrc.charitiesclaims.models.audit.{AuditClaimData, AuditCommunityBuildingsScheduleData, AuditConnectedCharitiesScheduleData, AuditDeclarationDetails, AuditDonation, AuditEvent, AuditGiftAidScheduleData, AuditGiftAidSmallDonationsSchemeClaim, AuditGiftAidSmallDonationsSchemeScheduleData, AuditOrganisationDetails, AuditOtherIncome, AuditOtherIncomeScheduleData, AuditRepaymentClaimDetails, AuditSubmissionDetails}
+import uk.gov.hmrc.charitiesclaims.models.{AgentUserOrganisationDetails, Claim, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, GiftAidScheduleData, GiftAidSmallDonationsSchemeDonationDetails, OrganisationDetails, OtherIncomeScheduleData, RepaymentClaimDetails, ScheduleData, SubmissionDetails}
+import uk.gov.hmrc.charitiesclaims.models.audit.{AuditAgentUserOrganisationDetails, AuditClaimData, AuditCommunityBuildingsScheduleData, AuditConnectedCharitiesScheduleData, AuditDeclarationDetails, AuditDonation, AuditEvent, AuditGiftAidScheduleData, AuditGiftAidSmallDonationsSchemeClaim, AuditGiftAidSmallDonationsSchemeScheduleData, AuditOrganisationDetails, AuditOtherIncome, AuditOtherIncomeScheduleData, AuditRepaymentClaimDetails, AuditSubmissionDetails}
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
-import uk.gov.hmrc.charitiesclaims.models.audit.AuditEventFormats._
+import uk.gov.hmrc.charitiesclaims.models.audit.AuditEventFormats.*
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,20 +35,31 @@ class AuditService @Inject() (
   private val auditSource: String = "charities-claims"
   private val auditType: String   = "ClaimSubmission"
 
-  private def buildAuditEvent(claim: Claim, scheduleData: ScheduleData, creationTimestamp: Instant) =
+  private def buildAuditEvent(
+    claim: Claim,
+    scheduleData: ScheduleData,
+    creationTimestamp: Instant,
+    declarationLanguage: String
+  ) =
     AuditEvent(
       claimId = claim.claimId,
       userId = claim.userId,
       claimSubmitted = claim.claimSubmitted,
       creationTimestamp = creationTimestamp.toString,
-      claimData = buildAuditClaimData(claim, scheduleData),
+      claimData = buildAuditClaimData(claim, scheduleData, declarationLanguage),
       submissionDetails = buildSubmissionDetails(claim.submissionDetails)
     )
 
-  private def buildAuditClaimData(claim: Claim, scheduleData: ScheduleData): AuditClaimData = {
+  private def buildAuditClaimData(
+    claim: Claim,
+    scheduleData: ScheduleData,
+    declarationLanguage: String
+  ): AuditClaimData = {
 
     val dRepaymentClaimDetails: RepaymentClaimDetails                                                    = claim.claimData.repaymentClaimDetails
     val odOrganisationDetails: Option[OrganisationDetails]                                               = claim.claimData.organisationDetails
+    val odAgentUserOrganisationDetails: Option[AgentUserOrganisationDetails]                             =
+      claim.claimData.agentUserOrganisationDetails
     val odGiftAid: Option[GiftAidScheduleData]                                                           = scheduleData.giftAid
     val odOtherIncome: Option[OtherIncomeScheduleData]                                                   = scheduleData.otherIncome
     val odConnectedCharities: Option[ConnectedCharitiesScheduleData]                                     = scheduleData.connectedCharities
@@ -80,6 +91,11 @@ class AuditService @Inject() (
           areYouACorporateTrustee = dOrganisationDetails.areYouACorporateTrustee,
           nameOfCorporateTrustee = dOrganisationDetails.nameOfCorporateTrustee,
           corporateTrusteePostcode = dOrganisationDetails.corporateTrusteePostcode,
+          notCorporateTrusteePostcode = Some(
+            dOrganisationDetails.areYouACorporateTrustee &&
+              (dOrganisationDetails.doYouHaveCorporateTrusteeUKAddress.contains(true) ||
+                dOrganisationDetails.doYouHaveAuthorisedOfficialTrusteeUKAddress.contains(true))
+          ),
           corporateTrusteeDaytimeTelephoneNumber = dOrganisationDetails.corporateTrusteeDaytimeTelephoneNumber,
           authorisedOfficialTrusteeTitle = dOrganisationDetails.authorisedOfficialTrusteeTitle,
           authorisedOfficialTrusteeFirstName = dOrganisationDetails.authorisedOfficialTrusteeFirstName,
@@ -87,6 +103,19 @@ class AuditService @Inject() (
           authorisedOfficialTrusteePostcode = dOrganisationDetails.authorisedOfficialTrusteePostcode,
           authorisedOfficialTrusteeDaytimeTelephoneNumber =
             dOrganisationDetails.authorisedOfficialTrusteeDaytimeTelephoneNumber
+        )
+      }
+
+    val auditAgentUserOrganisationDetails: Option[AuditAgentUserOrganisationDetails] =
+      odAgentUserOrganisationDetails.map { dAgentUserOrganisationDetails =>
+        AuditAgentUserOrganisationDetails(
+          whoShouldHmrcSendPaymentTo = dAgentUserOrganisationDetails.whoShouldHmrcSendPaymentTo,
+          daytimeTelephoneNumber = dAgentUserOrganisationDetails.daytimeTelephoneNumber,
+          doYouHaveAgentUKAddress = dAgentUserOrganisationDetails.doYouHaveAgentUKAddress,
+          postcode = dAgentUserOrganisationDetails.postcode,
+          nameOfCharityRegulator = dAgentUserOrganisationDetails.nameOfCharityRegulator.value,
+          charityRegistrationNumber = dAgentUserOrganisationDetails.charityRegistrationNumber,
+          reasonNotRegisteredWithRegulator = dAgentUserOrganisationDetails.reasonNotRegisteredWithRegulator
         )
       }
 
@@ -193,12 +222,14 @@ class AuditService @Inject() (
     val auditDeclarationDetails =
       AuditDeclarationDetails(
         understandFalseStatements = claim.claimData.understandFalseStatements,
-        includedAnyAdjustmentsInClaimPrompt = claim.claimData.includedAnyAdjustmentsInClaimPrompt
+        includedAnyAdjustmentsInClaimPrompt = claim.claimData.includedAnyAdjustmentsInClaimPrompt,
+        language = declarationLanguage
       )
 
     AuditClaimData(
       repaymentClaimDetails = auditRepaymentClaimDetails,
       organisationDetails = auditOrganisationDetails,
+      agentUserOrganisationDetails = auditAgentUserOrganisationDetails,
       giftAidScheduleData = auditGiftAidScheduleData,
       otherIncomeScheduleData = auditOtherIncomeScheduleData,
       giftAidSmallDonationsSchemeScheduleData = auditGiftAidSmallDonationsSchemeScheduleData,
@@ -214,13 +245,13 @@ class AuditService @Inject() (
       )
     }
 
-  def sendEvent(claim: Claim, scheduleData: ScheduleData, creationTimestamp: Instant)(implicit
-    hc: HeaderCarrier
+  def sendEvent(claim: Claim, scheduleData: ScheduleData, creationTimestamp: Instant, declarationLanguage: String)(
+    implicit hc: HeaderCarrier
   ): Future[AuditResult] = {
     val extendedDataEvent = ExtendedDataEvent(
       auditSource = auditSource,
       auditType = auditType,
-      detail = Json.toJson(buildAuditEvent(claim, scheduleData, creationTimestamp))
+      detail = Json.toJson(buildAuditEvent(claim, scheduleData, creationTimestamp, declarationLanguage))
     )
 
     auditConnector.sendExtendedEvent(extendedDataEvent)

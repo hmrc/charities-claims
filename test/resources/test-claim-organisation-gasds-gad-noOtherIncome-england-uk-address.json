@@ -8,7 +8,7 @@
       "claimingGiftAid": true,
       "claimingTaxDeducted": false,
       "claimingUnderGiftAidSmallDonationsScheme": true,
-      "claimReferenceNumber": "test-claim-reference-number",
+      "claimReferenceNumber": "test-claim-reference",
       "claimingDonationsNotFromCommunityBuilding": true,
       "claimingDonationsCollectedInCommunityBuildings": true,
       "connectedToAnyOtherCharities": true,

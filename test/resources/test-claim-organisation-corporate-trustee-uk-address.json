@@ -8,7 +8,7 @@
       "claimingGiftAid": true,
       "claimingTaxDeducted": false,
       "claimingUnderGiftAidSmallDonationsScheme": false,
-      "claimReferenceNumber": "test-claim-reference-number"
+      "claimReferenceNumber": "test-claim-reference"
     },
     "organisationDetails": {
       "nameOfCharityRegulator": "EnglandAndWales",

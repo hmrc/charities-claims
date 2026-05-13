@@ -38,7 +38,7 @@ sm2 --logs CHARITIES_CLAIMS
 
 login as an agent adding `--agent`
 ```
-./scripts/testChRISSubmission.sc -i test/resources/test-claim-organisation-corporate-trustee-england-non-uk-address.json --agent --gift-aid-schedule test/resources/Gift-Aid-Schedule-Excel-GoodData.ods --other-income-schedule test/resources/Other-Income-Schedule-GoodData.ods --community-buildings-schedule test/resources/Community-Buildings-Excel-GoodData.ods --connected-charities-schedule test/resources/Connected-Charities-Schedule-Excel-GoodData.ods
+./scripts/testChRISSubmission.sc -i test/resources/test-claim-agent-1.json --gift-aid-schedule test/resources/Gift-Aid-Schedule-Excel-GoodData.ods --other-income-schedule test/resources/Other-Income-Schedule-GoodData.ods --community-buildings-schedule test/resources/Community-Buildings-Excel-GoodData.ods --connected-charities-schedule test/resources/Connected-Charities-Schedule-Excel-GoodData.ods --agent
 sm2 --logs CHARITIES_CLAIMS
 ```
 

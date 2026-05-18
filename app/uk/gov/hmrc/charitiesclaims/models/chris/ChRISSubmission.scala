@@ -59,7 +59,8 @@ final case class GovTalkMessage(
 
 final case class Header(
   MessageDetails: MessageDetails = MessageDetails(),
-  SenderDetails: SenderDetails = SenderDetails() // This is intentionally set to be empty (<SenderDetails/>)
+  SenderDetails: SenderDetails =
+    SenderDetails() // This is intentionally set to be empty (<SenderDetails></SenderDetails>)
 ) derives XmlWriter
 
 val gatewayTimestampFormat: DateTimeFormatter =
@@ -97,7 +98,7 @@ final case class ChannelRouting(
 
 final case class Channel(
   URI: String = "9998",
-  Product: String = "Charities Portal",
+  Product: String = "Charities portal",
   Version: String = "1.0"
 ) derives XmlWriter
 

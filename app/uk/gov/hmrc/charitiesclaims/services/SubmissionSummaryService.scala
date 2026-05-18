@@ -47,13 +47,14 @@ class SubmissionSummaryServiceImpl @Inject() (
     currentUser: CurrentUser
   )(using HeaderCarrier): Future[SubmissionSummaryResponse] =
     for
-      orgOrAgentName         <- getAgentOrOrgName(currentUser)
+      orgOrAgentCharityName  <- getAgentCharityNameOrOrgName(currentUser, claim)
       giftAidData            <- getGiftAidUploadData(claim)
       communityBuildingsData <- getCommunityBuildingsUploadData(claim)
       connectedCharitiesData <- getConnectedCharitiesUploadData(claim)
       otherIncomeData        <- getOtherIncomeUploadData(claim)
+      submittedBy            <- getSubmittedBy(currentUser, claim)
     yield SubmissionSummaryResponse(
-      claimDetails = buildClaimDetails(claim, currentUser, orgOrAgentName),
+      claimDetails = buildClaimDetails(claim, currentUser, orgOrAgentCharityName, submittedBy),
       giftAidDetails = buildGiftAidDetails(giftAidData),
       otherIncomeDetails = buildOtherIncomeDetails(otherIncomeData),
       gasdsDetails = buildGasdsDetails(
@@ -72,13 +73,14 @@ class SubmissionSummaryServiceImpl @Inject() (
   private def buildClaimDetails(
     claim: Claim,
     currentUser: CurrentUser,
-    orgOrAgentName: String
+    orgOrAgentCharityName: String,
+    submittedBy: String
   ): ClaimDetails =
     ClaimDetails(
-      charityName = orgOrAgentName,
+      charityName = orgOrAgentCharityName,
       hmrcCharityReference = getCharityRef(currentUser, claim),
       submissionTimestamp = claim.submissionDetails.map(_.submissionTimestamp).getOrElse(""),
-      submittedBy = getSubmittedBy(currentUser, claim, orgOrAgentName)
+      submittedBy = submittedBy
     )
 
   private def buildGiftAidDetails(
@@ -150,33 +152,44 @@ class SubmissionSummaryServiceImpl @Inject() (
     if currentUser.isAgent then claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.getOrElse("")
     else currentUser.enrolmentIdentifierValue
 
-  private def getSubmittedBy(currentUser: CurrentUser, claim: Claim, agentName: String): String =
-    if currentUser.isAgent then agentName
+  private def getSubmittedBy(
+    currentUser: CurrentUser,
+    claim: Claim
+  )(using HeaderCarrier): Future[String] =
+    if currentUser.isAgent then
+      rdsConnector
+        .getAgentName(currentUser.enrolmentIdentifierValue)
+        .map(_.getOrElse(""))
     else
-      claim.claimData.organisationDetails
-        .flatMap { org =>
-          if org.areYouACorporateTrustee then org.nameOfCorporateTrustee
-          else {
-            val name =
-              Seq(
-                org.authorisedOfficialTrusteeTitle,
-                org.authorisedOfficialTrusteeFirstName,
-                org.authorisedOfficialTrusteeLastName
-              ).flatten.mkString(" ")
+      Future.successful {
+        claim.claimData.organisationDetails
+          .flatMap { org =>
+            if org.areYouACorporateTrustee then org.nameOfCorporateTrustee
+            else {
+              val name =
+                Seq(
+                  org.authorisedOfficialTrusteeTitle,
+                  org.authorisedOfficialTrusteeFirstName,
+                  org.authorisedOfficialTrusteeLastName
+                ).flatten.mkString(" ")
 
-            Option.when(name.nonEmpty)(name)
+              Option.when(name.nonEmpty)(name)
+            }
           }
-        }
-        .getOrElse("")
+          .getOrElse("")
+      }
 
-  private def getAgentOrOrgName(currentUser: CurrentUser)(using HeaderCarrier): Future[String] = {
+  private def getAgentCharityNameOrOrgName(currentUser: CurrentUser, claim: Claim)(using
+    HeaderCarrier
+  ): Future[String] = {
 
     val identifier = currentUser.enrolmentIdentifierValue
 
     val (nameF, errorMessage) =
       if currentUser.isAgent then
+        val charitiesRef = claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.getOrElse("")
         (
-          rdsConnector.getAgentName(identifier),
+          rdsConnector.getOrganisationName(charitiesRef),
           s"No agent name found for $identifier from rds data cache"
         )
       else
@@ -184,7 +197,6 @@ class SubmissionSummaryServiceImpl @Inject() (
           rdsConnector.getOrganisationName(identifier),
           s"No organisation name found for $identifier from rds data cache"
         )
-
     nameF.flatMap {
       case Some(name) => Future.successful(name)
       case None       => Future.failed(new Exception(errorMessage))

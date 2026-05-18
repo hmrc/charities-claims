@@ -150,9 +150,9 @@ class ChRISSubmissionServiceSpec
               doYouHaveCorporateTrusteeUKAddress = Some(true),
               doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(false),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteePostcode = Some("AB1 2CD"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteePostcode = Some("AB1 2CD"),
               authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
               authorisedOfficialTrusteeTitle = Some("Mr"),
               authorisedOfficialTrusteeFirstName = Some("John"),
@@ -176,7 +176,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("POST-CODE"),
+              Postcode = Some("AB1 2CD"),
               Overseas = None
             )
           ),
@@ -196,7 +196,7 @@ class ChRISSubmissionServiceSpec
 
       submissionOffId shouldBe Some(
         OffID(
-          Postcode = Some("POST-CODE"),
+          Postcode = Some("AB1 2CD"),
           Overseas = None
         )
       )
@@ -228,9 +228,9 @@ class ChRISSubmissionServiceSpec
               doYouHaveCorporateTrusteeUKAddress = Some(false),
               doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(false),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteePostcode = Some("AB1 2CD"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteePostcode = Some("AB1 2CD"),
               authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
               authorisedOfficialTrusteeTitle = Some("Mr"),
               authorisedOfficialTrusteeFirstName = Some("John"),
@@ -296,9 +296,9 @@ class ChRISSubmissionServiceSpec
               doYouHaveCorporateTrusteeUKAddress = Some(true),
               doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteePostcode = Some("AB1 2CD"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteePostcode = Some("AB1 2CD"),
               authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
               authorisedOfficialTrusteeTitle = Some("Mr"),
               authorisedOfficialTrusteeFirstName = Some("John"),
@@ -326,7 +326,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("POST-CODE"),
+              Postcode = Some("AB1 2CD"),
               Overseas = None
             )
           ),
@@ -369,9 +369,9 @@ class ChRISSubmissionServiceSpec
               doYouHaveCorporateTrusteeUKAddress = Some(false),
               doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(false),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteePostcode = Some("AB1 2CD"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteePostcode = Some("AB1 2CD"),
               authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
               authorisedOfficialTrusteeTitle = Some("Mr"),
               authorisedOfficialTrusteeFirstName = Some("John"),
@@ -433,9 +433,9 @@ class ChRISSubmissionServiceSpec
               doYouHaveCorporateTrusteeUKAddress = Some(true),
               doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteePostcode = Some("AB1 2CD"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteePostcode = Some("AB1 2CD"),
               authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
               authorisedOfficialTrusteeTitle = Some("Mr"),
               authorisedOfficialTrusteeFirstName = Some("John"),
@@ -463,7 +463,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("POST-CODE"),
+              Postcode = Some("AB1 2CD"),
               Overseas = None
             )
           ),
@@ -506,9 +506,9 @@ class ChRISSubmissionServiceSpec
               doYouHaveCorporateTrusteeUKAddress = Some(true),
               doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteePostcode = Some("AB1 2CD"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteePostcode = Some("AB1 2CD"),
               authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
               authorisedOfficialTrusteeTitle = Some("Mr"),
               authorisedOfficialTrusteeFirstName = Some("John"),
@@ -536,7 +536,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("POST-CODE"),
+              Postcode = Some("AB1 2CD"),
               Overseas = None
             )
           ),
@@ -581,9 +581,9 @@ class ChRISSubmissionServiceSpec
               doYouHaveCorporateTrusteeUKAddress = Some(true),
               doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteePostcode = Some("AB1 2CD"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteePostcode = Some("AB1 2CD"),
               authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
               authorisedOfficialTrusteeTitle = Some("Mr"),
               authorisedOfficialTrusteeFirstName = Some("John"),
@@ -613,7 +613,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("POST-CODE"),
+              Postcode = Some("AB1 2CD"),
               Overseas = None
             )
           ),
@@ -656,9 +656,9 @@ class ChRISSubmissionServiceSpec
               doYouHaveCorporateTrusteeUKAddress = Some(true),
               doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteePostcode = Some("AB1 2CD"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteePostcode = Some("AB1 2CD"),
               authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
               authorisedOfficialTrusteeTitle = Some("Mr"),
               authorisedOfficialTrusteeFirstName = Some("John"),
@@ -688,7 +688,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("POST-CODE"),
+              Postcode = Some("AB1 2CD"),
               Overseas = None
             )
           ),
@@ -725,9 +725,9 @@ class ChRISSubmissionServiceSpec
               doYouHaveCorporateTrusteeUKAddress = Some(true),
               doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteePostcode = Some("AB1 2CD"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteePostcode = Some("AB1 2CD"),
               authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
               authorisedOfficialTrusteeTitle = Some("Mr"),
               authorisedOfficialTrusteeFirstName = Some("John"),
@@ -757,7 +757,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("POST-CODE"),
+              Postcode = Some("AB1 2CD"),
               Overseas = None
             )
           ),
@@ -794,9 +794,9 @@ class ChRISSubmissionServiceSpec
               doYouHaveCorporateTrusteeUKAddress = Some(true),
               doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
               nameOfCorporateTrustee = Some("Test-Corporate-Trustee"),
-              corporateTrusteePostcode = Some("post-code"),
+              corporateTrusteePostcode = Some("AB1 2CD"),
               corporateTrusteeDaytimeTelephoneNumber = Some("1234567890"),
-              authorisedOfficialTrusteePostcode = Some("post-code"),
+              authorisedOfficialTrusteePostcode = Some("AB1 2CD"),
               authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("1234567890"),
               authorisedOfficialTrusteeTitle = Some("Mr"),
               authorisedOfficialTrusteeFirstName = Some("John"),
@@ -824,7 +824,7 @@ class ChRISSubmissionServiceSpec
           ClaimNo = Some("test-claim-reference-number"),
           OffID = Some(
             OffID(
-              Postcode = Some("POST-CODE"),
+              Postcode = Some("AB1 2CD"),
               Overseas = None
             )
           ),

@@ -56,6 +56,10 @@ class ChRISSubmissionServiceImpl @Inject() (
     def formatted: String = value.underlying().setScale(2, RoundingMode.HALF_UP).toPlainString()
   }
 
+  private def normalisePostcode(postcode: String): String =
+    val stripped = postcode.replaceAll("\\s", "").toUpperCase
+    stripped.dropRight(3) + " " + stripped.takeRight(3)
+
   def buildChRISSubmission(
     claim: models.Claim,
     currentUser: models.CurrentUser,
@@ -250,7 +254,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         else None,
       Postcode = claim.claimData.agentUserOrganisationDetails
         .flatMap(_.postcode)
-        .map(_.toUpperCase)
+        .map(normalisePostcode)
     )
 
   def buildOffName(claim: models.Claim): Option[OffName] =
@@ -286,10 +290,10 @@ class ChRISSubmissionServiceImpl @Inject() (
         Postcode =
           if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveCorporateTrusteeUKAddress
               .contains(true)
-          then organisationDetails.corporateTrusteePostcode.map(_.toUpperCase)
+          then organisationDetails.corporateTrusteePostcode.map(normalisePostcode)
           else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveAuthorisedOfficialTrusteeUKAddress
               .contains(true)
-          then organisationDetails.authorisedOfficialTrusteePostcode.map(_.toUpperCase)
+          then organisationDetails.authorisedOfficialTrusteePostcode.map(normalisePostcode)
           else None
       )
     )
@@ -449,7 +453,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       Sur = donation.donorLastName,
       House = donation.donorHouse,
       Overseas = if isOverseas then Some(true) else None,
-      Postcode = if isOverseas then None else donation.donorPostcode.map(_.toUpperCase)
+      Postcode = if isOverseas then None else donation.donorPostcode.map(normalisePostcode)
     )
 
   def buildGiftAidSmallDonationsScheme(
@@ -499,7 +503,7 @@ class ChRISSubmissionServiceImpl @Inject() (
             Building(
               BldgName = head.buildingName,
               Address = head.firstLineOfAddress,
-              Postcode = head.postcode.toUpperCase,
+              Postcode = normalisePostcode(head.postcode),
               BldgClaim = claims.toList
             )
           }

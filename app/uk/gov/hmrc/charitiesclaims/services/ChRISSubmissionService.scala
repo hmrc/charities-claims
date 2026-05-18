@@ -30,7 +30,9 @@ import scala.concurrent.ExecutionContext
 import cats.syntax.traverse.*
 import cats.instances.future.*
 import cats.instances.option.*
+
 import java.math.RoundingMode
+import scala.util.matching.Regex
 
 @ImplementedBy(classOf[ChRISSubmissionServiceImpl])
 trait ChRISSubmissionService {
@@ -240,6 +242,39 @@ class ChRISSubmissionServiceImpl @Inject() (
       Phone = claim.claimData.agentUserOrganisationDetails.map(_.daytimeTelephoneNumber).getOrElse("")
     )
 
+  def findFirstDigitFromEnd(str: String): Option[(Char, Int)] = {
+    if (str == null) return None // Handle null input
+
+    // Iterate from last index to first
+    for (i <- str.length - 1 to 0 by -1)
+      if (str.charAt(i).isDigit) {
+        return Some((str.charAt(i), i))
+      }
+    None
+  }
+
+  def postcodeRegexTransform(postcodeInput: String): String = {
+    // Example: We want the string to match a pattern like "NE27 0QQ"
+    val pattern: Regex =
+      "(GIR 0AA)|((([A-Z][0-9][0-9]?)|(([A-Z][A-HJ-Y][0-9][0-9]?)|(([A-Z][0-9][A-Z])|([A-Z][A-HJ-Y][0-9]?[A-Z])))) [0-9][A-Z]{2})".r
+
+    val csPostcode: CharSequence = postcodeInput.replace('-', ' ')
+    // Step 1: Check if it matches
+    if (pattern.matches(csPostcode)) {
+      // already matches the pattern
+      postcodeInput
+    } else {
+      // manipulate the postcode to add a space before the first digit from the end
+      findFirstDigitFromEnd(postcodeInput) match {
+        case Some((digit, index)) =>
+          postcodeInput.substring(0, index - 1) + " " + postcodeInput.substring(index - 1)
+        case None                 =>
+          postcodeInput
+      }
+
+    }
+  }
+
   def buildAoNID(claim: models.Claim): AoNID =
     AoNID(
       Overseas =
@@ -250,7 +285,10 @@ class ChRISSubmissionServiceImpl @Inject() (
         else None,
       Postcode = claim.claimData.agentUserOrganisationDetails
         .flatMap(_.postcode)
-        .map(_.toUpperCase)
+        .map(_.toUpperCase)  match {
+        case Some(chkPostcode) => Some(postcodeRegexTransform(chkPostcode))
+        case _                 => None
+      }
     )
 
   def buildOffName(claim: models.Claim): Option[OffName] =
@@ -286,10 +324,16 @@ class ChRISSubmissionServiceImpl @Inject() (
         Postcode =
           if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveCorporateTrusteeUKAddress
               .contains(true)
-          then organisationDetails.corporateTrusteePostcode.map(_.toUpperCase)
+          then organisationDetails.corporateTrusteePostcode.map(_.toUpperCase) match {
+            case Some(chkPostcode) => Some(postcodeRegexTransform(chkPostcode))
+            case _                 => None
+          }
           else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveAuthorisedOfficialTrusteeUKAddress
               .contains(true)
-          then organisationDetails.authorisedOfficialTrusteePostcode.map(_.toUpperCase)
+          then organisationDetails.authorisedOfficialTrusteePostcode.map(_.toUpperCase) match {
+              case Some(chkPostcode) => Some(postcodeRegexTransform(chkPostcode))
+              case _                 => None
+            }
           else None
       )
     )
@@ -499,7 +543,7 @@ class ChRISSubmissionServiceImpl @Inject() (
             Building(
               BldgName = head.buildingName,
               Address = head.firstLineOfAddress,
-              Postcode = head.postcode.toUpperCase,
+              Postcode = postcodeRegexTransform(head.postcode.toUpperCase),
               BldgClaim = claims.toList
             )
           }

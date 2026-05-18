@@ -8,7 +8,7 @@
       <CorrelationID>7D162389448F4F2597CFE48C3D1B31EF</CorrelationID>
       <GatewayTimestamp>2026-01-08T21:33:57.860</GatewayTimestamp>
     </MessageDetails>
-    <SenderDetails/>
+    <SenderDetails></SenderDetails>
   </Header>
   <GovTalkDetails>
     <Keys>
@@ -19,7 +19,7 @@
     <ChannelRouting>
       <Channel>
         <URI>9998</URI>
-        <Product>Charities Portal</Product>
+        <Product>Charities portal</Product>
         <Version>1.0</Version>
       </Channel>
     </ChannelRouting>

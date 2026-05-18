@@ -172,7 +172,12 @@ object XmlUtils {
       val source       = new DOMSource(document)
       val stringWriter = new StringWriter()
       transformer.transform(source, new StreamResult(stringWriter))
-      val xml          = stringWriter.toString().dropRight(1) // drop the trailing newline
+
+      val xml = stringWriter
+        .toString()
+        .dropRight(1)
+        .replace("<SenderDetails/>", "<SenderDetails></SenderDetails>") // drop the trailing newline
+
       if omitXmlDeclaration
       then xml
       else """<?xml version='1.0' encoding='UTF-8'?>""" + "\n" + xml
@@ -186,7 +191,11 @@ object XmlUtils {
       val source       = new DOMSource(document)
       val stringWriter = new StringWriter()
       transformer.transform(source, new StreamResult(stringWriter))
-      val xml          = stringWriter.toString()
+
+      val xml = stringWriter
+        .toString()
+        .replace("<SenderDetails/>", "<SenderDetails></SenderDetails>")
+
       if omitXmlDeclaration
       then xml
       else """<?xml version='1.0' encoding='UTF-8'?>""" + xml

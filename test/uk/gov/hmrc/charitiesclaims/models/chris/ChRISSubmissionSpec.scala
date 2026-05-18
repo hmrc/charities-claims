@@ -139,7 +139,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
           ChannelRouting = ChannelRouting(
             Channel = Channel(
               URI = "9998",
-              Product = "Charities Portal",
+              Product = "Charities portal",
               Version = "1.0"
             )
           )
@@ -346,7 +346,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
           ChannelRouting = ChannelRouting(
             Channel = Channel(
               URI = "9998",
-              Product = "Charities Portal",
+              Product = "Charities portal",
               Version = "1.0"
             )
           )
@@ -506,7 +506,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
           ChannelRouting = ChannelRouting(
             Channel = Channel(
               URI = "9998",
-              Product = "Charities Portal",
+              Product = "Charities portal",
               Version = "1.0"
             )
           )
@@ -637,7 +637,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
           ChannelRouting = ChannelRouting(
             Channel = Channel(
               URI = "9998",
-              Product = "Charities Portal",
+              Product = "Charities portal",
               Version = "1.0"
             )
           )

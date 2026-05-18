@@ -267,7 +267,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       // manipulate the postcode to add a space before the first digit from the end
       findFirstDigitFromEnd(postcodeInput) match {
         case Some((digit, index)) =>
-          postcodeInput.substring(0, index - 1) + " " + postcodeInput.substring(index - 1)
+          postcodeInput.substring(0, index) + " " + postcodeInput.substring(index)
         case None                 =>
           postcodeInput
       }
@@ -285,7 +285,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         else None,
       Postcode = claim.claimData.agentUserOrganisationDetails
         .flatMap(_.postcode)
-        .map(_.toUpperCase)  match {
+        .map(_.toUpperCase) match {
         case Some(chkPostcode) => Some(postcodeRegexTransform(chkPostcode))
         case _                 => None
       }
@@ -324,13 +324,15 @@ class ChRISSubmissionServiceImpl @Inject() (
         Postcode =
           if organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveCorporateTrusteeUKAddress
               .contains(true)
-          then organisationDetails.corporateTrusteePostcode.map(_.toUpperCase) match {
-            case Some(chkPostcode) => Some(postcodeRegexTransform(chkPostcode))
-            case _                 => None
-          }
+          then
+            organisationDetails.corporateTrusteePostcode.map(_.toUpperCase) match {
+              case Some(chkPostcode) => Some(postcodeRegexTransform(chkPostcode))
+              case _                 => None
+            }
           else if !organisationDetails.areYouACorporateTrustee && organisationDetails.doYouHaveAuthorisedOfficialTrusteeUKAddress
               .contains(true)
-          then organisationDetails.authorisedOfficialTrusteePostcode.map(_.toUpperCase) match {
+          then
+            organisationDetails.authorisedOfficialTrusteePostcode.map(_.toUpperCase) match {
               case Some(chkPostcode) => Some(postcodeRegexTransform(chkPostcode))
               case _                 => None
             }

@@ -25,7 +25,8 @@ final case class AuditEvent(
   claimSubmitted: Boolean,
   creationTimestamp: String,
   claimData: AuditClaimData,
-  submissionDetails: Option[AuditSubmissionDetails] = None
+  submissionDetails: Option[AuditSubmissionDetails] = None,
+  chrisPayload: Option[String] = None
 )
 
 final case class AuditClaimData(

@@ -364,6 +364,9 @@ class ChRISSubmissionServiceImpl @Inject() (
       if nameOfCharityRegulator == NameOfCharityRegulator.None && isCASCCharity
       then None
       else Some(Regulator(regName, noReg, regNo))
+//    println(
+//      "******************* checking the values : " + hmrcRef + "," + nameOfCharityRegulator + " , " + isCASCCharity + " , " + regName + " , " + noReg + " , " + regNo + " ********************"
+//    )
 
     result
   }

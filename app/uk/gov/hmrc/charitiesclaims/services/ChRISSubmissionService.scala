@@ -317,7 +317,11 @@ class ChRISSubmissionServiceImpl @Inject() (
         if currentUser.isAgent
         then claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.getOrElse("")
         else currentUser.enrolmentIdentifierValue,
-      Regulator = buildRegulator(claim, currentUser.enrolmentIdentifierValue),
+      Regulator = buildRegulator(
+        claim,
+        if currentUser.isAgent then claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.getOrElse("")
+        else currentUser.enrolmentIdentifierValue
+      ),
       Repayment = buildRepayment(claim, scheduleData.giftAid, scheduleData.otherIncome),
       GASDS = buildGiftAidSmallDonationsScheme(claim, scheduleData.connectedCharities, scheduleData.communityBuildings),
       OtherInfo = claim.claimData.includedAnyAdjustmentsInClaimPrompt
@@ -326,15 +330,15 @@ class ChRISSubmissionServiceImpl @Inject() (
   def buildRegulator(claim: models.Claim, hmrcRef: String): Option[Regulator] =
     claim.claimData.organisationDetails
       .flatMap { org =>
-        buildRegulator(org.nameOfCharityRegulator, org.charityRegistrationNumber, hmrcRef)
+        buildRegulatorDetails(org.nameOfCharityRegulator, org.charityRegistrationNumber, hmrcRef)
       }
       .orElse(
         claim.claimData.agentUserOrganisationDetails.flatMap { org =>
-          buildRegulator(org.nameOfCharityRegulator, org.charityRegistrationNumber, hmrcRef)
+          buildRegulatorDetails(org.nameOfCharityRegulator, org.charityRegistrationNumber, hmrcRef)
         }
       )
 
-  def buildRegulator(
+  def buildRegulatorDetails(
     nameOfCharityRegulator: NameOfCharityRegulator,
     charityRegistrationNumber: Option[String],
     hmrcRef: String
@@ -360,6 +364,9 @@ class ChRISSubmissionServiceImpl @Inject() (
       if nameOfCharityRegulator == NameOfCharityRegulator.None && isCASCCharity
       then None
       else Some(Regulator(regName, noReg, regNo))
+//    println(
+//      "******************* checking the values : " + hmrcRef + "," + nameOfCharityRegulator + " , " + isCASCCharity + " , " + regName + " , " + noReg + " , " + regNo + " ********************"
+//    )
 
     result
   }

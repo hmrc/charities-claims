@@ -237,6 +237,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       // If A2.18 - Send payment to is "taxAgent", then set to the value of "yes" else omit this element.
       PayToAoN =
         if claim.claimData.agentUserOrganisationDetails
+            .map(_.whoShouldHmrcSendPaymentTo)
             .contains("taxAgent")
         then Some(true)
         else None,

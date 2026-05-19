@@ -894,7 +894,7 @@ class ChRISSubmissionServiceSpec
           OrgName = "Test-Agent-Name",
           RefNo = "test-enrolment-identifier-value",
           ClaimNo = Some("test-claim-reference-number"),
-          PayToAoN = None,
+          PayToAoN = Some(true),
           AoNID = Some(AoNID(None, Some("AA1 1AA"))),
           Phone = "1234567890"
         )

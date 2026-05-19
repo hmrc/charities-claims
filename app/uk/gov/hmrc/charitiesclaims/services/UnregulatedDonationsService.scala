@@ -43,6 +43,9 @@ object UnregulatedDonationsService {
     claim.claimData.organisationDetails.exists { orgDetails =>
       orgDetails.nameOfCharityRegulator == NameOfCharityRegulator.None &&
       orgDetails.reasonNotRegisteredWithRegulator.exists(isQualifyingReason)
+    } || claim.claimData.agentUserOrganisationDetails.exists { orgDetails =>
+      orgDetails.nameOfCharityRegulator == NameOfCharityRegulator.None &&
+      orgDetails.reasonNotRegisteredWithRegulator.exists(isQualifyingReason)
     }
 
   def isQualifyingReason(reason: ReasonNotRegisteredWithRegulator): Boolean =

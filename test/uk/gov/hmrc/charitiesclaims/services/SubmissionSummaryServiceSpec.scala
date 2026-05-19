@@ -444,16 +444,22 @@ class SubmissionSummaryServiceSpec
       result.adjustmentDetails.value.previouslyOverclaimedGasds              shouldBe None
     }
 
-    "throw an exception when organisation name is not found" in {
+    "return empty charity name when organisation name is not found" in {
       when(mockRdsConnector.getOrganisationName(eqTo("CHAR123"))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
 
-      val ex =
-        intercept[Exception] {
-          service.getSummary(baseClaim, organisationUser).futureValue
-        }
+      val result = service.getSummary(baseClaim, organisationUser).futureValue
 
-      ex.getMessage should include("No organisation name found")
+      result.claimDetails.charityName shouldBe ""
+    }
+
+    "return empty charity name when organisation lookup fails" in {
+      when(mockRdsConnector.getOrganisationName(eqTo("CHAR123"))(using any[HeaderCarrier]))
+        .thenReturn(Future.failed(new Exception("500 error")))
+
+      val result = service.getSummary(baseClaim, organisationUser).futureValue
+
+      result.claimDetails.charityName shouldBe ""
     }
   }
 }

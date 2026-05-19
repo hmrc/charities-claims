@@ -160,6 +160,9 @@ class SubmissionSummaryServiceImpl @Inject() (
       rdsConnector
         .getAgentName(currentUser.enrolmentIdentifierValue)
         .map(_.getOrElse(""))
+        .recover { case _: Throwable =>
+          ""
+        }
     else
       Future.successful {
         claim.claimData.organisationDetails
@@ -183,24 +186,16 @@ class SubmissionSummaryServiceImpl @Inject() (
     HeaderCarrier
   ): Future[String] = {
 
-    val identifier = currentUser.enrolmentIdentifierValue
+    val identifier =
+      if currentUser.isAgent then claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.getOrElse("")
+      else currentUser.enrolmentIdentifierValue
 
-    val (nameF, errorMessage) =
-      if currentUser.isAgent then
-        val charitiesRef = claim.claimData.repaymentClaimDetails.hmrcCharitiesReference.getOrElse("")
-        (
-          rdsConnector.getOrganisationName(charitiesRef),
-          s"No agent name found for $identifier from rds data cache"
-        )
-      else
-        (
-          rdsConnector.getOrganisationName(identifier),
-          s"No organisation name found for $identifier from rds data cache"
-        )
-    nameF.flatMap {
-      case Some(name) => Future.successful(name)
-      case None       => Future.failed(new Exception(errorMessage))
-    }
+    rdsConnector
+      .getOrganisationName(identifier)
+      .map(_.getOrElse(""))
+      .recover { case _: Throwable =>
+        ""
+      }
   }
 
   def getCommunityBuildingsUploadData(

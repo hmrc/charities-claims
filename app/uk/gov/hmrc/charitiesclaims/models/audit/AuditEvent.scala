@@ -17,7 +17,7 @@
 package uk.gov.hmrc.charitiesclaims.models.audit
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.charitiesclaims.models.ReasonNotRegisteredWithRegulator
+import uk.gov.hmrc.charitiesclaims.models.{ReasonNotRegisteredWithRegulator, SubmissionDetails}
 
 final case class AuditEvent(
   claimId: String,
@@ -25,7 +25,7 @@ final case class AuditEvent(
   claimSubmitted: Boolean,
   creationTimestamp: String,
   claimData: AuditClaimData,
-  submissionDetails: Option[AuditSubmissionDetails] = None,
+  submissionDetails: SubmissionDetails,
   chrisPayload: Option[String] = None
 )
 

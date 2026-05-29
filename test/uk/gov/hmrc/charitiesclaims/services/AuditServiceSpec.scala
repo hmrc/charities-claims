@@ -74,6 +74,7 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
       val claim             = testClaim
       val scheduleData      = ScheduleData()
       val creationTimestamp = Instant.now()
+      val submissionDetails = SubmissionDetails(creationTimestamp.toString, "testSubmissionReference")
 
       (mockAuditConnector
         .sendExtendedEvent(_: ExtendedDataEvent)(using _: HeaderCarrier, _: ExecutionContext))
@@ -93,7 +94,7 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         )
         .returning(Future.successful(AuditResult.Success))
 
-      val result = service.sendEvent(claim, scheduleData, creationTimestamp, "en")
+      val result = service.sendEvent(claim, scheduleData, creationTimestamp, "en", submissionDetails)
 
       whenReady(result) { res =>
         res shouldBe AuditResult.Success
@@ -105,13 +106,14 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
       val claim             = testClaim
       val scheduleData      = ScheduleData()
       val creationTimestamp = Instant.now()
+      val submissionDetails = SubmissionDetails(creationTimestamp.toString, "testSubmissionReference")
 
       (mockAuditConnector
         .sendExtendedEvent(_: ExtendedDataEvent)(using _: HeaderCarrier, _: ExecutionContext))
         .expects(*, *, *)
         .returning(Future.failed(new RuntimeException("Audit failed")))
 
-      whenReady(service.sendEvent(claim, scheduleData, creationTimestamp, "en").failed) { ex =>
+      whenReady(service.sendEvent(claim, scheduleData, creationTimestamp, "en", submissionDetails).failed) { ex =>
         ex            shouldBe a[RuntimeException]
         ex.getMessage shouldBe "Audit failed"
       }
@@ -130,6 +132,7 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
 
       val scheduleData      = ScheduleData()
       val creationTimestamp = Instant.now()
+      val submissionDetails = SubmissionDetails(creationTimestamp.toString, "testSubmissionReference")
 
       (mockAuditConnector
         .sendExtendedEvent(_: ExtendedDataEvent)(using _: HeaderCarrier, _: ExecutionContext))
@@ -140,7 +143,7 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         )
         .returning(Future.successful(AuditResult.Success))
 
-      val result = service.sendEvent(claim, scheduleData, creationTimestamp, "cy")
+      val result = service.sendEvent(claim, scheduleData, creationTimestamp, "cy", submissionDetails)
 
       whenReady(result) { res =>
         res shouldBe AuditResult.Success

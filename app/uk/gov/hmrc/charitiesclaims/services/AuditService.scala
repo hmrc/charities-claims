@@ -40,6 +40,7 @@ class AuditService @Inject() (
     scheduleData: ScheduleData,
     creationTimestamp: Instant,
     declarationLanguage: String,
+    submissionDetails: SubmissionDetails,
     chrisPayload: Option[String]
   ) =
     AuditEvent(
@@ -48,7 +49,7 @@ class AuditService @Inject() (
       claimSubmitted = claim.claimSubmitted,
       creationTimestamp = creationTimestamp.toString,
       claimData = buildAuditClaimData(claim, scheduleData, declarationLanguage),
-      submissionDetails = buildSubmissionDetails(claim.submissionDetails),
+      submissionDetails = submissionDetails,
       chrisPayload = chrisPayload
     )
 
@@ -239,25 +240,20 @@ class AuditService @Inject() (
     )
   }
 
-  private def buildSubmissionDetails(oSubmissionDetails: Option[SubmissionDetails]): Option[AuditSubmissionDetails] =
-    oSubmissionDetails.map { submissionDetails =>
-      AuditSubmissionDetails(
-        submissionTimestamp = submissionDetails.submissionTimestamp,
-        submissionReference = submissionDetails.submissionReference
-      )
-    }
-
   def sendEvent(
     claim: Claim,
     scheduleData: ScheduleData,
     creationTimestamp: Instant,
     declarationLanguage: String,
+    submissionDetails: SubmissionDetails,
     chrisPayload: Option[String] = None
   )(implicit hc: HeaderCarrier): Future[AuditResult] = {
     val extendedDataEvent = ExtendedDataEvent(
       auditSource = auditSource,
       auditType = auditType,
-      detail = Json.toJson(buildAuditEvent(claim, scheduleData, creationTimestamp, declarationLanguage, chrisPayload))
+      detail = Json.toJson(
+        buildAuditEvent(claim, scheduleData, creationTimestamp, declarationLanguage, submissionDetails, chrisPayload)
+      )
     )
 
     auditConnector.sendExtendedEvent(extendedDataEvent)

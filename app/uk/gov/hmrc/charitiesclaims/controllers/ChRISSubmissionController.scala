@@ -73,31 +73,25 @@ class ChRISSubmissionController @Inject() (
 
   private def updateClaim(
     claim: Claim,
-    submissionTimestamp: String,
-    submissionReference: String
+    submissionDetails: SubmissionDetails
   )(using HeaderCarrier): Future[Result] =
     claimsService
       .putClaim(
         claim.copy(
           claimSubmitted = true,
-          submissionDetails = Some(
-            SubmissionDetails(
-              submissionTimestamp = submissionTimestamp,
-              submissionReference = submissionReference
-            )
-          )
+          submissionDetails = Some(submissionDetails)
         )
       )
       .map { _ =>
         logger.info(
-          s"ChRIS submission complete: claimId=${claim.claimId} submissionTimestamp=$submissionTimestamp submissionReference=$submissionReference"
+          s"ChRIS submission complete: claimId=${claim.claimId} submissionTimestamp=${submissionDetails.submissionTimestamp} submissionReference=${submissionDetails.submissionReference}"
         )
         Ok(
           Json.toJson(
             ChRISSubmissionResponse(
               success = true,
-              submissionTimestamp = submissionTimestamp,
-              submissionReference = submissionReference
+              submissionTimestamp = submissionDetails.submissionTimestamp,
+              submissionReference = submissionDetails.submissionReference
             )
           )
         )
@@ -164,6 +158,11 @@ class ChRISSubmissionController @Inject() (
 
                   scheduleData <- chrisSubmissionService.getScheduleData(claim)
 
+                  submissionDetails = SubmissionDetails(
+                                        submissionTimestamp = ISODateTime.timestampNow(),
+                                        submissionReference = govTalkMessage.submissionReference.getOrElse(claimId)
+                                      )
+
                   _ <-
                     handleAuditResult(
                       auditService
@@ -172,6 +171,7 @@ class ChRISSubmissionController @Inject() (
                           scheduleData,
                           creationTimestamp,
                           chrisSubmissionRequest.declarationLanguage,
+                          submissionDetails,
                           Some(XmlWriter.writeCompact(govTalkMessage))
                         ),
                       claimId,
@@ -182,8 +182,7 @@ class ChRISSubmissionController @Inject() (
 
                   result <- updateClaim(
                               claim = claim,
-                              submissionTimestamp = ISODateTime.timestampNow(),
-                              submissionReference = govTalkMessage.submissionReference.getOrElse(claimId)
+                              submissionDetails: SubmissionDetails
                             )
 
                 } yield result

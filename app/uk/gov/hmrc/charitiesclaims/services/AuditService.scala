@@ -20,7 +20,7 @@ import javax.inject.Inject
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.charitiesclaims.models.{AgentUserOrganisationDetails, Claim, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, GiftAidScheduleData, GiftAidSmallDonationsSchemeDonationDetails, OrganisationDetails, OtherIncomeScheduleData, RepaymentClaimDetails, ScheduleData, SubmissionDetails}
-import uk.gov.hmrc.charitiesclaims.models.audit.{AuditAgentUserOrganisationDetails, AuditClaimData, AuditCommunityBuildingsScheduleData, AuditConnectedCharitiesScheduleData, AuditDeclarationDetails, AuditDonation, AuditEvent, AuditGiftAidScheduleData, AuditGiftAidSmallDonationsSchemeClaim, AuditGiftAidSmallDonationsSchemeScheduleData, AuditOrganisationDetails, AuditOtherIncome, AuditOtherIncomeScheduleData, AuditRepaymentClaimDetails, AuditSubmissionDetails}
+import uk.gov.hmrc.charitiesclaims.models.audit.{AuditAgentUserOrganisationDetails, AuditClaimData, AuditCommunityBuildingsScheduleData, AuditConnectedCharitiesScheduleData, AuditDeclarationDetails, AuditDonation, AuditEvent, AuditGiftAidScheduleData, AuditGiftAidSmallDonationsSchemeClaim, AuditGiftAidSmallDonationsSchemeScheduleData, AuditOrganisationDetails, AuditOtherIncome, AuditOtherIncomeScheduleData, AuditRepaymentClaimDetails}
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 import uk.gov.hmrc.charitiesclaims.models.audit.AuditEventFormats.*
@@ -40,8 +40,7 @@ class AuditService @Inject() (
     scheduleData: ScheduleData,
     creationTimestamp: Instant,
     declarationLanguage: String,
-    submissionDetails: SubmissionDetails,
-    chrisPayload: Option[String]
+    submissionDetails: SubmissionDetails
   ) =
     AuditEvent(
       claimId = claim.claimId,
@@ -49,8 +48,7 @@ class AuditService @Inject() (
       claimSubmitted = claim.claimSubmitted,
       creationTimestamp = creationTimestamp.toString,
       claimData = buildAuditClaimData(claim, scheduleData, declarationLanguage),
-      submissionDetails = submissionDetails,
-      chrisPayload = chrisPayload
+      submissionDetails = submissionDetails
     )
 
   private def buildAuditClaimData(
@@ -122,22 +120,23 @@ class AuditService @Inject() (
         )
       }
 
-    val auditDonations: Seq[AuditDonation] = odGiftAid
-      .map(_.donations.map { donation =>
-        AuditDonation(
-          donationItem = donation.donationItem,
-          aggregatedDonations = donation.aggregatedDonations,
-          donorTitle = donation.donorTitle,
-          donorFirstName = donation.donorFirstName,
-          donorLastName = donation.donorLastName,
-          donorHouse = donation.donorHouse,
-          donorPostcode = donation.donorPostcode,
-          sponsoredEvent = donation.sponsoredEvent,
-          donationDate = donation.donationDate,
-          donationAmount = donation.donationAmount
-        )
-      })
-      .getOrElse(Nil)
+    val auditDonations: Option[Seq[AuditDonation]] =
+      odGiftAid
+        .map(_.donations.map { donation =>
+          AuditDonation(
+            donationItem = donation.donationItem,
+            aggregatedDonations = donation.aggregatedDonations,
+            donorTitle = donation.donorTitle,
+            donorFirstName = donation.donorFirstName,
+            donorLastName = donation.donorLastName,
+            donorHouse = donation.donorHouse,
+            donorPostcode = donation.donorPostcode,
+            sponsoredEvent = donation.sponsoredEvent,
+            donationDate = donation.donationDate,
+            donationAmount = donation.donationAmount
+          )
+        })
+        .filter(_.nonEmpty)
 
     val auditGiftAidScheduleData: Option[AuditGiftAidScheduleData] =
       odGiftAid.map { dGiftAid =>
@@ -149,7 +148,7 @@ class AuditService @Inject() (
         )
       }
 
-    val auditOtherIncomes: Seq[AuditOtherIncome] = odOtherIncome
+    val auditOtherIncomes: Option[Seq[AuditOtherIncome]] = odOtherIncome
       .map(_.otherIncomes.map { otherIncome =>
         AuditOtherIncome(
           otherIncomeItem = otherIncome.otherIncomeItem,
@@ -159,7 +158,7 @@ class AuditService @Inject() (
           taxDeducted = otherIncome.taxDeducted
         )
       })
-      .getOrElse(Nil)
+      .filter(_.nonEmpty)
 
     val auditOtherIncomeScheduleData =
       odOtherIncome.map { dOtherIncome =>
@@ -171,7 +170,7 @@ class AuditService @Inject() (
         )
       }
 
-    val auditGiftAidSmallDonationsSchemeClaim: Seq[AuditGiftAidSmallDonationsSchemeClaim] =
+    val auditGiftAidSmallDonationsSchemeClaim: Option[Seq[AuditGiftAidSmallDonationsSchemeClaim]] =
       odGiftAidSmallDonationsSchemeDonationDetails
         .map(_.claims.map { claim =>
           AuditGiftAidSmallDonationsSchemeClaim(
@@ -179,9 +178,9 @@ class AuditService @Inject() (
             amountOfDonationsReceived = claim.amountOfDonationsReceived
           )
         })
-        .getOrElse(Nil)
+        .filter(_.nonEmpty)
 
-    val auditConnectedCharitiesScheduleData: Seq[AuditConnectedCharitiesScheduleData] =
+    val auditConnectedCharitiesScheduleData: Option[Seq[AuditConnectedCharitiesScheduleData]] =
       odConnectedCharities
         .map(_.charities.map { connectedCharity =>
           AuditConnectedCharitiesScheduleData(
@@ -190,9 +189,9 @@ class AuditService @Inject() (
             charityReference = connectedCharity.charityReference
           )
         })
-        .getOrElse(Nil)
+        .filter(_.nonEmpty)
 
-    val auditCommunityBuildingsScheduleData: Seq[AuditCommunityBuildingsScheduleData] =
+    val auditCommunityBuildingsScheduleData: Option[Seq[AuditCommunityBuildingsScheduleData]] =
       odCommunityBuildings
         .map(_.communityBuildings.map { communityBuilding =>
           AuditCommunityBuildingsScheduleData(
@@ -206,7 +205,7 @@ class AuditService @Inject() (
             amountYear2 = communityBuilding.amountYear2
           )
         })
-        .getOrElse(Nil)
+        .filter(_.nonEmpty)
 
     val auditGiftAidSmallDonationsSchemeScheduleData: Option[AuditGiftAidSmallDonationsSchemeScheduleData] =
       odGiftAidSmallDonationsSchemeDonationDetails
@@ -245,14 +244,13 @@ class AuditService @Inject() (
     scheduleData: ScheduleData,
     creationTimestamp: Instant,
     declarationLanguage: String,
-    submissionDetails: SubmissionDetails,
-    chrisPayload: Option[String] = None
+    submissionDetails: SubmissionDetails
   )(implicit hc: HeaderCarrier): Future[AuditResult] = {
     val extendedDataEvent = ExtendedDataEvent(
       auditSource = auditSource,
       auditType = auditType,
       detail = Json.toJson(
-        buildAuditEvent(claim, scheduleData, creationTimestamp, declarationLanguage, submissionDetails, chrisPayload)
+        buildAuditEvent(claim, scheduleData, creationTimestamp, declarationLanguage, submissionDetails)
       )
     )
 

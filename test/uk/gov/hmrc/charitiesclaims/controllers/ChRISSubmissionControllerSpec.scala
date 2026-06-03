@@ -92,10 +92,10 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.successful(()))
 
       (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: Option[String])(using
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails)(using
           _: HeaderCarrier
         ))
-        .expects(*, *, *, *, *, *, *)
+        .expects(*, *, *, *, *, *)
         .returning(Future.successful(AuditResult.Success))
 
       val request = testRequest(
@@ -377,10 +377,10 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.successful(()))
 
       (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: Option[String])(using
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails)(using
           _: HeaderCarrier
         ))
-        .expects(*, *, *, *, *, *, *)
+        .expects(*, *, *, *, *, *)
         .returning(Future.successful(AuditResult.Success))
 
       val request = testRequest(
@@ -543,10 +543,10 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.failed(UnregulatedDonationException("test-claim-id", new RuntimeException("Error message"))))
 
       (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: Option[String])(using
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails)(using
           _: HeaderCarrier
         ))
-        .expects(*, *, *, *, *, *, *)
+        .expects(*, *, *, *, *, *)
         .returning(Future.successful(AuditResult.Success))
 
       val request = testRequest(
@@ -695,10 +695,10 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.successful(()))
 
       (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: Option[String])(using
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails)(using
           _: HeaderCarrier
         ))
-        .expects(*, *, *, *, *, *, *)
+        .expects(*, *, *, *, *, *)
         .returning(Future.successful(AuditResult.Failure("Audit failed")))
 
       (unregulatedDonationsServiceMock
@@ -779,10 +779,10 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.successful(()))
 
       (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: Option[String])(using
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails)(using
           _: HeaderCarrier
         ))
-        .expects(*, *, *, *, *, *, *)
+        .expects(*, *, *, *, *, *)
         .returning(Future.failed(new RuntimeException("Audit crashed")))
 
       (unregulatedDonationsServiceMock
@@ -863,10 +863,10 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         .returning(Future.successful(TestScheduleData.exampleScheduleData))
 
       (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: Option[String])(using
+        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails)(using
           _: HeaderCarrier
         ))
-        .expects(*, *, *, *, *, *, *)
+        .expects(*, *, *, *, *, *)
         .returning(Future.successful(AuditResult.Success))
 
       (unregulatedDonationsServiceMock

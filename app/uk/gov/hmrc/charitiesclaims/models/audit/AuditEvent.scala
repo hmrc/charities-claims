@@ -25,8 +25,7 @@ final case class AuditEvent(
   claimSubmitted: Boolean,
   creationTimestamp: String,
   claimData: AuditClaimData,
-  submissionDetails: SubmissionDetails,
-  chrisPayload: Option[String] = None
+  submissionDetails: SubmissionDetails
 )
 
 final case class AuditClaimData(
@@ -82,7 +81,7 @@ final case class AuditGiftAidScheduleData(
   earliestDonationDate: String,
   prevOverclaimedGiftAid: Option[BigDecimal] = None,
   totalDonations: BigDecimal,
-  donations: Seq[AuditDonation]
+  donations: Option[Seq[AuditDonation]]
 )
 
 final case class AuditDonation(
@@ -102,7 +101,7 @@ final case class AuditOtherIncomeScheduleData(
   adjustmentForOtherIncomePreviousOverClaimed: BigDecimal,
   totalOfGrossPayments: BigDecimal,
   totalOfTaxDeducted: BigDecimal,
-  otherIncomes: Seq[AuditOtherIncome]
+  otherIncomes: Option[Seq[AuditOtherIncome]]
 )
 
 final case class AuditOtherIncome(
@@ -116,9 +115,9 @@ final case class AuditOtherIncome(
 final case class AuditGiftAidSmallDonationsSchemeScheduleData(
   totalDonations: BigDecimal,
   adjustmentForGiftAidOverClaimed: BigDecimal,
-  claims: Seq[AuditGiftAidSmallDonationsSchemeClaim],
-  connectedCharitiesScheduleData: Seq[AuditConnectedCharitiesScheduleData],
-  communityBuildingsScheduleData: Seq[AuditCommunityBuildingsScheduleData]
+  claims: Option[Seq[AuditGiftAidSmallDonationsSchemeClaim]],
+  connectedCharitiesScheduleData: Option[Seq[AuditConnectedCharitiesScheduleData]],
+  communityBuildingsScheduleData: Option[Seq[AuditCommunityBuildingsScheduleData]]
 )
 
 final case class AuditGiftAidSmallDonationsSchemeClaim(
@@ -141,9 +140,6 @@ final case class AuditCommunityBuildingsScheduleData(
   amountYear1: BigDecimal,
   taxYear2: Option[Int] = None,
   amountYear2: Option[BigDecimal] = None
-  // TODO: taxYearThreeEnd and taxYearThreeAmount doesn't exist in data model. Need to update data model.
-  // taxYear3: Option[Int] = None,
-  // amountYear3: Option[BigDecimal] = None
 )
 
 final case class AuditDeclarationDetails(

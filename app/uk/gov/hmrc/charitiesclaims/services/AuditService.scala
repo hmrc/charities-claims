@@ -208,18 +208,23 @@ class AuditService @Inject() (
         .filter(_.nonEmpty)
 
     val auditGiftAidSmallDonationsSchemeScheduleData: Option[AuditGiftAidSmallDonationsSchemeScheduleData] =
-      odGiftAidSmallDonationsSchemeDonationDetails
-        .map { dGiftAidSmallDonationsSchemeDonationDetails =>
-          AuditGiftAidSmallDonationsSchemeScheduleData(
-            totalDonations =
-              dGiftAidSmallDonationsSchemeDonationDetails.totalAmountOfDonationsReceived.getOrElse(BigDecimal(0)),
-            adjustmentForGiftAidOverClaimed =
-              dGiftAidSmallDonationsSchemeDonationDetails.adjustmentForGiftAidOverClaimed,
-            claims = auditGiftAidSmallDonationsSchemeClaim,
-            connectedCharitiesScheduleData = auditConnectedCharitiesScheduleData,
-            communityBuildingsScheduleData = auditCommunityBuildingsScheduleData
-          )
-        }
+      Option.when(
+        odGiftAidSmallDonationsSchemeDonationDetails.isDefined ||
+          odConnectedCharities.isDefined ||
+          odCommunityBuildings.isDefined
+      ) {
+        AuditGiftAidSmallDonationsSchemeScheduleData(
+          totalDonations = odGiftAidSmallDonationsSchemeDonationDetails
+            .flatMap(_.totalAmountOfDonationsReceived)
+            .getOrElse(BigDecimal(0)),
+          adjustmentForGiftAidOverClaimed = odGiftAidSmallDonationsSchemeDonationDetails
+            .map(_.adjustmentForGiftAidOverClaimed)
+            .getOrElse(BigDecimal(0)),
+          claims = odGiftAidSmallDonationsSchemeDonationDetails.fold(None)(_ => auditGiftAidSmallDonationsSchemeClaim),
+          connectedCharitiesScheduleData = auditConnectedCharitiesScheduleData,
+          communityBuildingsScheduleData = auditCommunityBuildingsScheduleData
+        )
+      }
 
     val auditDeclarationDetails =
       AuditDeclarationDetails(

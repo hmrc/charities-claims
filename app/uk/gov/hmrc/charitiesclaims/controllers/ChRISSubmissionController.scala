@@ -29,7 +29,6 @@ import play.api.mvc.Result
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.charitiesclaims.connectors.ChRISConnector
-import uk.gov.hmrc.charitiesclaims.xml.XmlWriter
 import uk.gov.hmrc.charitiesclaims.models.ChRISSubmissionResponse
 import uk.gov.hmrc.charitiesclaims.models.SubmissionDetails
 import uk.gov.hmrc.charitiesclaims.validation.SchematronValidationException
@@ -155,11 +154,6 @@ class ChRISSubmissionController @Inject() (
                                     )
 
                   _ <- chrisConnector.submitClaim(govTalkMessage)
-
-                  _ =
-                    logger.info(
-                      s"Submitted claim to ChRIS: claimId=$claimId with a ChRIS XML: ${XmlWriter.writeCompact(govTalkMessage)}"
-                    )
 
                   scheduleData <- chrisSubmissionService.getScheduleData(claim)
 

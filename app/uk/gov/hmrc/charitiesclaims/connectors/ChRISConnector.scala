@@ -78,11 +78,14 @@ class ChRISConnectorImpl @Inject() (
           case Right(_)     => Future.unit
       }
       .flatMap { _ =>
-        logger.info(s"Submitting claim to ChRIS at POST $baseUrl$path")
+        val requestBody = document.compactPrint()
+
+        logger.info(s"Submitting claim to ChRIS at POST $baseUrl$path with a ChRISXML $requestBody")
+
         retry(retryIntervals*)(shouldRetry, retryReason)(
           http
             .post(URL(s"$baseUrl$path"))
-            .withBody(document.compactPrint())
+            .withBody(requestBody)
             .execute[HttpResponse]
         ).flatMap(response =>
           if response.status == 200

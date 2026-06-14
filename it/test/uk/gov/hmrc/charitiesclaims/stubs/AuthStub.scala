@@ -41,7 +41,7 @@ trait AuthStub { self: WireMockSupport =>
                 "identifiers": [
                   {
                     "key": "CHARID",
-                    "value": "1234567890"
+                    "value": "AB1234"
                   }
                 ],
                 "state": "Activated"

@@ -59,6 +59,20 @@ class ChRISSubmissionControllerISpec
           claimingTaxDeducted = true,
           claimingUnderGiftAidSmallDonationsScheme = false
         ),
+        organisationDetails = Some(
+          OrganisationDetails(
+            nameOfCharityRegulator = NameOfCharityRegulator.None,
+            charityRegistrationNumber = None,
+            areYouACorporateTrustee = false,
+            authorisedOfficialTrusteeTitle = Some("Mr"),
+            authorisedOfficialTrusteeFirstName = Some("John"),
+            authorisedOfficialTrusteeLastName = Some("Smith"),
+            authorisedOfficialTrusteeDaytimeTelephoneNumber = Some("01234567890"),
+            doYouHaveAuthorisedOfficialTrusteeUKAddress = Some(true),
+            authorisedOfficialTrusteePostcode = Some("AA11AA")
+          )
+        ),
+        giftAidScheduleFileUploadReference = Some(FileUploadReference("gift-aid-file")),
         communityBuildingsScheduleFileUploadReference = Some(FileUploadReference("file-1"))
       )
     )
@@ -70,7 +84,7 @@ class ChRISSubmissionControllerISpec
 
   private def stubOrganisationLookup(): Unit =
     wireMockServer.stubFor(
-      get(urlEqualTo("/rds-datacache-proxy/charities/organisations/1234567890"))
+      get(urlEqualTo("/rds-datacache-proxy/charities/organisations/AB1234"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -101,6 +115,45 @@ class ChRISSubmissionControllerISpec
         )
     )
 
+  private def stubGiftAidValidation(): Unit =
+    wireMockServer.stubFor(
+      get(
+        urlEqualTo(
+          s"/charities-claims-validation/$claimId/upload-results/gift-aid-file"
+        )
+      )
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              Json
+                .obj(
+                  "reference"           -> "gift-aid-file",
+                  "fileStatus"          -> "VALIDATED",
+                  "validationType"      -> "GiftAid",
+                  "giftAidScheduleData" -> Json.obj(
+                    "earliestDonationDate"   -> "2024-04-01",
+                    "prevOverclaimedGiftAid" -> 0,
+                    "totalDonations"         -> 100.00,
+                    "donations"              -> Json.arr(
+                      Json.obj(
+                        "donationDate"   -> "2024-05-01",
+                        "donationAmount" -> 100.00,
+                        "donorTitle"     -> "Mr",
+                        "donorFirstName" -> "Joe",
+                        "donorLastName"  -> "Bloggs",
+                        "donorHouse"     -> "1",
+                        "donorPostcode"  -> "AA11AA"
+                      )
+                    )
+                  )
+                )
+                .toString()
+            )
+        )
+    )
+
   private def stubChrisResponse(status: Int): Unit =
     wireMockServer.stubFor(
       post(urlEqualTo("/submission/ChRIS/Charities/Filing/sync/HMRC-CHAR-CLM"))
@@ -125,11 +178,11 @@ class ChRISSubmissionControllerISpec
   "POST /chris" should {
 
     "return 200 when claim submitted successfully" in {
-
       authorisedOrganisation()
       await(repository.put(claimId)(ClaimsRepository.claimDataKey, baseClaim))
 
       stubOrganisationLookup()
+      stubGiftAidValidation()
       stubCommunityBuildingValidation()
       stubChrisResponse(200)
 
@@ -183,6 +236,7 @@ class ChRISSubmissionControllerISpec
       await(repository.put(claimId)(ClaimsRepository.claimDataKey, baseClaim))
 
       stubOrganisationLookup()
+      stubGiftAidValidation()
       stubCommunityBuildingValidation()
       stubChrisResponse(500)
 

@@ -22,8 +22,7 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.charitiesclaims.repositories.ClaimsRepository
-import uk.gov.hmrc.charitiesclaims.services.ChRISSubmissionService
-import uk.gov.hmrc.charitiesclaims.stubs.{AuthStub, StubChRISSubmissionService}
+import uk.gov.hmrc.charitiesclaims.stubs.AuthStub
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.mongo.MongoComponent
@@ -63,8 +62,7 @@ trait IntegrationTestSupport
         "agentUnsubmittedClaimLimit" -> 2
       )
       .overrides(
-        bind[MongoComponent].toInstance(mongoComponent),
-        bind[ChRISSubmissionService].to[StubChRISSubmissionService]
+        bind[MongoComponent].toInstance(mongoComponent)
       )
       .build()
 

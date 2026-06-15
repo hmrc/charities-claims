@@ -29,7 +29,6 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import java.net.URL
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
 import scala.io.Source
 
 class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
@@ -37,7 +36,7 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
       """
-        |  microservice {
+        |microservice {
         |    services {
         |      charities-claims-validation {
         |        protocol = http
@@ -48,6 +47,7 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
         |      }
         |   }
         |}
+        |http-verbs.retries.intervals = [10ms,50ms]
         |""".stripMargin
     )
   )
@@ -56,7 +56,7 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
     new ClaimsValidationConnectorImpl(
       http = mockHttp,
       servicesConfig = new ServicesConfig(config),
-      configuration = config,
+      config = config,
       actorSystem = actorSystem
     )
 
@@ -105,9 +105,6 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
 
   "ClaimsConnector" - {
     "deleteClaim" - {
-      "have retries defined" in {
-        connector.retryIntervals shouldBe Seq(FiniteDuration(10, "ms"), FiniteDuration(50, "ms"))
-      }
 
       "should return a list of unsubmitted claims" in {
         givenDeleteClaimEndpointReturns(HttpResponse(200)).once()

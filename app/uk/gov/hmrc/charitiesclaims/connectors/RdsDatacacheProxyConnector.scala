@@ -17,18 +17,18 @@
 package uk.gov.hmrc.charitiesclaims.connectors
 
 import com.google.inject.ImplementedBy
+import com.typesafe.config.Config
 import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
+import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Retries}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.net.URL
 import javax.inject.Inject
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
-import play.api.libs.json.JsObject
 
 @ImplementedBy(classOf[RdsDatacacheProxyConnectorImpl])
 trait RdsDatacacheProxyConnector {
@@ -59,7 +59,7 @@ trait RdsDatacacheProxyConnector {
 
 class RdsDatacacheProxyConnectorImpl @Inject() (
   http: HttpClientV2,
-  configuration: Configuration,
+  config: Configuration,
   servicesConfig: ServicesConfig,
   val actorSystem: ActorSystem
 )(using
@@ -69,7 +69,7 @@ class RdsDatacacheProxyConnectorImpl @Inject() (
 
   val baseUrl: String = servicesConfig.baseUrl("rds-datacache-proxy")
 
-  val retryIntervals: Seq[FiniteDuration] = Retries.getConfIntervals("rds-datacache-proxy", configuration)
+  def configuration: Config = config.underlying
 
   val contextPath: String = servicesConfig
     .getConfString("rds-datacache-proxy.context-path", "rds-datacache-proxy")
@@ -77,49 +77,51 @@ class RdsDatacacheProxyConnectorImpl @Inject() (
   final def getAgentName(agentReference: AgentReference)(using
     hc: HeaderCarrier
   ): Future[Option[String]] =
-    retry(retryIntervals*)(shouldRetry, retryReason)(
+    retryFor("getAgentName") { case _ => true }(
       http
         .get(URL(s"$baseUrl$contextPath/charities/agents/$agentReference"))
         .execute[HttpResponse]
-    ).flatMap(response =>
-      if response.status == 200
-      then
-        Future {
-          response.json
-            .asOpt[JsObject]
-            .flatMap(_.value("agentName").asOpt[String])
-        }
-      else if response.status == 404
-      then Future.successful(None)
-      else
-        Future.failed(
-          Exception(
-            s"Request to GET $baseUrl$contextPath/charities/agents/$agentReference failed because of $response ${response.body}"
-          )
+        .flatMap(response =>
+          if response.status == 200
+          then
+            Future {
+              response.json
+                .asOpt[JsObject]
+                .flatMap(_.value("agentName").asOpt[String])
+            }
+          else if response.status == 404
+          then Future.successful(None)
+          else
+            Future.failed(
+              Exception(
+                s"Request to GET $baseUrl$contextPath/charities/agents/$agentReference failed because of $response ${response.body}"
+              )
+            )
         )
     )
   final def getOrganisationName(charityReference: CharityReference)(using
     hc: HeaderCarrier
   ): Future[Option[String]] =
-    retry(retryIntervals*)(shouldRetry, retryReason)(
+    retryFor("getOrganisationName") { case _ => true }(
       http
         .get(URL(s"$baseUrl$contextPath/charities/organisations/$charityReference"))
         .execute[HttpResponse]
-    ).flatMap(response =>
-      if response.status == 200
-      then
-        Future {
-          response.json
-            .asOpt[JsObject]
-            .flatMap(_.value("organisationName").asOpt[String])
-        }
-      else if response.status == 404
-      then Future.successful(None)
-      else
-        Future.failed(
-          Exception(
-            s"Request to GET $baseUrl$contextPath/charities/organisations/$charityReference failed because of $response ${response.body}"
-          )
+        .flatMap(response =>
+          if response.status == 200
+          then
+            Future {
+              response.json
+                .asOpt[JsObject]
+                .flatMap(_.value("organisationName").asOpt[String])
+            }
+          else if response.status == 404
+          then Future.successful(None)
+          else
+            Future.failed(
+              Exception(
+                s"Request to GET $baseUrl$contextPath/charities/organisations/$charityReference failed because of $response ${response.body}"
+              )
+            )
         )
     )
 

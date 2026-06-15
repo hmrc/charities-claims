@@ -59,7 +59,10 @@ trait IntegrationTestSupport
 
         "microservice.services.chris.baseUrl" -> s"http://$wireMockHost:$wireMockPort",
         "microservice.services.chris.path" -> "/submission/ChRIS/Charities/Filing/sync/HMRC-CHAR-CLM",
-        "agentUnsubmittedClaimLimit" -> 2
+        "agentUnsubmittedClaimLimit" -> 2,
+        "http-verbs.retries.intervals" -> Seq("50ms", "100ms"),
+        "metrics.enabled" -> true,
+        "auditing.enabled" -> false
       )
       .overrides(
         bind[MongoComponent].toInstance(mongoComponent)

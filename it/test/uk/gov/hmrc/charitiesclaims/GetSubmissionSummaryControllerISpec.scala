@@ -70,7 +70,7 @@ class GetSubmissionSummaryControllerISpec
 
   private def stubOrganisationLookup(): Unit =
     wireMockServer.stubFor(
-      get(urlEqualTo("/rds-datacache-proxy/charities/organisations/1234567890"))
+      get(urlPathMatching("/rds-datacache-proxy/charities/organisations/.*"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -101,6 +101,12 @@ class GetSubmissionSummaryControllerISpec
         )
     )
 
+  private def stubClaimsValidationTtl(): Unit =
+    wireMockServer.stubFor(
+      patch(urlEqualTo(s"/charities-claims-validation/ttl/$claimId"))
+        .willReturn(aResponse().withStatus(204))
+    )
+
   private def getSummary(id: String): HttpResponse =
     httpClient
       .get(url"$baseUrl/submission-summary/$id")(using HeaderCarrier())
@@ -114,6 +120,7 @@ class GetSubmissionSummaryControllerISpec
       insertClaim(submittedClaim)
       stubOrganisationLookup()
       stubCommunityBuildingsValidation()
+      stubClaimsValidationTtl()
 
       val response = getSummary(claimId)
 

@@ -25,7 +25,6 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.net.URL
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.FiniteDuration
 
 class ChRISConnectorSpec extends BaseSpec with HttpV2Support {
 
@@ -41,6 +40,7 @@ class ChRISConnectorSpec extends BaseSpec with HttpV2Support {
         |      }
         |    }
         |  }
+        |  http-verbs.retries.intervals = [10ms,50ms]
         |""".stripMargin
     )
   )
@@ -49,7 +49,7 @@ class ChRISConnectorSpec extends BaseSpec with HttpV2Support {
     new ChRISConnectorImpl(
       http = mockHttp,
       servicesConfig = new ServicesConfig(config),
-      configuration = config,
+      config = config,
       actorSystem = actorSystem
     )
 
@@ -61,10 +61,6 @@ class ChRISConnectorSpec extends BaseSpec with HttpV2Support {
   given HeaderCarrier = HeaderCarrier()
 
   "ChRISConnector" - {
-
-    "have retries defined" in {
-      connector.retryIntervals shouldBe Seq(FiniteDuration(10, "ms"), FiniteDuration(50, "ms"))
-    }
 
     "submitClaim" - {
 

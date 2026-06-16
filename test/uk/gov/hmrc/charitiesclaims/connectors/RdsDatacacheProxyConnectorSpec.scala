@@ -19,23 +19,22 @@ package uk.gov.hmrc.charitiesclaims.connectors
 import com.typesafe.config.ConfigFactory
 import org.scalamock.handlers.CallHandler
 import play.api.Configuration
+import play.api.libs.json.Json
 import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.util.{BaseSpec, HttpV2Support}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.net.URL
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
-import play.api.libs.json.Json
-import java.net.URL
 
 class RdsDatacacheProxyConnectorSpec extends BaseSpec with HttpV2Support {
 
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
       """
-        |  microservice {
+        |microservice {
         |    services {
         |      rds-datacache-proxy {
         |        protocol = http
@@ -46,6 +45,7 @@ class RdsDatacacheProxyConnectorSpec extends BaseSpec with HttpV2Support {
         |      }
         |   }
         |}
+        |http-verbs.retries.intervals = [10ms,50ms]
         |""".stripMargin
     )
   )
@@ -54,7 +54,7 @@ class RdsDatacacheProxyConnectorSpec extends BaseSpec with HttpV2Support {
     new RdsDatacacheProxyConnectorImpl(
       http = mockHttp,
       servicesConfig = new ServicesConfig(config),
-      configuration = config,
+      config = config,
       actorSystem = actorSystem
     )
 
@@ -67,10 +67,6 @@ class RdsDatacacheProxyConnectorSpec extends BaseSpec with HttpV2Support {
   given HeaderCarrier = HeaderCarrier()
 
   "RdsDatacacheProxyConnector" - {
-
-    "have retries defined" in {
-      connector.retryIntervals shouldBe Seq(FiniteDuration(10, "ms"), FiniteDuration(50, "ms"))
-    }
 
     "getAgentName" - {
 

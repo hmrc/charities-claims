@@ -17,25 +17,23 @@
 package uk.gov.hmrc.charitiesclaims.connectors
 
 import com.google.inject.ImplementedBy
+import com.typesafe.config.Config
 import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.util.ByteString
+import play.api.libs.ws.{BodyWritable, InMemoryBody}
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.charitiesclaims.models.chris.GovTalkMessage
-import uk.gov.hmrc.charitiesclaims.xml.XmlWriter
+import uk.gov.hmrc.charitiesclaims.validation.{SchematronValidationException, SchematronValidator}
+import uk.gov.hmrc.charitiesclaims.xml.XmlUtils.*
+import uk.gov.hmrc.charitiesclaims.xml.{XmlUtils, XmlWriter}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Retries}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.net.URL
 import javax.inject.Inject
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
-import play.api.libs.ws.BodyWritable
-import play.api.libs.ws.InMemoryBody
-import org.apache.pekko.util.ByteString
-import uk.gov.hmrc.charitiesclaims.xml.XmlUtils
-import uk.gov.hmrc.charitiesclaims.validation.{SchematronValidationException, SchematronValidator}
-import uk.gov.hmrc.charitiesclaims.xml.XmlUtils.*
 import scala.util.{Failure, Success}
 
 @ImplementedBy(classOf[ChRISConnectorImpl])
@@ -48,7 +46,7 @@ trait ChRISConnector {
 
 class ChRISConnectorImpl @Inject() (
   http: HttpClientV2,
-  configuration: Configuration,
+  config: Configuration,
   servicesConfig: ServicesConfig,
   val actorSystem: ActorSystem
 )(using
@@ -58,10 +56,10 @@ class ChRISConnectorImpl @Inject() (
 
   private val logger = Logger(getClass)
 
+  def configuration: Config = config.underlying
+
   val baseUrl: String = servicesConfig.getString("microservice.services.chris.baseUrl")
   val path: String    = servicesConfig.getString("microservice.services.chris.path")
-
-  val retryIntervals: Seq[FiniteDuration] = Retries.getConfIntervals("chris", configuration)
 
   given BodyWritable[String] =
     BodyWritable(str => InMemoryBody(ByteString.fromString(str)), "text/xml;charset=UTF-8")
@@ -82,24 +80,25 @@ class ChRISConnectorImpl @Inject() (
 
         logger.info(s"Submitting claim to ChRIS at POST $baseUrl$path with a ChRISXML $requestBody")
 
-        retry(retryIntervals*)(shouldRetry, retryReason)(
+        retryFor("submitClaim") { case _ => true }(
           http
             .post(URL(s"$baseUrl$path"))
             .withBody(requestBody)
             .execute[HttpResponse]
-        ).flatMap(response =>
-          if response.status == 200
-          then {
-            logger.info(s"Successfully submitted claim to ChRIS")
-            Future.successful(())
-          } else {
-            logger.error(s"ChRIS submission failed: POST $baseUrl$path returned ${response.status}")
-            Future.failed(
-              Exception(
-                s"Request to POST $baseUrl$path failed because of $response ${response.body}"
-              )
+            .flatMap(response =>
+              if response.status == 200
+              then {
+                logger.info(s"Successfully submitted claim to ChRIS")
+                Future.successful(())
+              } else {
+                logger.error(s"ChRIS submission failed: POST $baseUrl$path returned ${response.status}")
+                Future.failed(
+                  Exception(
+                    s"Request to POST $baseUrl$path failed because of $response ${response.body}"
+                  )
+                )
+              }
             )
-          }
         )
       }
       .transform {

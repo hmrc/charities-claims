@@ -30,6 +30,7 @@ import uk.gov.hmrc.charitiesclaims.models.SaveClaimRequest
 import uk.gov.hmrc.charitiesclaims.repositories.ClaimsRepository
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
+import com.github.tomakehurst.wiremock.client.WireMock.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -62,6 +63,12 @@ class SaveClaimControllerISpec
       )
     )
 
+  private def stubClaimsValidationTtl(): Unit =
+    wireMockServer.stubFor(
+      patch(urlPathMatching(s"/charities-claims-validation/ttl/.*"))
+        .willReturn(aResponse().withStatus(204))
+    )
+
   private def postClaim(): HttpResponse =
     httpClient
       .post(url"$baseUrl/claims")(using HeaderCarrier())
@@ -75,6 +82,7 @@ class SaveClaimControllerISpec
     "create a claim for an organisation" in {
 
       authorisedOrganisation()
+      stubClaimsValidationTtl()
       val response = postClaim()
 
       response.status.shouldBe(OK)
@@ -90,6 +98,7 @@ class SaveClaimControllerISpec
     "return BAD_REQUEST if organisation already has an unsubmitted claim" in {
 
       authorisedOrganisation()
+      stubClaimsValidationTtl()
       postClaim()
 
       val response = postClaim()
@@ -98,6 +107,7 @@ class SaveClaimControllerISpec
 
     "allow agent to create claim when under limit" in {
       authorisedAgent()
+      stubClaimsValidationTtl()
 
       val response = postClaim()
       response.status shouldBe OK
@@ -105,6 +115,7 @@ class SaveClaimControllerISpec
 
     "return BAD_REQUEST when agent exceeds claim limit" in {
       authorisedAgent()
+      stubClaimsValidationTtl()
       val limit = app.injector.instanceOf[uk.gov.hmrc.charitiesclaims.config.AppConfig].agentUnsubmittedClaimLimit
       (1 to limit).foreach(_ => postClaim())
 

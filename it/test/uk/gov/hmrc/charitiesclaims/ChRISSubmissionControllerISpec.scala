@@ -160,6 +160,12 @@ class ChRISSubmissionControllerISpec
         .willReturn(aResponse().withStatus(status))
     )
 
+  private def stubClaimsValidationTtl(): Unit =
+    wireMockServer.stubFor(
+      patch(urlEqualTo(s"/charities-claims-validation/ttl/$claimId"))
+        .willReturn(aResponse().withStatus(204))
+    )
+
   private def requestBody(id: String, ref: String) =
     Json.obj(
       "claimId"              -> id,
@@ -185,6 +191,7 @@ class ChRISSubmissionControllerISpec
       stubGiftAidValidation()
       stubCommunityBuildingValidation()
       stubChrisResponse(200)
+      stubClaimsValidationTtl()
 
       val response = postSubmission(requestBody(claimId, "ref-1"))
 

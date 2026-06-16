@@ -17,18 +17,19 @@
 package uk.gov.hmrc.charitiesclaims.connectors
 
 import com.google.inject.ImplementedBy
+import com.typesafe.config.Config
 import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
 import uk.gov.hmrc.charitiesclaims.models.{DeleteUploadResponse, FileUploadReference, GetUploadResultResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Retries}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.net.URL
 import javax.inject.Inject
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
 @ImplementedBy(classOf[ClaimsValidationConnectorImpl])
 trait ClaimsValidationConnector {
@@ -47,7 +48,7 @@ trait ClaimsValidationConnector {
 
 class ClaimsValidationConnectorImpl @Inject() (
   http: HttpClientV2,
-  configuration: Configuration,
+  config: Configuration,
   servicesConfig: ServicesConfig,
   val actorSystem: ActorSystem
 )(using
@@ -57,7 +58,7 @@ class ClaimsValidationConnectorImpl @Inject() (
 
   val baseUrl: String = servicesConfig.baseUrl("charities-claims-validation")
 
-  val retryIntervals: Seq[FiniteDuration] = Retries.getConfIntervals("charities-claims-validation", configuration)
+  def configuration: Config = config.underlying
 
   val contextPath: String = servicesConfig
     .getConfString("charities-claims-validation.context-path", "charities-claims-validation")
@@ -65,66 +66,83 @@ class ClaimsValidationConnectorImpl @Inject() (
   final override def deleteClaim(claimId: UserId)(using
     hc: HeaderCarrier
   ): Future[Unit] =
-    retry(retryIntervals*)(shouldRetry, retryReason)(
+    retryFor("deleteClaim") { case _ => true }(
       http
         .delete(URL(s"$baseUrl$contextPath/$claimId/upload-results"))
         .execute[HttpResponse]
-    ).flatMap(response =>
-      if response.status == 200
-      then Future.successful(())
-      else
-        Future.failed(
-          Exception(
-            s"Request to DELETE $baseUrl$contextPath/$claimId/upload-results failed because of $response ${response.body}"
-          )
+        .flatMap(response =>
+          if response.status == 200
+          then Future.successful(())
+          else
+            Future.failed(
+              Exception(
+                s"Request to DELETE $baseUrl$contextPath/$claimId/upload-results failed because of $response ${response.body}"
+              )
+            )
         )
     )
 
   final override def deleteUpload(claimId: UserId, reference: FileUploadReference)(using
     hc: HeaderCarrier
   ): Future[Boolean] =
-    retry(retryIntervals*)(shouldRetry, retryReason)(
+    retryFor("deleteUpload") { case _ => true }(
       http
         .delete(URL(s"$baseUrl$contextPath/$claimId/upload-results/$reference"))
         .execute[HttpResponse]
-    ).flatMap(response =>
-      if response.status == 200
-      then
-        Future.successful(
-          response.json.as[DeleteUploadResponse].success
-        )
-      else if response.status == 404
-      then Future.successful(false)
-      else
-        Future.failed(
-          Exception(
-            s"Request to DELETE $baseUrl$contextPath/$claimId/upload-results/$reference failed because of $response ${response.body}"
-          )
+        .flatMap(response =>
+          if response.status == 200
+          then
+            Future.successful(
+              response.json.as[DeleteUploadResponse].success
+            )
+          else if response.status == 404
+          then Future.successful(false)
+          else
+            Future.failed(
+              Exception(
+                s"Request to DELETE $baseUrl$contextPath/$claimId/upload-results/$reference failed because of $response ${response.body}"
+              )
+            )
         )
     )
 
   final override def getUploadResult(claimId: String, reference: FileUploadReference)(using
     hc: HeaderCarrier
   ): Future[Option[GetUploadResultResponse]] =
-    retry(retryIntervals*)(shouldRetry, retryReason)(
+    retryFor("getUploadResult") { case _ => true }(
       http
         .get(URL(s"$baseUrl$contextPath/$claimId/upload-results/$reference"))
         .execute[HttpResponse]
-    ).flatMap(response =>
-      if response.status == 200
-      then Future.successful(response.json.asOpt[GetUploadResultResponse])
-      else if response.status == 404
-      then Future.successful(None)
-      else
-        Future.failed(
-          Exception(
-            s"Request to GET $baseUrl$contextPath/$claimId/upload-results/$reference failed because of $response ${response.body}"
-          )
+        .flatMap(response =>
+          if response.status == 200
+          then Future.successful(response.json.asOpt[GetUploadResultResponse])
+          else if response.status == 404
+          then Future.successful(None)
+          else
+            Future.failed(
+              Exception(
+                s"Request to GET $baseUrl$contextPath/$claimId/upload-results/$reference failed because of $response ${response.body}"
+              )
+            )
         )
     )
 
   def touchTtl(claimId: String)(using hc: HeaderCarrier): Future[Unit] =
-    retry(retryIntervals*)(shouldRetry, retryReason) {
-      http.patch(URL(s"$baseUrl$contextPath/ttl/$claimId")).execute[HttpResponse]
-    }.map(_ => ())
+    retryFor("touchTtl") { case _ => true } {
+      http
+        .patch(URL(s"$baseUrl$contextPath/ttl/$claimId"))
+        .execute[HttpResponse]
+        .flatMap(response =>
+          if response.status < 300
+          then Future.successful(())
+          else
+            Future.failed(
+              Exception(
+                s"Request to PATCH $baseUrl$contextPath/ttl/$claimId failed because of $response ${response.body}"
+              )
+            )
+        )
+    }.transform { case _ =>
+      Success(())
+    }
 }

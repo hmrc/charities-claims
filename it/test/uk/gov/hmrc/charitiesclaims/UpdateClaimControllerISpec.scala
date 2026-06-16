@@ -31,6 +31,7 @@ import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimData, RepaymentClaimDetai
 import uk.gov.hmrc.charitiesclaims.repositories.ClaimsRepository
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
+import com.github.tomakehurst.wiremock.client.WireMock.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -62,6 +63,12 @@ class UpdateClaimControllerISpec
       )
     )
 
+  private def stubClaimsValidationTtl(): Unit =
+    wireMockServer.stubFor(
+      patch(urlPathMatching(s"/charities-claims-validation/ttl/.*"))
+        .willReturn(aResponse().withStatus(204))
+    )
+
   private val updateRequest =
     UpdateClaimRequest(
       repaymentClaimDetails = RepaymentClaimDetails(true, true, false),
@@ -87,6 +94,7 @@ class UpdateClaimControllerISpec
         delete(urlEqualTo(s"/charities-claims-validation/$claimId/upload-results"))
           .willReturn(aResponse().withStatus(200))
       )
+      stubClaimsValidationTtl()
 
       val response =
         httpClient

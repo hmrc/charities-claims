@@ -53,11 +53,11 @@ class ClaimsServiceImpl @Inject() (
   def putClaim(claim: Claim)(using HeaderCarrier): Future[Unit] =
     repository.getWithCreatedAt(claim.claimId)(ClaimsRepository.claimDataKey).flatMap {
       case Some(existingClaim, _) if existingClaim == claim =>
-        logger.info(s"Skipping put for unchanged claim: claimId=${claim.claimId}")
+        logger.debug(s"Skipping put for unchanged claim: claimId=${claim.claimId}")
         Future.successful(())
 
       case _ =>
-        logger.info(s"Saving claim: claimId=${claim.claimId}")
+        logger.debug(s"Saving claim: claimId=${claim.claimId}")
         repository
           .put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
           .flatMap { _ =>
@@ -77,7 +77,7 @@ class ClaimsServiceImpl @Inject() (
     repository.getWithCreatedAt(claimId)(ClaimsRepository.claimDataKey)
 
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit] =
-    logger.info(s"Deleting claim: claimId=$claimId")
+    logger.debug(s"Deleting claim: claimId=$claimId")
     claimsValidationConnector
       .deleteClaim(claimId)
       .flatMap(_ => repository.deleteEntity(claimId))

@@ -63,11 +63,11 @@ class ChRISSubmissionController @Inject() (
       .flatMap {
         case AuditResult.Success => Future.unit
         case _                   =>
-          logger.warn(s"Chris submission audit failed: claimId=$claimId, userId=$userId")
+          logger.debug(s"Chris submission audit failed: claimId=$claimId, userId=$userId")
           Future.unit
       }
       .recover { case e =>
-        logger.warn(s"Audit call failed: claimId=$claimId, userId=$userId", e)
+        logger.debug(s"Audit call failed: claimId=$claimId, userId=$userId", e)
       }
 
   private def updateClaim(

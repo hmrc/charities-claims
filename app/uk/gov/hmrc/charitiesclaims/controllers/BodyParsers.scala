@@ -26,7 +26,7 @@ import play.api.mvc.Result
 
 object BodyParsers {
 
-  val parseTolerantTextUtf8: BodyParser[String] =
+  val parseTolerantJson: BodyParser[String] =
     BodyParser("parse.tolerantJson") { _ =>
       val decodeAsUtf8: Sink[ByteString, Future[Either[Result, String]]] =
         Sink

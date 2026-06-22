@@ -43,7 +43,7 @@ class DefaultAuthorisedAction @Inject() (
     extends AuthorisedAction
     with AuthorisedFunctions {
 
-  val parser: BodyParser[String] = BodyParsers.parseTolerantTextUtf8
+  val parser: BodyParser[String] = BodyParsers.parseTolerantJson
   val logger: Logger             = Logger(this.getClass)
 
   override def invokeBlock[A](request: Request[A], block: AuthorisedRequest[A] => Future[Result]): Future[Result] = {

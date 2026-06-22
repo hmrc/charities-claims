@@ -53,7 +53,7 @@ trait BaseController {
     request
 
   final def whenAuthorised(block: AuthorisedRequest[String] ?=> Future[Result]): Action[String] =
-    authorisedAction(BodyParsers.parseTolerantJson).async(implicit r => block)
+    authorisedAction.async(implicit r => block)
 
   final def withPayload[A : Format](
     body: Request[String] ?=> A => Future[Result]

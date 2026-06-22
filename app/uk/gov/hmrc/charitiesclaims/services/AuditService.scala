@@ -19,7 +19,7 @@ package uk.gov.hmrc.charitiesclaims.services
 import javax.inject.Inject
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.charitiesclaims.models.{AgentUserOrganisationDetails, Claim, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, GiftAidScheduleData, GiftAidSmallDonationsSchemeDonationDetails, OrganisationDetails, OtherIncomeScheduleData, RepaymentClaimDetails, ScheduleData, SubmissionDetails}
+import uk.gov.hmrc.charitiesclaims.models.{AgentUserOrganisationDetails, Claim, ClaimData, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, GiftAidScheduleData, GiftAidSmallDonationsSchemeDonationDetails, OrganisationDetails, OtherIncomeScheduleData, RepaymentClaimDetails, ScheduleData, SubmissionDetails}
 import uk.gov.hmrc.charitiesclaims.models.audit.{AuditAgentUserOrganisationDetails, AuditClaimData, AuditCommunityBuildingsScheduleData, AuditConnectedCharitiesScheduleData, AuditDeclarationDetails, AuditDonation, AuditEvent, AuditGiftAidScheduleData, AuditGiftAidSmallDonationsSchemeClaim, AuditGiftAidSmallDonationsSchemeScheduleData, AuditOrganisationDetails, AuditOtherIncome, AuditOtherIncomeScheduleData, AuditRepaymentClaimDetails}
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
@@ -45,11 +45,17 @@ class AuditService @Inject() (
     AuditEvent(
       claimId = claim.claimId,
       userId = claim.userId,
+      userType = identifyUserType(claim.claimData),
       claimSubmitted = claim.claimSubmitted,
       creationTimestamp = creationTimestamp.toString,
       claimData = buildAuditClaimData(claim, scheduleData, declarationLanguage),
       submissionDetails = submissionDetails
     )
+
+  private def identifyUserType(claimData: ClaimData): String =
+    if claimData.organisationDetails.isDefined then "Organisation"
+    else if claimData.agentUserOrganisationDetails.isDefined then "Agent"
+    else "Unknown"
 
   private def buildAuditClaimData(
     claim: Claim,

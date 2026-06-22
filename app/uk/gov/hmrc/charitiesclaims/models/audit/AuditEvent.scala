@@ -22,6 +22,7 @@ import uk.gov.hmrc.charitiesclaims.models.{ReasonNotRegisteredWithRegulator, Sub
 final case class AuditEvent(
   claimId: String,
   userId: String,
+  userType: String,
   claimSubmitted: Boolean,
   creationTimestamp: String,
   claimData: AuditClaimData,

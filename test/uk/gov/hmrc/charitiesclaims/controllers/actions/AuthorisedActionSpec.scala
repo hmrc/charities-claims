@@ -65,7 +65,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -98,7 +98,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -133,7 +133,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -159,7 +159,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -185,7 +185,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -211,7 +211,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -230,7 +230,7 @@ class AuthorisedActionSpec extends BaseSpec {
         .returns(Future.failed(new MissingBearerToken("Missing bearer token")))
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -257,7 +257,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -292,7 +292,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -325,7 +325,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -353,7 +353,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -386,7 +386,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))
@@ -419,7 +419,7 @@ class AuthorisedActionSpec extends BaseSpec {
         )
 
       val authorisedAction =
-        new DefaultAuthorisedAction(mockAuthConnector)
+        new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
 
       val controller = new Harness(authorisedAction)
       val result     = controller.onPageLoad(FakeRequest("GET", "/test"))

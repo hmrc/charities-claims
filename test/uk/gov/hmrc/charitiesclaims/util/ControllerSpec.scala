@@ -38,6 +38,7 @@ import play.api.http.MimeTypes
 import play.api.libs.json.Writes
 import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsEmpty
+import play.api.mvc.PlayBodyParsers
 
 trait ControllerSpec extends BaseSpec with TestUsers {
 
@@ -81,7 +82,7 @@ trait ControllerSpec extends BaseSpec with TestUsers {
       )
 
     val authorisedAction =
-      new DefaultAuthorisedAction(mockAuthConnector)
+      new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
   }
 
   trait AuthorisedAgentFixture {
@@ -113,7 +114,7 @@ trait ControllerSpec extends BaseSpec with TestUsers {
       )
 
     val authorisedAction =
-      new DefaultAuthorisedAction(mockAuthConnector)
+      new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
   }
 
 }

@@ -75,16 +75,16 @@ class ClaimFormatsSpec extends AnyWordSpec with Matchers {
       val json = format.writes(claim)
 
       val org = json \ "claimData" \ "organisationDetails"
-      (org \ "authorisedOfficialTrusteeTitle").as[String]                   should not be trusteeTitle
-      (org \ "authorisedOfficialTrusteeFirstName").as[String]               should not be trusteeFirstName
-      (org \ "authorisedOfficialTrusteeLastName").as[String]                should not be trusteeLastName
-      (org \ "authorisedOfficialTrusteePostcode").as[String]                should not be trusteePostcode
-      (org \ "authorisedOfficialTrusteeDaytimeTelephoneNumber").as[String]  should not be trusteePhone
-      (org \ "corporateTrusteePostcode").as[String] shouldBe corporatePostcode
+      (org \ "authorisedOfficialTrusteeTitle").as[String]                  should not be trusteeTitle
+      (org \ "authorisedOfficialTrusteeFirstName").as[String]              should not be trusteeFirstName
+      (org \ "authorisedOfficialTrusteeLastName").as[String]               should not be trusteeLastName
+      (org \ "authorisedOfficialTrusteePostcode").as[String]               should not be trusteePostcode
+      (org \ "authorisedOfficialTrusteeDaytimeTelephoneNumber").as[String] should not be trusteePhone
+      (org \ "corporateTrusteePostcode").as[String]                      shouldBe corporatePostcode
 
       val agent = json \ "claimData" \ "agentUserOrganisationDetails"
-      (agent \ "daytimeTelephoneNumber").as[String]     should not be trusteePhone
-      (agent \ "postcode").as[String]                   should not be trusteePostcode
+      (agent \ "daytimeTelephoneNumber").as[String]       should not be trusteePhone
+      (agent \ "postcode").as[String]                     should not be trusteePostcode
       (agent \ "whoShouldHmrcSendPaymentTo").as[String] shouldBe "charity"
 
       json.toString should not include trusteeLastName

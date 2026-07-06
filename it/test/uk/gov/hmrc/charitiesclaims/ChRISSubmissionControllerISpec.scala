@@ -185,7 +185,7 @@ class ChRISSubmissionControllerISpec
 
     "return 200 when claim submitted successfully" in {
       authorisedOrganisation()
-      await(repository.put(claimId)(ClaimsRepository.claimDataKey, baseClaim))
+      await(repository.putClaim(baseClaim))
 
       stubOrganisationLookup()
       stubGiftAidValidation()
@@ -223,7 +223,7 @@ class ChRISSubmissionControllerISpec
           )
         )
 
-      await(repository.put(claimId)(ClaimsRepository.claimDataKey, submittedClaim))
+      await(repository.putClaim(submittedClaim))
 
       val response = postSubmission(requestBody(claimId, "ref-2"))
       response.status shouldBe BAD_REQUEST
@@ -232,7 +232,7 @@ class ChRISSubmissionControllerISpec
     "return 400 when claim updated by another user" in {
       authorisedOrganisation()
 
-      await(repository.put(claimId)(ClaimsRepository.claimDataKey, baseClaim))
+      await(repository.putClaim(baseClaim))
 
       val response = postSubmission(requestBody(claimId, "different-ref"))
       response.status shouldBe BAD_REQUEST
@@ -240,7 +240,7 @@ class ChRISSubmissionControllerISpec
 
     "return 500 when ChRIS connector fails" in {
       authorisedOrganisation()
-      await(repository.put(claimId)(ClaimsRepository.claimDataKey, baseClaim))
+      await(repository.putClaim(baseClaim))
 
       stubOrganisationLookup()
       stubGiftAidValidation()

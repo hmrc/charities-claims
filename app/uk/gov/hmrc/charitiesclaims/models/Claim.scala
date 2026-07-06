@@ -95,7 +95,7 @@ final case class OrganisationDetails(
 )
 
 object OrganisationDetails {
-  given Format[OrganisationDetails] = Json.format[OrganisationDetails]
+  given format: Format[OrganisationDetails] = Json.format[OrganisationDetails]
 }
 
 final case class AgentUserOrganisationDetails(
@@ -109,7 +109,7 @@ final case class AgentUserOrganisationDetails(
 )
 
 object AgentUserOrganisationDetails {
-  given Format[AgentUserOrganisationDetails] = Json.format[AgentUserOrganisationDetails]
+  given format: Format[AgentUserOrganisationDetails] = Json.format[AgentUserOrganisationDetails]
 }
 
 final case class GiftAidScheduleData(

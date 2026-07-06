@@ -20,8 +20,8 @@ import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.charitiesclaims.config.AppConfig
-import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
-import play.api.libs.json.Reads
+import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimFormats, ClaimInfo}
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
 import uk.gov.hmrc.mongo.play.json.Codecs
 
@@ -35,7 +35,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class ClaimsRepository @Inject() (
   mongoComponent: MongoComponent,
   timestampSupport: TimestampSupport,
-  appConfig: AppConfig
+  appConfig: AppConfig,
+  crypto: Encrypter & Decrypter
 )(implicit ec: ExecutionContext)
     extends MongoCacheRepository(
       mongoComponent = mongoComponent,
@@ -60,9 +61,14 @@ class ClaimsRepository @Inject() (
       )
     ) {
 
-  def getWithCreatedAt[A : Reads](cacheId: String)(dataKey: DataKey[A]): Future[Option[(A, Instant)]] =
+  private given claimFormat: Format[Claim] = ClaimFormats.encryptedClaimFormat(using crypto)
+
+  def putClaim(claim: Claim): Future[Unit] =
+    put(claim.claimId)(ClaimsRepository.claimDataKey, claim).map(_ => ())
+
+  def getClaimWithCreatedAt(cacheId: String): Future[Option[(Claim, Instant)]] =
     findById(cacheId).map(
-      _.flatMap(ci => (ci.data \ dataKey.unwrap).asOpt[A].map(_ -> ci.createdAt))
+      _.flatMap(ci => (ci.data \ ClaimsRepository.claimDataKey.unwrap).asOpt[Claim].map(_ -> ci.createdAt))
     )
 }
 

@@ -51,7 +51,7 @@ class ClaimsServiceImpl @Inject() (
   private val logger = Logger(getClass)
 
   def putClaim(claim: Claim)(using HeaderCarrier): Future[Unit] =
-    repository.getWithCreatedAt(claim.claimId)(ClaimsRepository.claimDataKey).flatMap {
+    repository.getClaimWithCreatedAt(claim.claimId).flatMap {
       case Some(existingClaim, _) if existingClaim == claim =>
         logger.debug(s"Skipping put for unchanged claim: claimId=${claim.claimId}")
         Future.successful(())
@@ -59,7 +59,7 @@ class ClaimsServiceImpl @Inject() (
       case _ =>
         logger.debug(s"Saving claim: claimId=${claim.claimId}")
         repository
-          .put(claim.claimId)(ClaimsRepository.claimDataKey, claim)
+          .putClaim(claim)
           .flatMap { _ =>
             claimsValidationConnector
               .touchTtl(claim.claimId)
@@ -74,7 +74,7 @@ class ClaimsServiceImpl @Inject() (
     }
 
   def getClaim(claimId: String): Future[Option[(Claim, Instant)]] =
-    repository.getWithCreatedAt(claimId)(ClaimsRepository.claimDataKey)
+    repository.getClaimWithCreatedAt(claimId)
 
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit] =
     logger.debug(s"Deleting claim: claimId=$claimId")

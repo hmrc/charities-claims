@@ -255,11 +255,13 @@ class AuditService @Inject() (
     scheduleData: ScheduleData,
     creationTimestamp: Instant,
     declarationLanguage: String,
-    submissionDetails: SubmissionDetails
+    submissionDetails: SubmissionDetails,
+    correlationId: String
   )(implicit hc: HeaderCarrier): Future[AuditResult] = {
     val extendedDataEvent = ExtendedDataEvent(
       auditSource = auditSource,
       auditType = auditType,
+      tags = Map("correlationId" -> correlationId),
       detail = Json.toJson(
         buildAuditEvent(claim, scheduleData, creationTimestamp, declarationLanguage, submissionDetails)
       )

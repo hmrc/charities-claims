@@ -42,6 +42,8 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
 
   val service = new AuditService(mockAuditConnector)
 
+  val testCorrelationId = "A1B2C3D4E5F6478899AABBCCDDEEFF00"
+
   def testClaim: Claim =
     Claim(
       claimId = "test-claim-id",
@@ -84,6 +86,7 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
               val json = event.detail
               event.auditSource == "charities-claims" &&
               event.auditType == "ClaimSubmission" &&
+              event.tags == Map("correlationId" -> testCorrelationId) &&
               (json \ "claimId").as[String] == claim.claimId &&
               (json \ "userId").as[String] == claim.userId
             },
@@ -94,7 +97,8 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         )
         .returning(Future.successful(AuditResult.Success))
 
-      val result = service.sendEvent(claim, scheduleData, creationTimestamp, "en", submissionDetails)
+      val result =
+        service.sendEvent(claim, scheduleData, creationTimestamp, "en", submissionDetails, testCorrelationId)
 
       whenReady(result) { res =>
         res shouldBe AuditResult.Success
@@ -113,7 +117,9 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         .expects(*, *, *)
         .returning(Future.failed(new RuntimeException("Audit failed")))
 
-      whenReady(service.sendEvent(claim, scheduleData, creationTimestamp, "en", submissionDetails).failed) { ex =>
+      whenReady(
+        service.sendEvent(claim, scheduleData, creationTimestamp, "en", submissionDetails, testCorrelationId).failed
+      ) { ex =>
         ex            shouldBe a[RuntimeException]
         ex.getMessage shouldBe "Audit failed"
       }
@@ -143,7 +149,8 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
         )
         .returning(Future.successful(AuditResult.Success))
 
-      val result = service.sendEvent(claim, scheduleData, creationTimestamp, "cy", submissionDetails)
+      val result =
+        service.sendEvent(claim, scheduleData, creationTimestamp, "cy", submissionDetails, testCorrelationId)
 
       whenReady(result) { res =>
         res shouldBe AuditResult.Success

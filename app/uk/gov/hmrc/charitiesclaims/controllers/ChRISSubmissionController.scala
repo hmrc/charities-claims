@@ -170,7 +170,8 @@ class ChRISSubmissionController @Inject() (
                           scheduleData,
                           creationTimestamp,
                           chrisSubmissionRequest.declarationLanguage,
-                          submissionDetails
+                          submissionDetails,
+                          govTalkMessage.Header.MessageDetails.CorrelationID
                         ),
                       claimId,
                       claim.userId

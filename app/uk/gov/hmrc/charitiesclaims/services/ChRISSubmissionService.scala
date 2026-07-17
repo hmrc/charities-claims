@@ -20,6 +20,7 @@ import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.models
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
+import uk.gov.hmrc.charitiesclaims.config.AppConfig
 import uk.gov.hmrc.charitiesclaims.models.{CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, Donation, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncomeScheduleData, ScheduleData}
 
 import scala.concurrent.Future
@@ -48,7 +49,8 @@ trait ChRISSubmissionService {
 @Singleton
 class ChRISSubmissionServiceImpl @Inject() (
   rdsConnector: RdsDatacacheProxyConnector,
-  claimsValidationConnector: ClaimsValidationConnector
+  claimsValidationConnector: ClaimsValidationConnector,
+  appConfig: AppConfig
 )(using ExecutionContext)
     extends ChRISSubmissionService {
 
@@ -69,15 +71,17 @@ class ChRISSubmissionServiceImpl @Inject() (
     for
       orgName      <- getOrganisationName(currentUser)
       scheduleData <- getScheduleData(claim)
-    yield GovTalkMessage(
-      GovTalkDetails = buildGovTalkDetails(currentUser, claim.claimData.repaymentClaimDetails.hmrcCharitiesReference),
-      Body = Body(
-        IRenvelope = IRenvelope(
-          IRheader = buildIRheader(currentUser, claim.claimData.repaymentClaimDetails.hmrcCharitiesReference),
-          R68 = buildR68(claim, currentUser, orgName.getOrElse(""), declarationLanguage, scheduleData)
+    yield
+      val message = GovTalkMessage(
+        GovTalkDetails = buildGovTalkDetails(currentUser, claim.claimData.repaymentClaimDetails.hmrcCharitiesReference),
+        Body = Body(
+          IRenvelope = IRenvelope(
+            IRheader = buildIRheader(currentUser, claim.claimData.repaymentClaimDetails.hmrcCharitiesReference),
+            R68 = buildR68(claim, currentUser, orgName.getOrElse(""), declarationLanguage, scheduleData)
+          )
         )
       )
-    ).withLiteIRmark
+      if appConfig.computeLiteIRMark then message.withLiteIRmark else message.withFullIRmark
 
   def getOrganisationName(currentUser: models.CurrentUser)(using
     HeaderCarrier

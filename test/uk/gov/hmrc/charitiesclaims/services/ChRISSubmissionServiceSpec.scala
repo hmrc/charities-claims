@@ -30,6 +30,7 @@ import uk.gov.hmrc.charitiesclaims.models.chris.*
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
+import uk.gov.hmrc.charitiesclaims.config.AppConfig
 
 import scala.concurrent.Future
 import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, Donation, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncome, OtherIncomeScheduleData, ScheduleData}
@@ -50,6 +51,8 @@ class ChRISSubmissionServiceSpec
   ) extends models.CurrentUser
 
   given HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("test-session-id")))
+
+  val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   val organisationUser: models.CurrentUser = TestCurrentUser(
     affinityGroup = AffinityGroup.Organisation,
@@ -87,7 +90,7 @@ class ChRISSubmissionServiceSpec
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
       val service                       =
-        new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -127,7 +130,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = true and address in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -205,7 +208,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = true and address NOT in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -273,7 +276,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = false and address in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -346,7 +349,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an organisation - Regulator = EnglandAndWales, Corporate Trustee = false and address NOT in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -410,7 +413,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an organisation - Regulator = NorthernIreland, Corporate Trustee = false and address in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -483,7 +486,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an organisation - Regulator = Scottish, Corporate Trustee = false and address in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -556,7 +559,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an organisation - Regulator = None, Corporate Trustee = false and address in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       // val orgName:Option[String] = Some(rdsConnectorMock.getOrganisationName("test"))
 
@@ -633,7 +636,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an organisation which has CF - Regulator = None, Corporate Trustee = false and address in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -702,7 +705,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an organisation which has CH - Regulator = None, Corporate Trustee = false and address in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -771,7 +774,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an organisation which has CH - Regulator = Scottish, Corporate Trustee = false and address in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -845,7 +848,7 @@ class ChRISSubmissionServiceSpec
     "build a ChRISSubmission correctly for an agent - Regulator = None, Corporate Trustee = false and address in UK " in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       (rdsConnectorMock
         .getAgentName(_: String)(using _: HeaderCarrier))
@@ -912,7 +915,7 @@ class ChRISSubmissionServiceSpec
     "buildChRISSubmission fetches upload data from validation service when GASDS upload references are present" in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val communityBuildingsRef = FileUploadReference("cb-ref-123")
       val connectedCharitiesRef = FileUploadReference("cc-ref-456")
@@ -1079,7 +1082,7 @@ class ChRISSubmissionServiceSpec
     "buildChRISSubmission fetches gift aid upload data from validation service when gift aid upload reference is present" in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val giftAidRef = FileUploadReference("ga-ref-123")
 
@@ -1164,7 +1167,7 @@ class ChRISSubmissionServiceSpec
     "buildChRISSubmission fetches gift aid upload data from validation service when gift aid upload & otherIncome reference are present" in {
       val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+      val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
       val giftAidRef = FileUploadReference("ga-ref-123")
 
@@ -1251,7 +1254,7 @@ class ChRISSubmissionServiceSpec
       "populate GASDS with upload data from validation service" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1344,7 +1347,7 @@ class ChRISSubmissionServiceSpec
       "return None when claimingUnderGiftAidSmallDonationsScheme is false" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1379,7 +1382,7 @@ class ChRISSubmissionServiceSpec
       "return GASDSClaim as None when giftAidSmallDonationsSchemeDonationDetails is None" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1405,7 +1408,7 @@ class ChRISSubmissionServiceSpec
       "map multiple connected charities from upload data correctly" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1453,7 +1456,7 @@ class ChRISSubmissionServiceSpec
       "return Charity as None when no upload data for connected charities" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1486,7 +1489,7 @@ class ChRISSubmissionServiceSpec
       "map GiftAidSmallDonationsSchemeClaim correctly" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1529,7 +1532,7 @@ class ChRISSubmissionServiceSpec
       "map CommunityBuilding with 2 years from upload data" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1593,7 +1596,7 @@ class ChRISSubmissionServiceSpec
       "map CommunityBuilding with 1 year only from upload data" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1654,7 +1657,7 @@ class ChRISSubmissionServiceSpec
       "return Building as None when no upload data for community buildings" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1687,7 +1690,7 @@ class ChRISSubmissionServiceSpec
       "set Adj when adjustment > 0 and None when 0" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claimWithAdj = models.Claim(
           claimId = "test-claim-id",
@@ -1734,7 +1737,7 @@ class ChRISSubmissionServiceSpec
       "map ConnectedCharities yes/no from repaymentClaimDetails" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         def buildClaimWithConnected(connected: Option[Boolean]): models.Claim =
           models.Claim(
@@ -1776,7 +1779,7 @@ class ChRISSubmissionServiceSpec
       "map CommBldgs yes/no from repaymentClaimDetails" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         def buildClaimWithCommBldgs(claiming: Option[Boolean]): models.Claim =
           models.Claim(
@@ -1822,7 +1825,7 @@ class ChRISSubmissionServiceSpec
       "return None when claimingGiftAid is false" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1847,7 +1850,7 @@ class ChRISSubmissionServiceSpec
       "return None when claimingGiftAid is true but no gift aid data" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val claim = models.Claim(
           claimId = "test-claim-id",
@@ -1872,7 +1875,7 @@ class ChRISSubmissionServiceSpec
       "map individual donor donations to GAD with Donor element" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val giftAidData = Some(
           GiftAidScheduleData(
@@ -1966,7 +1969,7 @@ class ChRISSubmissionServiceSpec
       "map aggregated donations to GAD with AggDonation element" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val giftAidData     = Some(
           GiftAidScheduleData(
@@ -2021,7 +2024,7 @@ class ChRISSubmissionServiceSpec
       "map overseas donor (postcode X) to GAD with Overseas flag" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val giftAidData     = Some(
           GiftAidScheduleData(
@@ -2081,7 +2084,7 @@ class ChRISSubmissionServiceSpec
       "map sponsored donation to GAD with Sponsored flag" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val giftAidData = Some(
           GiftAidScheduleData(
@@ -2141,7 +2144,7 @@ class ChRISSubmissionServiceSpec
       "populate EarliestGAdate from schedule data" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val giftAidData = Some(
           GiftAidScheduleData(
@@ -2199,7 +2202,7 @@ class ChRISSubmissionServiceSpec
       "populate Adjustment from prevOverclaimedGiftAid when overpayment and OtherIncome overpayment are both present" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val giftAidData = Some(
           GiftAidScheduleData(
@@ -2258,7 +2261,7 @@ class ChRISSubmissionServiceSpec
       "populate Adjustment from prevOverclaimedGiftAid when present and OtherIncome is not defined" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val giftAidData = Some(
           GiftAidScheduleData(
@@ -2300,7 +2303,7 @@ class ChRISSubmissionServiceSpec
       "populate Adjustment when prevOverclaimedGiftAid is None &  OtherIncome overpayment is present" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val giftAidData = Some(
           GiftAidScheduleData(
@@ -2358,7 +2361,7 @@ class ChRISSubmissionServiceSpec
       "omit Adjustment when prevOverclaimedGiftAid is None &  there no OtherIncome" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val giftAidData = Some(
           GiftAidScheduleData(
@@ -2399,7 +2402,7 @@ class ChRISSubmissionServiceSpec
       "map multiple donations correctly" in {
         val rdsConnectorMock              = mock[RdsDatacacheProxyConnector]
         val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
-        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock)
+        val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
         val giftAidData = Some(
           GiftAidScheduleData(

@@ -49,7 +49,25 @@ class SaveClaimController @Inject() (
                 .listClaims(currentUserId, claimSubmitted = false)
                 .flatMap {
                   case claims if claims.size < appConfig.agentUnsubmittedClaimLimit =>
-                    saveClaim(saveClaimRequest)
+                    saveClaimRequest.hmrcCharitiesReference
+                      .match {
+                        case Some(charityReference) =>
+                          claimsService.hasUnsubmittedClaim(currentUserId, charityReference)
+                        case None                   =>
+                          Future.successful(false)
+                      }
+                      .flatMap {
+                        case false => saveClaim(saveClaimRequest)
+                        case true  =>
+                          Future.successful(
+                            BadRequest(
+                              Json.obj(
+                                "errorMessage" -> "Agent already has an unsubmitted claim for this charity",
+                                "errorCode"    -> "UNSUBMITTED_CLAIM_EXISTS_FOR_CHARITY"
+                              )
+                            )
+                          )
+                      }
 
                   case claims =>
                     Future.successful(

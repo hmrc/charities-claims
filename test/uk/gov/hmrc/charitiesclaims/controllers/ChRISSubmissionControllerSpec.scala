@@ -482,7 +482,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       (json \ "errors").as[List[play.api.libs.json.JsObject]].size shouldBe 2
     }
 
-    "return 500 when recording unregulated donation fails" in new AuthorisedOrganisationFixture {
+    "return 200 and continue processing when recording unregulated donation fails" in new AuthorisedOrganisationFixture {
 
       val claim = Claim(
         claimId = "test-claim-id",
@@ -500,7 +500,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         )
       )
 
-      val claimsService: ClaimsService    = mock[ClaimsService]
+      val claimsService: ClaimsService    = new TestClaimsService(initialClaims = Seq(claim))
       val chrisSubmissionServiceMock      = mock[ChRISSubmissionService]
       val chrisConnectorMock              = mock[ChRISConnector]
       val unregulatedDonationsServiceMock = mock[UnregulatedDonationsService]
@@ -515,11 +515,6 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         unregulatedDonationsServiceMock,
         auditServiceMock
       )
-
-      (claimsService
-        .getClaim(_: String))
-        .expects("test-claim-id")
-        .returning(Future.successful(Some((claim, Instant.now()))))
 
       (chrisSubmissionServiceMock
         .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
@@ -560,17 +555,10 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       )
 
       val result = controller.submitClaim()(request)
-      val json   = contentAsJson(result)
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      status(result) shouldBe OK
 
-      json.as[JsObject].value.get("errorMessage") shouldBe Some(
-        JsString(
-          s"ChRIS submission was successful but cannot record unregulated donation for claimId test-claim-id because of ${classOf[UnregulatedDonationException].getName}: Failed to record unregulated donation for claimId=test-claim-id: Error message"
-        )
-      )
-      json.as[JsObject].value.get("errorCode")    shouldBe Some(
-        JsString("UNREGULATED_DONATION_ERROR")
-      )
+      val (updatedClaim, _) = claimsService.getClaim("test-claim-id").futureValue.get
+      updatedClaim.claimSubmitted shouldBe true
     }
 
     "return 500 when ChRIS submission fails" in new AuthorisedOrganisationFixture {
@@ -813,7 +801,7 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       updatedClaim.claimSubmitted shouldBe true
     }
 
-    "return 500 when charity reference is missing" in new AuthorisedOrganisationFixture {
+    "return 200 and continue processing even when charity reference is missing" in new AuthorisedOrganisationFixture {
 
       val claim = Claim(
         claimId = "test-claim-id",
@@ -885,13 +873,11 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
       )
 
       val result = controller.submitClaim()(request)
-      val json   = contentAsJson(result)
 
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      status(result) shouldBe OK
 
-      json.as[JsObject].value.get("errorCode") shouldBe Some(
-        JsString("UNREGULATED_DONATION_ERROR")
-      )
+      val (updatedClaim, _) = claimsService.getClaim("test-claim-id").futureValue.get
+      updatedClaim.claimSubmitted shouldBe true
     }
 
   }

@@ -22,7 +22,7 @@ import play.api.mvc.Results.*
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.charitiesclaims.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.charitiesclaims.models.{ChRISSubmissionRequest, Claim}
-import uk.gov.hmrc.charitiesclaims.services.{AuditService, ChRISSubmissionService, ClaimsService, MissingCharityReferenceException, UnregulatedDonationException, UnregulatedDonationsService}
+import uk.gov.hmrc.charitiesclaims.services.{AuditService, ChRISSubmissionService, ClaimsService, MissingCharityReferenceException, UnregulatedDonationsService}
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import play.api.mvc.Result
 
@@ -177,12 +177,19 @@ class ChRISSubmissionController @Inject() (
                       claim.userId
                     )
 
-                  _ <- unregulatedDonationsService.recordUnregulatedDonation(claim, currentUser)
-
                   result <- updateClaim(
                               claim = claim,
                               submissionDetails: SubmissionDetails
                             )
+
+                  _ <-
+                    unregulatedDonationsService
+                      .recordUnregulatedDonation(claim, currentUser)
+                      .recover { case e =>
+                        logger.error(
+                          s"ChRIS submission was successful but cannot record unregulated donation for claimId $claimId because of ${e.getClass.getName}: ${e.getMessage}"
+                        )
+                      }
 
                 } yield result
 
@@ -202,13 +209,6 @@ class ChRISSubmissionController @Inject() (
                   case e: MissingCharityReferenceException =>
                     logAndFail(
                       s"Cannot record unregulated donation: no charity reference available for claimId=$claimId",
-                      "UNREGULATED_DONATION_ERROR",
-                      e
-                    )
-
-                  case e: UnregulatedDonationException =>
-                    logAndFail(
-                      s"ChRIS submission was successful but cannot record unregulated donation for claimId $claimId",
                       "UNREGULATED_DONATION_ERROR",
                       e
                     )

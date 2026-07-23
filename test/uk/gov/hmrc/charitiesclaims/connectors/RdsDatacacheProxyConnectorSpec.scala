@@ -82,6 +82,13 @@ class RdsDatacacheProxyConnectorSpec extends BaseSpec with HttpV2Support {
         await(connector.getAgentName("abc-123")) shouldBe Some("AgentABC")
       }
 
+      "should trim leading and trailing spaces from the agent name" in {
+        givenGetAgentNameByAgentReferenceReturns(
+          HttpResponse(200, body = Json.obj("agentName" -> "  AgentABC  ").toString())
+        )
+        await(connector.getAgentName("abc-123")) shouldBe Some("AgentABC")
+      }
+
       "throw an exception if the service returns 500 status" in {
         givenGetAgentNameByAgentReferenceReturns(HttpResponse(500))
         a[Exception] should be thrownBy
@@ -125,6 +132,13 @@ class RdsDatacacheProxyConnectorSpec extends BaseSpec with HttpV2Support {
       "should return the organisation na,e for the given charity reference" in {
         givenGetOrganisationNameByCharityReferenceReturns(
           HttpResponse(200, body = Json.obj("organisationName" -> "OrganisationNameABC").toString())
+        )
+        await(connector.getOrganisationName("abc-123")) shouldBe Some("OrganisationNameABC")
+      }
+
+      "should trim leading and trailing spaces from the organisation name" in {
+        givenGetOrganisationNameByCharityReferenceReturns(
+          HttpResponse(200, body = Json.obj("organisationName" -> " OrganisationNameABC ").toString())
         )
         await(connector.getOrganisationName("abc-123")) shouldBe Some("OrganisationNameABC")
       }

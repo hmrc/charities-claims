@@ -88,6 +88,7 @@ class RdsDatacacheProxyConnectorImpl @Inject() (
               response.json
                 .asOpt[JsObject]
                 .flatMap(_.value("agentName").asOpt[String])
+                .map(_.trim)
             }
           else if response.status == 404
           then Future.successful(None)
@@ -113,6 +114,7 @@ class RdsDatacacheProxyConnectorImpl @Inject() (
               response.json
                 .asOpt[JsObject]
                 .flatMap(_.value("organisationName").asOpt[String])
+                .map(_.trim)
             }
           else if response.status == 404
           then Future.successful(None)

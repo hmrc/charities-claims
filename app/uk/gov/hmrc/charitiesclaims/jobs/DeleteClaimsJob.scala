@@ -44,14 +44,18 @@ class DeleteClaimsJob @Inject() (
 
     Future
       .traverse(appConfig.claimIdsToBeDeleted) { claimId =>
-        repository
-          .deleteEntity(claimId)
-          .map { _ =>
-            logger.info(s"Deletion of claim $claimId completed successfully")
-          }
-          .recover { case ex =>
-            logger.error(s"Deletion of claim $claimId failed", ex)
-          }
+        repository.findById(claimId).map {
+          case Some(value) =>
+            repository.deleteEntity(claimId)
+              .map { _ =>
+                logger.info(s"Deletion of claim $claimId completed successfully")
+              }
+              .recover { case ex =>
+                logger.error(s"Deletion of claim $claimId failed", ex)
+              }
+          case None =>
+            logger.info(s"Claim $claimId not found")
+        }
       }
       .map(_ => ())
   }

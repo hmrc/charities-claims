@@ -34,7 +34,7 @@ class AppConfigSpec extends AnyWordSpec with Matchers:
           | }
           | agentUnsubmittedClaimLimit = 123
           | computeLiteIRMark = false
-          |
+          | claimIdsToBeDeleted = [b30217d6-8be7-4938-b3d5-53896d43d62c, 82d535f0-3a73-466a-a910-2534c8742caf]
           |""".stripMargin
     )
   )
@@ -55,3 +55,7 @@ class AppConfigSpec extends AnyWordSpec with Matchers:
     "return computeLiteIRMark" in:
       val appConfig = new AppConfig(config)
       appConfig.computeLiteIRMark shouldBe false
+
+    "return claimIdsToBeDeleted" in:
+      val appConfig = new AppConfig(config)
+      appConfig.claimIdsToBeDeleted.isEmpty shouldBe false

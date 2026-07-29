@@ -22,7 +22,6 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.{Configuration, Environment, Logger}
 import uk.gov.hmrc.charitiesclaims.config.CryptoProvider
-import uk.gov.hmrc.charitiesclaims.jobs.DeleteClaimsJob
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.{HttpClientV2, HttpClientV2Impl}
@@ -46,8 +45,7 @@ class Module extends AppModule {
     Seq(
       bind[Clock].toInstance(Clock.systemDefaultZone), // inject if current time needs to be controlled in unit tests
       bind[HttpClientV2].to(classOf[DebuggingHttpClientV2]),
-      bind[Encrypter & Decrypter].toProvider[CryptoProvider],
-      bind[DeleteClaimsJob].toSelf.eagerly()
+      bind[Encrypter & Decrypter].toProvider[CryptoProvider]
     )
 
 }

@@ -37,7 +37,7 @@ class GetSubmissionSummaryControllerSpec extends ControllerSpec with MockitoSuga
   private val mockSummaryService = mock[SubmissionSummaryService]
 
   private val fakeRequest = FakeRequest("GET", "/summary")
-  private val testClaimId = "claim-1"
+  private val testClaimId = "123e4567-e89b-12d3-a456-426614174000"
   private val claim       =
     Claim(
       claimId = testClaimId,

@@ -74,11 +74,6 @@ class ChRISSubmissionServiceImpl @Inject() (
     yield
       val message = GovTalkMessage(
         GovTalkDetails = buildGovTalkDetails(currentUser, claim.claimData.repaymentClaimDetails.hmrcCharitiesReference),
-        Header = Header(
-          MessageDetails = MessageDetails(
-            CorrelationID = claim.claimId.toString.replace("-", "").toUpperCase
-          )
-        ),
         Body = Body(
           IRenvelope = IRenvelope(
             IRheader = buildIRheader(currentUser, claim.claimData.repaymentClaimDetails.hmrcCharitiesReference),

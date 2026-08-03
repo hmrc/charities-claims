@@ -41,7 +41,7 @@ class GetSubmissionSummaryControllerISpec
 
   private val authHeader = "Authorization" -> "Bearer test-token"
 
-  private val claimId = "123e4567-e89b-12d3-a456-426614174000"
+  private val claimId = "claim-1"
 
   private val submittedClaim =
     Claim(

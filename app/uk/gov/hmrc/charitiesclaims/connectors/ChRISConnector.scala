@@ -31,10 +31,14 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, Retries}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.net.URL
+import java.net.{ConnectException, URL, UnknownHostException}
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
+import javax.net.ssl.SSLHandshakeException
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
+
+final case class ChRISSubmissionRejected(status: Int, body: String) extends Exception(s"ChRIS returned $status: $body")
 
 @ImplementedBy(classOf[ChRISConnectorImpl])
 trait ChRISConnector {
@@ -80,7 +84,13 @@ class ChRISConnectorImpl @Inject() (
 
         logger.info(s"Submitting claim to ChRIS at POST $baseUrl$path with a ChRISXML $requestBody")
 
-        retryFor("submitClaim") { case _ => true }(
+        val attempt = AtomicInteger(0)
+
+        retryFor("submitClaim") { case e => neverReachedChRIS(e) } {
+          val attemptNumber = attempt.incrementAndGet()
+          if attemptNumber > 1 then
+            logger.warn(s"Retrying ChRIS submission (attempt $attemptNumber): POST $baseUrl$path")
+
           http
             .post(URL(s"$baseUrl$path"))
             .withBody(requestBody)
@@ -92,14 +102,10 @@ class ChRISConnectorImpl @Inject() (
                 Future.successful(())
               } else {
                 logger.error(s"ChRIS submission failed: POST $baseUrl$path returned ${response.status}")
-                Future.failed(
-                  Exception(
-                    s"Request to POST $baseUrl$path failed because of $response ${response.body}"
-                  )
-                )
+                Future.failed(ChRISSubmissionRejected(response.status, response.body))
               }
             )
-        )
+        }
       }
       .transform {
         case Success(value)     => Success(value)
@@ -107,6 +113,16 @@ class ChRISConnectorImpl @Inject() (
           logger.error(s"ChRIS submission failed: ${exception.getMessage}")
           logger.error(document.prettyPrint())
           Failure(exception)
+      }
+
+  private[connectors] def neverReachedChRIS(t: Throwable, depth: Int = 0): Boolean =
+    if t == null || depth > 10 then false
+    else
+      t match {
+        case _: ConnectException      => true
+        case _: UnknownHostException  => true
+        case _: SSLHandshakeException => true
+        case other                    => neverReachedChRIS(other.getCause, depth + 1)
       }
 
 }

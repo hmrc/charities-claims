@@ -23,7 +23,9 @@ import uk.gov.hmrc.charitiesclaims.util.{BaseSpec, ChRISTestData, HttpV2Support}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.net.URL
+import java.io.IOException
+import java.net.{ConnectException, SocketTimeoutException, URL, UnknownHostException}
+import javax.net.ssl.SSLHandshakeException
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ChRISConnectorSpec extends BaseSpec with HttpV2Support {
@@ -69,35 +71,49 @@ class ChRISConnectorSpec extends BaseSpec with HttpV2Support {
         await(connector.submitClaim(ChRISTestData.exampleMessage)) shouldBe ()
       }
 
-      "throw an exception if the service returns 500 status" in {
+      "fail without retrying when ChRIS returns a 5xx status" in {
         givenChRISReturns(HttpResponse(500), ChRISTestData.exampleSubmissionXML)
-        givenChRISReturns(HttpResponse(500), ChRISTestData.exampleSubmissionXML)
-        givenChRISReturns(HttpResponse(500), ChRISTestData.exampleSubmissionXML)
-        a[Exception] should be thrownBy
+        a[ChRISSubmissionRejected] should be thrownBy
           await(connector.submitClaim(ChRISTestData.exampleMessage))
       }
 
-      "throw exception when 5xx response status in the third attempt" in {
-        givenChRISReturns(HttpResponse(500), ChRISTestData.exampleSubmissionXML)
+      "fail without retrying when ChRIS returns a 4xx status" in {
         givenChRISReturns(HttpResponse(499), ChRISTestData.exampleSubmissionXML)
-        givenChRISReturns(HttpResponse(469), ChRISTestData.exampleSubmissionXML)
-
-        a[Exception] shouldBe thrownBy {
+        a[ChRISSubmissionRejected] should be thrownBy
           await(connector.submitClaim(ChRISTestData.exampleMessage))
-        }
+      }
+    }
+
+    "neverReachedChRIS" - {
+
+      "allow a retry only when the request never left us" in {
+        connector.neverReachedChRIS(ConnectException("refused"))                  shouldBe true
+        connector.neverReachedChRIS(UnknownHostException("chris.ws.hmrc.gov.uk")) shouldBe true
+        connector.neverReachedChRIS(SSLHandshakeException("handshake"))           shouldBe true
       }
 
-      "accept valid response in a second attempt" in {
-        givenChRISReturns(HttpResponse(500), ChRISTestData.exampleSubmissionXML)
-        givenChRISReturns(HttpResponse(200), ChRISTestData.exampleSubmissionXML)
-        await(connector.submitClaim(ChRISTestData.exampleMessage)) shouldBe ()
+      "refuse a retry for other failures, where ChRIS may already have filed the claim" in {
+        connector.neverReachedChRIS(SocketTimeoutException("read timed out")) shouldBe false
+        connector.neverReachedChRIS(IOException("connection reset"))          shouldBe false
+        connector.neverReachedChRIS(ChRISSubmissionRejected(500, "boom"))     shouldBe false
       }
 
-      "accept valid response in a third attempt" in {
-        givenChRISReturns(HttpResponse(499), ChRISTestData.exampleSubmissionXML)
-        givenChRISReturns(HttpResponse(500), ChRISTestData.exampleSubmissionXML)
-        givenChRISReturns(HttpResponse(200), ChRISTestData.exampleSubmissionXML)
-        await(connector.submitClaim(ChRISTestData.exampleMessage)) shouldBe ()
+      "fail closed for unrecognised exceptions" in {
+        connector.neverReachedChRIS(RuntimeException("something new")) shouldBe false
+        connector.neverReachedChRIS(null)                              shouldBe false
+      }
+
+      "unwrap causes, since the HTTP client wraps transport failures" in {
+        connector.neverReachedChRIS(
+          RuntimeException("wrapper", ConnectException("refused"))
+        ) shouldBe true
+      }
+
+      "terminate on a cyclic cause chain" in {
+        val a = RuntimeException("a")
+        val b = RuntimeException("b", a)
+        a.initCause(b)
+        connector.neverReachedChRIS(a) shouldBe false
       }
     }
 

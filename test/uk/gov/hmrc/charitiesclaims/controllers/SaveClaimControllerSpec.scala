@@ -51,7 +51,7 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
           | }
           | agentUnsubmittedClaimLimit = 3
           | computeLiteIRMark = true
-          | claimIdsToBeDeleted = [b30217d6-8be7-4938-b3d5-53896d43d62c, 82d535f0-3a73-466a-a910-2534c8742caf]
+          |
           |""".stripMargin
       )
     )

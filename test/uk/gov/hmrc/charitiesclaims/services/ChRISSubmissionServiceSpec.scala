@@ -561,8 +561,6 @@ class ChRISSubmissionServiceSpec
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
       val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
-      // val orgName:Option[String] = Some(rdsConnectorMock.getOrganisationName("test"))
-
       val claim = models.Claim(
         claimId = "test-claim-id",
         userId = "test-user-id",

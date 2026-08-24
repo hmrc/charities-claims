@@ -111,7 +111,6 @@ class ChRISConnectorImpl @Inject() (
         case Success(value)     => Success(value)
         case Failure(exception) =>
           logger.error(s"ChRIS submission failed: ${exception.getMessage}")
-          logger.error(document.prettyPrint())
           Failure(exception)
       }
 

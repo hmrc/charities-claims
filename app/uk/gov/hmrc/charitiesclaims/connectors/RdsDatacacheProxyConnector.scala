@@ -102,7 +102,8 @@ class RdsDatacacheProxyConnectorImpl @Inject() (
     )
   final def getOrganisationName(charityReference: CharityReference)(using
     hc: HeaderCarrier
-  ): Future[Option[String]] =
+  ): Future[Option[String]] = {
+    println("\nJHJJJJJJJJJJ")
     retryFor("getOrganisationName") { case _ => true }(
       http
         .get(URL(s"$baseUrl$contextPath/charities/organisations/$charityReference"))
@@ -126,5 +127,6 @@ class RdsDatacacheProxyConnectorImpl @Inject() (
             )
         )
     )
+  }
 
 }

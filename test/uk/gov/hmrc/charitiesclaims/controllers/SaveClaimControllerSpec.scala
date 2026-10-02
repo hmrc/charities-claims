@@ -222,8 +222,8 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       val mockClaimsService: ClaimsService = mock[ClaimsService]
 
       (mockClaimsService
-        .listClaims(_: String, _: Boolean))
-        .expects(*, false)
+        .listClaims(_: String))
+        .expects(*)
         .returning(Future.failed(new RuntimeException("Error message")))
 
       val controller =

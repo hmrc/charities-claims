@@ -69,10 +69,10 @@ class TestClaimsService(initialClaims: Seq[Claim]) extends ClaimsService {
     Future.successful(())
   }
 
-  override def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]] =
+  override def listClaims(userId: String): Future[Seq[ClaimInfo]] =
     Future.successful(
       claims.collect {
-        case (claim, _) if claim.userId == userId && claim.claimSubmitted == claimSubmitted =>
+        case (claim, _) if claim.userId == userId && !claim.claimSubmitted =>
           ClaimInfo(
             claim.claimId,
             claim.userId,
@@ -91,7 +91,7 @@ class TestClaimsService(initialClaims: Seq[Claim]) extends ClaimsService {
     Future.successful(
       claims.exists((c, _) =>
         c.userId == userId
-          && c.claimSubmitted == false
+          && !c.claimSubmitted
           && c.claimData.repaymentClaimDetails.hmrcCharitiesReference.contains(hmrcCharitiesReference)
       )
     )

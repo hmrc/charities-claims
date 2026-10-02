@@ -35,7 +35,7 @@ trait ClaimsService {
   def putClaim(claim: Claim)(using HeaderCarrier): Future[Unit]
   def getClaim(claimId: String): Future[Option[(Claim, Instant)]]
   def deleteClaim(claimId: String)(using HeaderCarrier): Future[Unit]
-  def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]]
+  def listClaims(userId: String): Future[Seq[ClaimInfo]]
   def updateLastVisitedAt(claimId: String): Future[Unit]
   def hasUnsubmittedClaim(userId: String, hmrcCharitiesReference: String): Future[Boolean]
 }
@@ -82,10 +82,10 @@ class ClaimsServiceImpl @Inject() (
       .deleteClaim(claimId)
       .flatMap(_ => repository.deleteEntity(claimId))
 
-  def listClaims(userId: String, claimSubmitted: Boolean): Future[Seq[ClaimInfo]] =
+  def listClaims(userId: String): Future[Seq[ClaimInfo]] =
     repository.collection
       .withDocumentClass[ClaimsRepository.CacheItemWithClaimInfo]
-      .find(BsonDocument(ClaimsRepository.userIdPath -> userId, ClaimsRepository.claimSubmittedPath -> claimSubmitted))
+      .find(BsonDocument(ClaimsRepository.userIdPath -> userId, ClaimsRepository.claimSubmittedPath -> false))
       .projection(
         fields(
           include(

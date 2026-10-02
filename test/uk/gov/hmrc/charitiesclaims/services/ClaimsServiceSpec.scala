@@ -29,7 +29,6 @@ import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
 import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
 import uk.gov.hmrc.charitiesclaims.util.TestClaimsService
 import uk.gov.hmrc.http.HeaderCarrier
-
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
@@ -80,13 +79,16 @@ class ClaimsServiceSpec
           given HeaderCarrier = HeaderCarrier()
 
           info("create and store a submitted claim for the first user")
-          val claim = claims.head.copy(claimId = UUID.randomUUID().toString, "UUID.randomUUID().toString")
+          val claim = claims.head.copy(claimId = UUID.randomUUID().toString, UUID.randomUUID().toString)
 
           claim.claimSubmitted shouldBe true
 
-          claimsService.putClaim(claim)
+          claimsService.putClaim(claim).futureValue
 
           info("check the claim can be retrieved and listed")
+          whenReady(claimsService.getClaim(claim.claimId)) { result =>
+            result.map(_._1) shouldBe Some(claim)
+          }
           claimsService.getClaim(claim.claimId).futureValue.map(_._1) shouldBe Some(claim)
 
           claimsService.listClaims(claim.userId).futureValue shouldBe Seq.empty
@@ -98,7 +100,7 @@ class ClaimsServiceSpec
           info("add a new submitted claim for the second user")
           val claim2 = claim.copy(userId = UUID.randomUUID().toString)
 
-          claimsService.putClaim(claim2)
+          claimsService.putClaim(claim2).futureValue
 
           info("check the second claim cannot be retrieved since it is submitted")
           claimsService.listClaims(claim2.userId).futureValue shouldBe Seq.empty
@@ -115,7 +117,7 @@ class ClaimsServiceSpec
                 )
             )
           )
-          claimsService.putClaim(claim3)
+          claimsService.putClaim(claim3).futureValue
 
           info("check both claims cannot be retrieved since it is submitted")
           claimsService.listClaims(claim3.userId).futureValue shouldBe Seq.empty
@@ -130,7 +132,7 @@ class ClaimsServiceSpec
             hmrcCharitiesReference = claim4.claimData.repaymentClaimDetails.hmrcCharitiesReference,
             nameOfCharity = claim4.claimData.repaymentClaimDetails.nameOfCharity
           )
-          claimsService.putClaim(claim4)
+          claimsService.putClaim(claim4).futureValue
 
           info("check claims returned are only the submitted or unsubmitted claim")
           claimsService.listClaims(claim4.userId).futureValue shouldBe Seq(claimInfo4)
@@ -145,13 +147,13 @@ class ClaimsServiceSpec
 
           info("delete the claims")
 
-          claimsService.deleteClaim(claim.claimId)
+          claimsService.deleteClaim(claim.claimId).futureValue
           claimsService.getClaim(claim.claimId).futureValue shouldBe None
 
-          claimsService.deleteClaim(claim3.claimId)
+          claimsService.deleteClaim(claim3.claimId).futureValue
           claimsService.getClaim(claim3.claimId).futureValue shouldBe None
 
-          claimsService.deleteClaim(claim4.claimId)
+          claimsService.deleteClaim(claim4.claimId).futureValue
           claimsService.getClaim(claim4.claimId).futureValue shouldBe None
         }
       }

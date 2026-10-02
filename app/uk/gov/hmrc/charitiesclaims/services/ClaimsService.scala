@@ -85,7 +85,7 @@ class ClaimsServiceImpl @Inject() (
   def listClaims(userId: String): Future[Seq[ClaimInfo]] =
     repository.collection
       .withDocumentClass[ClaimsRepository.CacheItemWithClaimInfo]
-      .find(BsonDocument(ClaimsRepository.userIdPath -> userId, ClaimsRepository.claimSubmittedPath -> "false"))
+      .find(BsonDocument(ClaimsRepository.userIdPath -> userId, ClaimsRepository.claimSubmittedPath -> false))
       .projection(
         fields(
           include(

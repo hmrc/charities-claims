@@ -37,19 +37,19 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val request = testRequest("GET", "/claims?claimSubmitted=true")
+      val request = testRequest("GET", "/claims")
 
-      val result = controller.getClaims(claimSubmitted = true)(request)
+      val result = controller.getClaims(request)
       status(result) shouldBe Status.OK
 
       val json       = contentAsJson(result).as[JsObject]
       val claimsList = (json \ "claimsList").as[JsArray]
 
-      (json \ "claimsCount").as[Int] shouldBe 1
-      claimsList.value.size          shouldBe 1
+      (json \ "claimsCount").as[Int] shouldBe 3
+      claimsList.value.size          shouldBe 3
 
       val firstClaim = claimsList.value.head.as[JsObject]
-      (firstClaim \ "claimId").as[String] shouldBe "test-claim-submitted"
+      (firstClaim \ "claimId").as[String] shouldBe "test-claim-unsubmitted-1"
 
       firstClaim.keys shouldBe Set("claimId")
     }
@@ -58,19 +58,19 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val request = testRequest("GET", "/claims?claimSubmitted=true")
+      val request = testRequest("GET", "/claims")
 
-      val result = controller.getClaims(claimSubmitted = true)(request)
+      val result = controller.getClaims(request)
       status(result) shouldBe Status.OK
 
       val json       = contentAsJson(result).as[JsObject]
       val claimsList = (json \ "claimsList").as[JsArray]
 
-      (json \ "claimsCount").as[Int] shouldBe 1
-      claimsList.value.size          shouldBe 1
+      (json \ "claimsCount").as[Int] shouldBe 3
+      claimsList.value.size          shouldBe 3
 
       val firstClaim = claimsList.value.head.as[JsObject]
-      (firstClaim \ "claimId").as[String] shouldBe "test-claim-submitted-2"
+      (firstClaim \ "claimId").as[String] shouldBe "test-claim-unsubmitted-1-2"
 
       firstClaim.keys shouldBe Set("claimId", "hmrcCharitiesReference", "nameOfCharity", "lastVisitedAt")
     }
@@ -79,9 +79,9 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val request = testRequest("GET", "/claims?claimSubmitted=false")
+      val request = testRequest("GET", "/claims")
 
-      val result = controller.getClaims(claimSubmitted = false)(request)
+      val result = controller.getClaims(request)
       status(result) shouldBe Status.OK
 
       val json       = contentAsJson(result).as[JsObject]
@@ -101,9 +101,9 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, claimsService)
 
-      val request = testRequest("GET", "/claims?claimSubmitted=false")
+      val request = testRequest("GET", "/claims")
 
-      val result = controller.getClaims(claimSubmitted = false)(request)
+      val result = controller.getClaims(request)
       status(result) shouldBe Status.OK
 
       val json       = contentAsJson(result).as[JsObject]
@@ -126,16 +126,16 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
       val mockClaimsService: ClaimsService = mock[ClaimsService]
 
       (mockClaimsService
-        .listClaims(_: String, _: Boolean))
-        .expects(*, *)
+        .listClaims(_: String))
+        .expects(*)
         .anyNumberOfTimes()
         .returning(Future.failed(new RuntimeException("Error message")))
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
-      val request = testRequest("GET", "/claims?claimSubmitted=true")
+      val request = testRequest("GET", "/claims")
 
-      val result = controller.getClaims(claimSubmitted = true)(request)
+      val result = controller.getClaims(request)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       val errorResponse = contentAsJson(result).as[JsObject]
       errorResponse.value.get("errorMessage") shouldBe Some(JsString("Error message"))

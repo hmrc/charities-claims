@@ -37,10 +37,10 @@ class GetClaimsController @Inject() (
 )(using ExecutionContext)
     extends BaseController {
 
-  def getClaims(claimSubmitted: Boolean): Action[String] =
+  def getClaims: Action[String] =
     whenAuthorised {
       claimsService
-        .listClaims(currentUserId, claimSubmitted)
+        .listClaims(currentUserId)
         .map { claims =>
           val claimsList = currentUserGroup match {
             case AffinityGroup.Agent =>

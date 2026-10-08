@@ -46,7 +46,7 @@ class SaveClaimController @Inject() (
           .match {
             case AffinityGroup.Agent =>
               claimsService
-                .listClaims(currentUserId, claimSubmitted = false)
+                .listClaims(currentUserId)
                 .flatMap {
                   case claims if claims.size < appConfig.agentUnsubmittedClaimLimit =>
                     saveClaimRequest.hmrcCharitiesReference
@@ -82,7 +82,7 @@ class SaveClaimController @Inject() (
 
             case _ =>
               claimsService
-                .listClaims(currentUserId, claimSubmitted = false)
+                .listClaims(currentUserId)
                 .flatMap {
                   case claims if claims.size == 0 =>
                     saveClaim(saveClaimRequest)

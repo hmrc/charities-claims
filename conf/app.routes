@@ -1,19 +1,19 @@
 # microservice specific routes
 
-GET         /claims                 uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaims(claimSubmitted: Boolean ?= false)
-POST        /claims                 uk.gov.hmrc.charitiesclaims.controllers.SaveClaimController.saveClaim
+GET      /claims                                            uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaims(claimSubmitted: Boolean ?= false)
+POST     /claims                                            uk.gov.hmrc.charitiesclaims.controllers.SaveClaimController.saveClaim
 
-GET         /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaim(claimId: String)
-DELETE      /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.DeleteClaimController.deleteClaim(claimId: String)
-PUT         /claims/:claimId        uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateClaim(claimId: String)
-PATCH       /claims/:claimId/last-visited-at  uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateLastVisitedAt(claimId: String)
-GET         /claims/charities/:charityReference/unsubmitted        uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.hasUnsubmittedClaim(charityReference: String)
+GET      /claims/:claimId                                   uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.getClaim(claimId: String)
+DELETE   /claims/:claimId                                   uk.gov.hmrc.charitiesclaims.controllers.DeleteClaimController.deleteClaim(claimId: String)
+PUT      /claims/:claimId                                   uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateClaim(claimId: String)
+PATCH    /claims/:claimId/last-visited-at                   uk.gov.hmrc.charitiesclaims.controllers.UpdateClaimController.updateLastVisitedAt(claimId: String)
+GET      /claims/charities/:charityReference/unsubmitted    uk.gov.hmrc.charitiesclaims.controllers.GetClaimsController.hasUnsubmittedClaim(charityReference: String)
 
-GET         /charities/:charityReference/unregulated-donations uk.gov.hmrc.charitiesclaims.controllers.UnregulatedDonationsController.getTotalUnregulatedDonations(charityReference: String)
+GET      /charities/:charityReference/unregulated-donations uk.gov.hmrc.charitiesclaims.controllers.UnregulatedDonationsController.getTotalUnregulatedDonations(charityReference: String)
 
-POST        /chris                   uk.gov.hmrc.charitiesclaims.controllers.ChRISSubmissionController.submitClaim
+POST     /chris                                             uk.gov.hmrc.charitiesclaims.controllers.ChRISSubmissionController.submitClaim
 
-GET        /charities/agents/:agentRef                    uk.gov.hmrc.charitiesclaims.controllers.GetRdsDatacacheController.getAgentName(agentRef: String)
-GET        /charities/organisations/:charityRef           uk.gov.hmrc.charitiesclaims.controllers.GetRdsDatacacheController.getOrganisationName(charityRef: String)
+GET      /charities/agents/:agentRef                        uk.gov.hmrc.charitiesclaims.controllers.GetRdsDatacacheController.getAgentName(agentRef: String)
+GET      /charities/organisations/:charityRef               uk.gov.hmrc.charitiesclaims.controllers.GetRdsDatacacheController.getOrganisationName(charityRef: String)
 
-GET        /submission-summary/:claimId           uk.gov.hmrc.charitiesclaims.controllers.GetSubmissionSummaryController.getSummary(claimId: String)
+GET      /submission-summary/:claimId                       uk.gov.hmrc.charitiesclaims.controllers.GetSubmissionSummaryController.getSummary(claimId: String)

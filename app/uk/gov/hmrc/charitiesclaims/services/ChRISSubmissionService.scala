@@ -253,8 +253,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     AoNID(
       Overseas =
         if claim.claimData.agentUserOrganisationDetails
-            .map(_.doYouHaveAgentUKAddress)
-            .contains(false)
+            .forall(!_.doYouHaveAgentUKAddress)
         then Some(true)
         else None,
       Postcode = claim.claimData.agentUserOrganisationDetails

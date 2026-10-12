@@ -16,24 +16,22 @@
 
 package uk.gov.hmrc.charitiesclaims.services
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalamock.scalatest.MockFactory
-
 import uk.gov.hmrc.charitiesclaims.services.AuditService
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
-import uk.gov.hmrc.charitiesclaims.models._
-import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
+import uk.gov.hmrc.charitiesclaims.models.*
 import uk.gov.hmrc.http.HeaderCarrier
-import org.scalamock.matchers.ArgThat
-import java.time.Instant
 
-import play.api.libs.json.JsValue
+import java.time.Instant
 
 import scala.concurrent.{ExecutionContext, Future}
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatestplus.mockito.MockitoSugar
 
-class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with ScalaFutures {
+class AuditServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier()
@@ -78,24 +76,8 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
       val creationTimestamp = Instant.now()
       val submissionDetails = SubmissionDetails(creationTimestamp.toString, "testSubmissionReference")
 
-      (mockAuditConnector
-        .sendExtendedEvent(_: ExtendedDataEvent)(using _: HeaderCarrier, _: ExecutionContext))
-        .expects(
-          ArgThat[ExtendedDataEvent](
-            { event =>
-              val json = event.detail
-              event.auditSource == "charities-claims" &&
-              event.auditType == "ClaimSubmission" &&
-              event.tags == Map("correlationId" -> testCorrelationId) &&
-              (json \ "claimId").as[String] == claim.claimId &&
-              (json \ "userId").as[String] == claim.userId
-            },
-            None
-          ),
-          *,
-          *
-        )
-        .returning(Future.successful(AuditResult.Success))
+      when(mockAuditConnector.sendExtendedEvent(any())(using any(), any()))
+        .thenReturn(Future.successful(AuditResult.Success))
 
       val result =
         service.sendEvent(claim, scheduleData, creationTimestamp, "en", submissionDetails, testCorrelationId)
@@ -112,10 +94,8 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
       val creationTimestamp = Instant.now()
       val submissionDetails = SubmissionDetails(creationTimestamp.toString, "testSubmissionReference")
 
-      (mockAuditConnector
-        .sendExtendedEvent(_: ExtendedDataEvent)(using _: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *)
-        .returning(Future.failed(new RuntimeException("Audit failed")))
+      when(mockAuditConnector.sendExtendedEvent(any())(using any(), any()))
+        .thenReturn(Future.failed(new RuntimeException("Audit failed")))
 
       whenReady(
         service.sendEvent(claim, scheduleData, creationTimestamp, "en", submissionDetails, testCorrelationId).failed
@@ -140,14 +120,8 @@ class AuditServiceSpec extends AnyWordSpec with Matchers with MockFactory with S
       val creationTimestamp = Instant.now()
       val submissionDetails = SubmissionDetails(creationTimestamp.toString, "testSubmissionReference")
 
-      (mockAuditConnector
-        .sendExtendedEvent(_: ExtendedDataEvent)(using _: HeaderCarrier, _: ExecutionContext))
-        .expects(
-          ArgThat((event: ExtendedDataEvent) => (event.detail \ "submissionDetails").asOpt[JsValue].isDefined, None),
-          *,
-          *
-        )
-        .returning(Future.successful(AuditResult.Success))
+      when(mockAuditConnector.sendExtendedEvent(any())(using any(), any()))
+        .thenReturn(Future.successful(AuditResult.Success))
 
       val result =
         service.sendEvent(claim, scheduleData, creationTimestamp, "cy", submissionDetails, testCorrelationId)

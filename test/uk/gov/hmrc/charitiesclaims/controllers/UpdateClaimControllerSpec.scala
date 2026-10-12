@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
-import org.scalamock.matchers.ArgCapture.CaptureOne
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.http.Status
 import play.api.libs.json.{Format, JsObject, JsString, Json, Writes}
 import play.api.test.Helpers
@@ -29,7 +31,6 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
-import uk.gov.hmrc.http.HeaderCarrier
 
 class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
 
@@ -163,23 +164,13 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         )
       )
 
-      val captured = CaptureOne[Claim]()
+      val captor = ArgumentCaptor.forClass(classOf[Claim])
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(Future.successful(Some((existingClaim, Instant.now()))))
+      when(mockClaimsService.getClaim(any())).thenReturn(Future.successful(Some((existingClaim, Instant.now()))))
 
-      (mockClaimsService
-        .putClaim(_: Claim)(using _: HeaderCarrier))
-        .expects(capture(captured), *)
-        .returning(Future.successful(()))
+      when(mockClaimsService.putClaim(captor.capture())(using any())).thenReturn(Future.successful(()))
 
-      (mockClaimsValidationConnector
-        .deleteUpload(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .repeat(4)
-        .returning(Future.successful(true))
+      when(mockClaimsValidationConnector.deleteUpload(any(), any())(using any())).thenReturn(Future.successful(true))
 
       val controller =
         new UpdateClaimController(
@@ -194,7 +185,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val response = contentAsJson(result).as[UpdateClaimResponse]
       response.success shouldBe true
 
-      captured.value shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
+      captor.getValue shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
     }
 
     "return 200 when claim is updated for org details and all file upload references are updated" in new AuthorisedOrganisationFixture {
@@ -212,23 +203,13 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         )
       )
 
-      val captured = CaptureOne[Claim]()
+      val captor = ArgumentCaptor.forClass(classOf[Claim])
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(Future.successful(Some((existingClaim, Instant.now()))))
+      when(mockClaimsService.getClaim(any())).thenReturn(Future.successful(Some((existingClaim, Instant.now()))))
 
-      (mockClaimsService
-        .putClaim(_: Claim)(using _: HeaderCarrier))
-        .expects(capture(captured), *)
-        .returning(Future.successful(()))
+      when(mockClaimsService.putClaim(captor.capture())(using any())).thenReturn(Future.successful(()))
 
-      (mockClaimsValidationConnector
-        .deleteUpload(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .repeat(4)
-        .returning(Future.successful(true))
+      when(mockClaimsValidationConnector.deleteUpload(any(), any())(using any())).thenReturn(Future.successful(true))
 
       val controller =
         new UpdateClaimController(
@@ -243,7 +224,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val response = contentAsJson(result).as[UpdateClaimResponse]
       response.success shouldBe true
 
-      captured.value shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
+      captor.getValue shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
     }
 
     "return 200 if claim updated for giftAidSmallDonationsSchemeDonationDetails" in new AuthorisedOrganisationFixture {
@@ -261,23 +242,13 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         )
       )
 
-      val captured = CaptureOne[Claim]()
+      val captor = ArgumentCaptor.forClass(classOf[Claim])
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(Future.successful(Some((existingClaim, Instant.now()))))
+      when(mockClaimsService.getClaim(any())).thenReturn(Future.successful(Some((existingClaim, Instant.now()))))
 
-      (mockClaimsService
-        .putClaim(_: Claim)(using _: HeaderCarrier))
-        .expects(capture(captured), *)
-        .returning(Future.successful(()))
+      when(mockClaimsService.putClaim(captor.capture())(using any())).thenReturn(Future.successful(()))
 
-      (mockClaimsValidationConnector
-        .deleteUpload(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .repeat(4)
-        .returning(Future.successful(true))
+      when(mockClaimsValidationConnector.deleteUpload(any(), any())(using any())).thenReturn(Future.successful(true))
 
       val controller =
         new UpdateClaimController(
@@ -292,7 +263,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val response = contentAsJson(result).as[UpdateClaimResponse]
       response.success shouldBe true
 
-      captured.value shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
+      captor.getValue shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
     }
 
     "return 404 when claim is not found" in new AuthorisedOrganisationFixture {
@@ -313,10 +284,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val mockClaimsService: ClaimsService                         = mock[ClaimsService]
       val mockClaimsValidationConnector: ClaimsValidationConnector = mock[ClaimsValidationConnector]
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(Future.successful(Some((existingClaim.copy(claimSubmitted = true), Instant.now()))))
+      when(mockClaimsService.getClaim(any()))
+        .thenReturn(Future.successful(Some((existingClaim.copy(claimSubmitted = true), Instant.now()))))
 
       val controller =
         new UpdateClaimController(
@@ -337,10 +306,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val mockClaimsService: ClaimsService                         = mock[ClaimsService]
       val mockClaimsValidationConnector: ClaimsValidationConnector = mock[ClaimsValidationConnector]
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(Future.successful(Some((existingClaim.copy(lastUpdatedReference = "foobar"), Instant.now()))))
+      when(mockClaimsService.getClaim(any()))
+        .thenReturn(Future.successful(Some((existingClaim.copy(lastUpdatedReference = "foobar"), Instant.now()))))
 
       val controller =
         new UpdateClaimController(
@@ -365,25 +332,15 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val mockClaimsValidationConnector: ClaimsValidationConnector = mock[ClaimsValidationConnector]
       val originalReference                                        = "0123456789"
 
-      val captured = CaptureOne[Claim]()
+      val captor = ArgumentCaptor.forClass(classOf[Claim])
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(
-          Future.successful(Some((existingClaim.copy(lastUpdatedReference = originalReference), Instant.now())))
-        )
+      when(mockClaimsService.getClaim(any())).thenReturn(
+        Future.successful(Some((existingClaim.copy(lastUpdatedReference = originalReference), Instant.now())))
+      )
 
-      (mockClaimsService
-        .putClaim(_: Claim)(using _: HeaderCarrier))
-        .expects(capture(captured), *)
-        .returning(Future.successful(()))
+      when(mockClaimsService.putClaim(captor.capture())(using any())).thenReturn(Future.successful(()))
 
-      (mockClaimsValidationConnector
-        .deleteUpload(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .repeat(4)
-        .returning(Future.successful(true))
+      when(mockClaimsValidationConnector.deleteUpload(any(), any())(using any())).thenReturn(Future.successful(true))
 
       val controller =
         new UpdateClaimController(
@@ -397,8 +354,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       status(result) shouldBe Status.OK
 
       val response = contentAsJson(result).as[UpdateClaimResponse]
-      response.lastUpdatedReference         should not be originalReference
-      captured.value.lastUpdatedReference shouldBe response.lastUpdatedReference
+      response.lastUpdatedReference          should not be originalReference
+      captor.getValue.lastUpdatedReference shouldBe response.lastUpdatedReference
     }
 
     "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {
@@ -406,15 +363,10 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val mockClaimsService: ClaimsService                         = mock[ClaimsService]
       val mockClaimsValidationConnector: ClaimsValidationConnector = mock[ClaimsValidationConnector]
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(Future.successful(Some((existingClaim, Instant.now()))))
+      when(mockClaimsService.getClaim(any())).thenReturn(Future.successful(Some((existingClaim, Instant.now()))))
 
-      (mockClaimsService
-        .putClaim(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.failed(new RuntimeException("Error message")))
+      when(mockClaimsService.putClaim(any())(using any()))
+        .thenReturn(Future.failed(new RuntimeException("Error message")))
 
       val controller =
         new UpdateClaimController(
@@ -484,23 +436,14 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         )
       )
 
-      val captured = CaptureOne[Claim]()
+      val captor = ArgumentCaptor.forClass(classOf[Claim])
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(Future.successful(Some((existingClaimWithOrgDetails, Instant.now()))))
+      when(mockClaimsService.getClaim(any()))
+        .thenReturn(Future.successful(Some((existingClaimWithOrgDetails, Instant.now()))))
 
-      (mockClaimsService
-        .putClaim(_: Claim)(using _: HeaderCarrier))
-        .expects(capture(captured), *)
-        .returning(Future.successful(()))
+      when(mockClaimsService.putClaim(captor.capture())(using any())).thenReturn(Future.successful(()))
 
-      (mockClaimsValidationConnector
-        .deleteUpload(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .repeat(4)
-        .returning(Future.successful(true))
+      when(mockClaimsValidationConnector.deleteUpload(any(), any())(using any())).thenReturn(Future.successful(true))
 
       val controller =
         new UpdateClaimController(
@@ -513,7 +456,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
       status(result) shouldBe Status.OK
 
-      captured.value.claimData.organisationDetails shouldBe None
+      captor.getValue.claimData.organisationDetails shouldBe None
     }
 
     "remove giftAidSmallDonationsSchemeDonationDetails when omitted from PUT request" in new AuthorisedOrganisationFixture {
@@ -526,23 +469,14 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         )
       )
 
-      val captured = CaptureOne[Claim]()
+      val captor = ArgumentCaptor.forClass(classOf[Claim])
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(Future.successful(Some((existingClaimWithGasds, Instant.now()))))
+      when(mockClaimsService.getClaim(any()))
+        .thenReturn(Future.successful(Some((existingClaimWithGasds, Instant.now()))))
 
-      (mockClaimsService
-        .putClaim(_: Claim)(using _: HeaderCarrier))
-        .expects(capture(captured), *)
-        .returning(Future.successful(()))
+      when(mockClaimsService.putClaim(captor.capture())(using any())).thenReturn(Future.successful(()))
 
-      (mockClaimsValidationConnector
-        .deleteUpload(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .repeat(4)
-        .returning(Future.successful(true))
+      when(mockClaimsValidationConnector.deleteUpload(any(), any())(using any())).thenReturn(Future.successful(true))
 
       val controller =
         new UpdateClaimController(
@@ -555,7 +489,7 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
       status(result) shouldBe Status.OK
 
-      captured.value.claimData.giftAidSmallDonationsSchemeDonationDetails shouldBe None
+      captor.getValue.claimData.giftAidSmallDonationsSchemeDonationDetails shouldBe None
     }
 
     "remove includedAnyAdjustmentsInClaimPrompt and understandFalseStatements when omitted from PUT request" in new AuthorisedOrganisationFixture {
@@ -569,23 +503,14 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
         )
       )
 
-      val captured = CaptureOne[Claim]()
+      val captor = ArgumentCaptor.forClass(classOf[Claim])
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .returning(Future.successful(Some((existingClaimWithDeclaration, Instant.now()))))
+      when(mockClaimsService.getClaim(any()))
+        .thenReturn(Future.successful(Some((existingClaimWithDeclaration, Instant.now()))))
 
-      (mockClaimsService
-        .putClaim(_: Claim)(using _: HeaderCarrier))
-        .expects(capture(captured), *)
-        .returning(Future.successful(()))
+      when(mockClaimsService.putClaim(captor.capture())(using any())).thenReturn(Future.successful(()))
 
-      (mockClaimsValidationConnector
-        .deleteUpload(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .repeat(4)
-        .returning(Future.successful(true))
+      when(mockClaimsValidationConnector.deleteUpload(any(), any())(using any())).thenReturn(Future.successful(true))
 
       val controller =
         new UpdateClaimController(
@@ -598,8 +523,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       private val result = controller.updateClaim(claimId)(requestRepaymentClaimDetails)
       status(result) shouldBe Status.OK
 
-      captured.value.claimData.includedAnyAdjustmentsInClaimPrompt shouldBe None
-      captured.value.claimData.understandFalseStatements           shouldBe None
+      captor.getValue.claimData.includedAnyAdjustmentsInClaimPrompt shouldBe None
+      captor.getValue.claimData.understandFalseStatements           shouldBe None
     }
   }
 }

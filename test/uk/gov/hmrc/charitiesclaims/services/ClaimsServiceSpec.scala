@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.charitiesclaims.services
 
-import org.scalamock.scalatest.MockFactory
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.bind
@@ -39,21 +41,13 @@ class ClaimsServiceSpec
     with ScalaFutures
     with IntegrationPatience
     with GuiceOneServerPerSuite
-    with MockFactory {
+    with MockitoSugar {
 
   val mockClaimsValidationConnector: ClaimsValidationConnector = mock[ClaimsValidationConnector]
 
-  (mockClaimsValidationConnector
-    .deleteClaim(_: String)(using _: HeaderCarrier))
-    .expects(*, *)
-    .anyNumberOfTimes()
-    .returning(Future.successful(()))
+  when(mockClaimsValidationConnector.deleteClaim(any())(using any())).thenReturn(Future.successful(()))
 
-  (mockClaimsValidationConnector
-    .touchTtl(_: String)(using _: HeaderCarrier))
-    .expects(*, *)
-    .atLeastOnce()
-    .returning(Future.unit)
+  when(mockClaimsValidationConnector.touchTtl(any())(using any())).thenReturn(Future.unit)
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()

@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.charitiesclaims.services
 
+import org.scalactic.Prettifier.default
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, FormpProxyConnector}
 import uk.gov.hmrc.charitiesclaims.models.*
@@ -272,17 +275,21 @@ class UnregulatedDonationsServiceSpec extends BaseSpec {
           donations = Seq.empty
         )
 
-        (claimsValidationConnector
-          .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-          .expects("qualifying-claim-id", giftAidRef, *)
-          .returning(Future.successful(Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))))
+        when(claimsValidationConnector.getUploadResult(eqTo("qualifying-claim-id"), eqTo(giftAidRef))(using any()))
+          .thenReturn(Future.successful(Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))))
 
         val expectedClaimIdInt = UnregulatedDonationsService.claimIdToInt("qualifying-claim-id")
 
-        (formpProxyConnector
-          .saveUnregulatedDonation(_: String, _: Int, _: BigDecimal)(using _: HeaderCarrier))
-          .expects("ORG-CHARITY-REF-123", expectedClaimIdInt, BigDecimal(5000), *)
-          .returning(Future.successful(()))
+        when(
+          formpProxyConnector.saveUnregulatedDonation(
+            eqTo("ORG-CHARITY-REF-123"),
+            eqTo(expectedClaimIdInt),
+            eqTo(BigDecimal(5000))
+          )(using
+            any()
+          )
+        )
+          .thenReturn(Future.successful(()))
 
         val result = service.recordUnregulatedDonation(claim, organisationUser)
         result.futureValue shouldBe ()
@@ -308,17 +315,13 @@ class UnregulatedDonationsServiceSpec extends BaseSpec {
           donations = Seq.empty
         )
 
-        (claimsValidationConnector
-          .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-          .expects("agent-claim-id", giftAidRef, *)
-          .returning(Future.successful(Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))))
+        when(claimsValidationConnector.getUploadResult("agent-claim-id", giftAidRef))
+          .thenReturn(Future.successful(Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))))
 
         val expectedClaimIdInt = UnregulatedDonationsService.claimIdToInt("agent-claim-id")
 
-        (formpProxyConnector
-          .saveUnregulatedDonation(_: String, _: Int, _: BigDecimal)(using _: HeaderCarrier))
-          .expects("AGENT-CHARITY-REF-789", expectedClaimIdInt, BigDecimal(3000), *)
-          .returning(Future.successful(()))
+        when(formpProxyConnector.saveUnregulatedDonation("AGENT-CHARITY-REF-789", expectedClaimIdInt, BigDecimal(3000)))
+          .thenReturn(Future.successful(()))
 
         val result = service.recordUnregulatedDonation(claim, agentUser)
         result.futureValue shouldBe ()
@@ -359,10 +362,8 @@ class UnregulatedDonationsServiceSpec extends BaseSpec {
         // have no schedule refs, so no validation connector calls needed
         val expectedClaimIdInt = UnregulatedDonationsService.claimIdToInt("failing-claim-id")
 
-        (formpProxyConnector
-          .saveUnregulatedDonation(_: String, _: Int, _: BigDecimal)(using _: HeaderCarrier))
-          .expects("ORG-CHARITY-REF-123", expectedClaimIdInt, BigDecimal(0), *)
-          .returning(Future.failed(Exception("FormP Proxy error")))
+        when(formpProxyConnector.saveUnregulatedDonation("ORG-CHARITY-REF-123", expectedClaimIdInt, BigDecimal(0)))
+          .thenReturn(Future.failed(Exception("FormP Proxy error")))
 
         val result = service.recordUnregulatedDonation(claim, organisationUser)
         val ex     = result.failed.futureValue
@@ -386,10 +387,8 @@ class UnregulatedDonationsServiceSpec extends BaseSpec {
 
         val expectedClaimIdInt = UnregulatedDonationsService.claimIdToInt("no-schedules-claim")
 
-        (formpProxyConnector
-          .saveUnregulatedDonation(_: String, _: Int, _: BigDecimal)(using _: HeaderCarrier))
-          .expects("ORG-CHARITY-REF-123", expectedClaimIdInt, BigDecimal(0), *)
-          .returning(Future.successful(()))
+        when(formpProxyConnector.saveUnregulatedDonation("ORG-CHARITY-REF-123", expectedClaimIdInt, BigDecimal(0)))
+          .thenReturn(Future.successful(()))
 
         val result = service.recordUnregulatedDonation(claim, organisationUser)
         result.futureValue shouldBe ()

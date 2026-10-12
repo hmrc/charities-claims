@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
 import play.api.test.Helpers
 import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.connectors.RdsDatacacheProxyConnector
-import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.http.Status
@@ -32,11 +34,8 @@ class GetRdsDatacacheControllerSpec extends ControllerSpec {
     "return 200 when agent name is found" in new AuthorisedOrganisationFixture {
 
       val rdsDatacacheProxyConnector = mock[RdsDatacacheProxyConnector]
-      (rdsDatacacheProxyConnector
-        .getAgentName(_: String)(using _: HeaderCarrier))
-        .expects("123", *)
-        .anyNumberOfTimes()
-        .returns(Future.successful(Some("123")))
+
+      when(rdsDatacacheProxyConnector.getAgentName(eqTo("123"))(using any())).thenReturn(Future.successful(Some("123")))
 
       val controller =
         new GetRdsDatacacheController(Helpers.stubControllerComponents(), authorisedAction, rdsDatacacheProxyConnector)
@@ -50,11 +49,8 @@ class GetRdsDatacacheControllerSpec extends ControllerSpec {
 
     "return 404 when no agent name found for agent ref" in new AuthorisedOrganisationFixture {
       val rdsDatacacheProxyConnector = mock[RdsDatacacheProxyConnector]
-      (rdsDatacacheProxyConnector
-        .getAgentName(_: String)(using _: HeaderCarrier))
-        .expects("123", *)
-        .anyNumberOfTimes()
-        .returns(Future.successful(None))
+
+      when(rdsDatacacheProxyConnector.getAgentName(eqTo("123"))(using any())).thenReturn(Future.successful(None))
 
       val controller =
         new GetRdsDatacacheController(Helpers.stubControllerComponents(), authorisedAction, rdsDatacacheProxyConnector)
@@ -71,11 +67,9 @@ class GetRdsDatacacheControllerSpec extends ControllerSpec {
 
     "return 500 when the rds cache proxy connector returns an error" in new AuthorisedOrganisationFixture {
       val rdsDatacacheProxyConnector = mock[RdsDatacacheProxyConnector]
-      (rdsDatacacheProxyConnector
-        .getAgentName(_: String)(using _: HeaderCarrier))
-        .expects("1234567890", *)
-        .anyNumberOfTimes()
-        .returns(Future.failed(new Exception("Error message")))
+
+      when(rdsDatacacheProxyConnector.getAgentName(eqTo("1234567890"))(using any()))
+        .thenReturn(Future.failed(new Exception("Error message")))
 
       val controller =
         new GetRdsDatacacheController(Helpers.stubControllerComponents(), authorisedAction, rdsDatacacheProxyConnector)
@@ -94,11 +88,9 @@ class GetRdsDatacacheControllerSpec extends ControllerSpec {
     "return 200 when Organisation name is found for a charity reference" in new AuthorisedOrganisationFixture {
 
       val rdsDatacacheProxyConnector = mock[RdsDatacacheProxyConnector]
-      (rdsDatacacheProxyConnector
-        .getOrganisationName(_: String)(using _: HeaderCarrier))
-        .expects("123", *)
-        .anyNumberOfTimes()
-        .returns(Future.successful(Some("123")))
+
+      when(rdsDatacacheProxyConnector.getOrganisationName(eqTo("123"))(using any()))
+        .thenReturn(Future.successful(Some("123")))
 
       val controller =
         new GetRdsDatacacheController(Helpers.stubControllerComponents(), authorisedAction, rdsDatacacheProxyConnector)
@@ -112,11 +104,8 @@ class GetRdsDatacacheControllerSpec extends ControllerSpec {
 
     "return 404 when no organisation name found for charity ref" in new AuthorisedOrganisationFixture {
       val rdsDatacacheProxyConnector = mock[RdsDatacacheProxyConnector]
-      (rdsDatacacheProxyConnector
-        .getOrganisationName(_: String)(using _: HeaderCarrier))
-        .expects("123", *)
-        .anyNumberOfTimes()
-        .returns(Future.successful(None))
+
+      when(rdsDatacacheProxyConnector.getOrganisationName(eqTo("123"))(using any())).thenReturn(Future.successful(None))
 
       val controller =
         new GetRdsDatacacheController(Helpers.stubControllerComponents(), authorisedAction, rdsDatacacheProxyConnector)
@@ -133,11 +122,9 @@ class GetRdsDatacacheControllerSpec extends ControllerSpec {
 
     "return 500 when the rds cache proxy connector returns an error" in new AuthorisedOrganisationFixture {
       val rdsDatacacheProxyConnector = mock[RdsDatacacheProxyConnector]
-      (rdsDatacacheProxyConnector
-        .getOrganisationName(_: String)(using _: HeaderCarrier))
-        .expects("1234567890", *)
-        .anyNumberOfTimes()
-        .returns(Future.failed(new Exception("Error message")))
+
+      when(rdsDatacacheProxyConnector.getOrganisationName(eqTo("1234567890"))(using any()))
+        .thenReturn(Future.failed(new Exception("Error message")))
 
       val controller =
         new GetRdsDatacacheController(Helpers.stubControllerComponents(), authorisedAction, rdsDatacacheProxyConnector)

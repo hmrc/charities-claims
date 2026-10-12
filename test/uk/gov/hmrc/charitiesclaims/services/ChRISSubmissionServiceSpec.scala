@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.charitiesclaims.services
 
-import org.scalamock.scalatest.MockFactory
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import uk.gov.hmrc.charitiesclaims.models
 import uk.gov.hmrc.auth.core.AffinityGroup
@@ -41,7 +43,7 @@ class ChRISSubmissionServiceSpec
     with ScalaFutures
     with IntegrationPatience
     with GuiceOneServerPerSuite
-    with MockFactory {
+    with MockitoSugar {
 
   case class TestCurrentUser(
     affinityGroup: AffinityGroup,
@@ -109,12 +111,8 @@ class ChRISSubmissionServiceSpec
 
       val currentUser = organisationUser
 
-      (rdsConnectorMock
-        .getOrganisationName(_: String)(using _: HeaderCarrier))
-        .expects(currentUser.enrolmentIdentifierValue, *)
-        .returns(
-          Future.successful(Some(orgName))
-        )
+      when(rdsConnectorMock.getOrganisationName(currentUser.enrolmentIdentifierValue))
+        .thenReturn(Future.successful(Some(orgName)))
 
       val submission = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
@@ -848,10 +846,8 @@ class ChRISSubmissionServiceSpec
       val claimsValidationConnectorMock = mock[ClaimsValidationConnector]
       val service                       = new ChRISSubmissionServiceImpl(rdsConnectorMock, claimsValidationConnectorMock, appConfig)
 
-      (rdsConnectorMock
-        .getAgentName(_: String)(using _: HeaderCarrier))
-        .expects("test-enrolment-identifier-value", *)
-        .returns(Future.successful(Some("Test-Agent-Name")))
+      when(rdsConnectorMock.getAgentName("test-enrolment-identifier-value"))
+        .thenReturn(Future.successful(Some("Test-Agent-Name")))
 
       val claim = models.Claim(
         claimId = "test-claim-id",
@@ -1001,50 +997,34 @@ class ChRISSubmissionServiceSpec
           )
         )
 
-      (claimsValidationConnectorMock
-        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects("test-claim-id", communityBuildingsRef, *)
-        .returns(
+      when(
+        claimsValidationConnectorMock.getUploadResult(eqTo("test-claim-id"), eqTo(communityBuildingsRef))(using any())
+      )
+        .thenReturn(
           Future.successful(
             Some(GetUploadResultValidatedCommunityBuildings(communityBuildingsRef, communityBuildingsData))
           )
         )
 
-      (claimsValidationConnectorMock
-        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects("test-claim-id", connectedCharitiesRef, *)
-        .returns(
+      when(
+        claimsValidationConnectorMock.getUploadResult(eqTo("test-claim-id"), eqTo(connectedCharitiesRef))(using any())
+      )
+        .thenReturn(
           Future.successful(
             Some(GetUploadResultValidatedConnectedCharities(connectedCharitiesRef, connectedCharitiesData))
           )
         )
 
-      (claimsValidationConnectorMock
-        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects("test-claim-id", otherIncomeRef, *)
-        .returns(
-          Future.successful(
-            Some(GetUploadResultValidatedOtherIncome(otherIncomeRef, otherIncomeData))
-          )
-        )
+      when(claimsValidationConnectorMock.getUploadResult(eqTo("test-claim-id"), eqTo(otherIncomeRef))(using any()))
+        .thenReturn(Future.successful(Some(GetUploadResultValidatedOtherIncome(otherIncomeRef, otherIncomeData))))
 
-      (claimsValidationConnectorMock
-        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects("test-claim-id", giftAidRef, *)
-        .returns(
-          Future.successful(
-            Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidData))
-          )
-        )
+      when(claimsValidationConnectorMock.getUploadResult(eqTo("test-claim-id"), eqTo(giftAidRef))(using any()))
+        .thenReturn(Future.successful(Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidData))))
 
       val currentUser = organisationUser
 
-      (rdsConnectorMock
-        .getOrganisationName(_: String)(using _: HeaderCarrier))
-        .expects(currentUser.enrolmentIdentifierValue, *)
-        .returns(
-          Future.successful(Some(orgName))
-        )
+      when(rdsConnectorMock.getOrganisationName(eqTo(currentUser.enrolmentIdentifierValue))(using any()))
+        .thenReturn(Future.successful(Some(orgName)))
 
       val result = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
@@ -1116,23 +1096,13 @@ class ChRISSubmissionServiceSpec
         )
       )
 
-      (claimsValidationConnectorMock
-        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects("test-claim-id", giftAidRef, *)
-        .returns(
-          Future.successful(
-            Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))
-          )
-        )
+      when(claimsValidationConnectorMock.getUploadResult(eqTo("test-claim-id"), eqTo(giftAidRef))(using any()))
+        .thenReturn(Future.successful(Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))))
 
       val currentUser = organisationUser
 
-      (rdsConnectorMock
-        .getOrganisationName(_: String)(using _: HeaderCarrier))
-        .expects(currentUser.enrolmentIdentifierValue, *)
-        .returns(
-          Future.successful(Some(orgName))
-        )
+      when(rdsConnectorMock.getOrganisationName(eqTo(currentUser.enrolmentIdentifierValue))(using any()))
+        .thenReturn(Future.successful(Some(orgName)))
 
       val result = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
@@ -1201,23 +1171,13 @@ class ChRISSubmissionServiceSpec
         )
       )
 
-      (claimsValidationConnectorMock
-        .getUploadResult(_: String, _: FileUploadReference)(using _: HeaderCarrier))
-        .expects("test-claim-id", giftAidRef, *)
-        .returns(
-          Future.successful(
-            Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))
-          )
-        )
+      when(claimsValidationConnectorMock.getUploadResult(eqTo("test-claim-id"), eqTo(giftAidRef))(using any()))
+        .thenReturn(Future.successful(Some(GetUploadResultValidatedGiftAid(giftAidRef, giftAidScheduleData))))
 
       val currentUser = organisationUser
 
-      (rdsConnectorMock
-        .getOrganisationName(_: String)(using _: HeaderCarrier))
-        .expects(currentUser.enrolmentIdentifierValue, *)
-        .returns(
-          Future.successful(Some(orgName))
-        )
+      when(rdsConnectorMock.getOrganisationName(eqTo(currentUser.enrolmentIdentifierValue))(using any()))
+        .thenReturn(Future.successful(Some(orgName)))
 
       val result = service.buildChRISSubmission(claim, currentUser, declarationLanguage).futureValue
 
@@ -2471,7 +2431,7 @@ class ChRISSubmissionServiceSpec
         val gads = result.get.GAD.get
         gads should have size 3
 
-        gads(0).Donor       shouldBe Some(
+        gads.head.Donor       shouldBe Some(
           Donor(
             Ttl = Some("Mr"),
             Fore = Some("John"),
@@ -2481,8 +2441,8 @@ class ChRISSubmissionServiceSpec
             Postcode = Some("AB1 2CD")
           )
         )
-        gads(0).AggDonation shouldBe None
-        gads(0).Total       shouldBe "240.00"
+        gads.head.AggDonation shouldBe None
+        gads.head.Total       shouldBe "240.00"
 
         gads(1).AggDonation shouldBe Some("One off donations")
         gads(1).Donor       shouldBe None

@@ -16,17 +16,16 @@
 
 package uk.gov.hmrc.charitiesclaims.util
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.EnrolmentIdentifier
 import uk.gov.hmrc.charitiesclaims.controllers.actions.DefaultAuthorisedAction
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -62,24 +61,14 @@ trait ControllerSpec extends BaseSpec with TestUsers {
       state = "Activated"
     )
 
-    (mockAuthConnector
-      .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-        _: HeaderCarrier,
-        _: ExecutionContext
-      ))
-      .expects(*, *, *, *)
-      .anyNumberOfTimes()
-      .returning(
-        Future.successful(
-          new ~(
-            new ~(
-              Some(AffinityGroup.Organisation),
-              Enrolments(Set(orgEnrolment))
-            ),
-            Some(Credentials(organisation1, "GovernmentGateway"))
-          )
+    when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+      Future.successful(
+        new ~(
+          new ~(Some(AffinityGroup.Organisation), Enrolments(Set(orgEnrolment))),
+          Some(Credentials(organisation1, "GovernmentGateway"))
         )
       )
+    )
 
     val authorisedAction =
       new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -94,24 +83,14 @@ trait ControllerSpec extends BaseSpec with TestUsers {
       state = "Activated"
     )
 
-    (mockAuthConnector
-      .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-        _: HeaderCarrier,
-        _: ExecutionContext
-      ))
-      .expects(*, *, *, *)
-      .anyNumberOfTimes()
-      .returning(
-        Future.successful(
-          new ~(
-            new ~(
-              Some(AffinityGroup.Agent),
-              Enrolments(Set(agentEnrolment))
-            ),
-            Some(Credentials(agent1, "GovernmentGateway"))
-          )
+    when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+      Future.successful(
+        new ~(
+          new ~(Some(AffinityGroup.Agent), Enrolments(Set(agentEnrolment))),
+          Some(Credentials(agent1, "GovernmentGateway"))
         )
       )
+    )
 
     val authorisedAction =
       new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())

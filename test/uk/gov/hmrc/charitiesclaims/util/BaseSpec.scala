@@ -18,7 +18,6 @@ package uk.gov.hmrc.charitiesclaims.util
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.IntegrationPatience
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.freespec.AnyFreeSpec
@@ -27,10 +26,11 @@ import org.scalatest.time.Millis
 import org.scalatest.time.Span
 import org.scalatest.OptionValues
 import org.scalatest.EitherValues
+import org.scalatestplus.mockito.MockitoSugar
 
 trait BaseSpec
     extends AnyFreeSpec
-    with MockFactory
+    with MockitoSugar
     with Matchers
     with ScalaFutures
     with IntegrationPatience

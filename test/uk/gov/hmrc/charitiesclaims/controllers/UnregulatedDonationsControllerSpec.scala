@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import uk.gov.hmrc.charitiesclaims.util.ControllerSpec
 import play.api.test.Helpers
 import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.connectors.FormpProxyConnector
-import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.http.Status
@@ -32,11 +34,9 @@ class UnregulatedDonationsControllerSpec extends ControllerSpec {
     "return 200 when unregulated donations are found" in new AuthorisedOrganisationFixture {
 
       val formpProxyConnector = mock[FormpProxyConnector]
-      (formpProxyConnector
-        .getTotalUnregulatedDonations(_: String)(using _: HeaderCarrier))
-        .expects("1234567890", *)
-        .anyNumberOfTimes()
-        .returns(Future.successful(Some(100.1)))
+
+      when(formpProxyConnector.getTotalUnregulatedDonations(eqTo("1234567890"))(using any()))
+        .thenReturn(Future.successful(Some(BigDecimal(100.1))))
 
       val controller =
         new UnregulatedDonationsController(Helpers.stubControllerComponents(), authorisedAction, formpProxyConnector)
@@ -50,11 +50,9 @@ class UnregulatedDonationsControllerSpec extends ControllerSpec {
 
     "return 404 when no unregulated donations are found" in new AuthorisedOrganisationFixture {
       val formpProxyConnector = mock[FormpProxyConnector]
-      (formpProxyConnector
-        .getTotalUnregulatedDonations(_: String)(using _: HeaderCarrier))
-        .expects("1234567890", *)
-        .anyNumberOfTimes()
-        .returns(Future.successful(None))
+
+      when(formpProxyConnector.getTotalUnregulatedDonations(eqTo("1234567890"))(using any()))
+        .thenReturn(Future.successful(None))
 
       val controller =
         new UnregulatedDonationsController(Helpers.stubControllerComponents(), authorisedAction, formpProxyConnector)
@@ -71,11 +69,9 @@ class UnregulatedDonationsControllerSpec extends ControllerSpec {
 
     "return 500 when the formp proxy connector returns an error" in new AuthorisedOrganisationFixture {
       val formpProxyConnector = mock[FormpProxyConnector]
-      (formpProxyConnector
-        .getTotalUnregulatedDonations(_: String)(using _: HeaderCarrier))
-        .expects("1234567890", *)
-        .anyNumberOfTimes()
-        .returns(Future.failed(new Exception("Error message")))
+
+      when(formpProxyConnector.getTotalUnregulatedDonations(eqTo("1234567890"))(using any()))
+        .thenReturn(Future.failed(new Exception("Error message")))
 
       val controller =
         new UnregulatedDonationsController(Helpers.stubControllerComponents(), authorisedAction, formpProxyConnector)

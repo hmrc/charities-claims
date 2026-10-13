@@ -22,10 +22,9 @@ import play.api.libs.json.Json
 import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.models.{FileUploadReference, GetUploadResultResponse}
 import uk.gov.hmrc.charitiesclaims.util.{BaseSpec, HttpV2Support}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.net.URL
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 
@@ -64,10 +63,16 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
   ) =
     mockHttpDeleteSuccess(expectedUrl)(response)
 
-  def givenDeleteClaimEndpointReturns(response: HttpResponse) =
+  def givenDeleteReturns(
+    expectedUrl: String,
+    responses: Seq[HttpResponse]
+  ) =
+    mockHttpDeleteSuccesses(expectedUrl)(responses)
+
+  def givenDeleteClaimEndpointReturns(responses: Seq[HttpResponse]) =
     givenDeleteReturns(
       expectedUrl = "http://foo.bar.com:1234/foo-claims/12345/upload-results",
-      response = response
+      responses = responses
     )
 
   def givenDeleteUploadEndpointReturns(response: HttpResponse) =
@@ -77,12 +82,20 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
     )
 
   def givenGetUploadResultEndpointReturns(response: HttpResponse) =
-    mockHttpGetSuccess(URL("http://foo.bar.com:1234/foo-claims/12345/upload-results/test-ref-123"))(
+    mockHttpGetSuccess(url"http://foo.bar.com:1234/foo-claims/12345/upload-results/test-ref-123")(
       response = response
     )
 
+  def givenGetUploadResultEndpointReturns(responses: Seq[HttpResponse]) =
+    mockHttpGetSuccesses(url"http://foo.bar.com:1234/foo-claims/12345/upload-results/test-ref-123")(
+      responses = responses
+    )
+
   def givenTouchTtlEndpointReturns(response: HttpResponse) =
-    mockHttpPatchSuccess(URL("http://foo.bar.com:1234/foo-claims/ttl/12345"))(response)
+    mockHttpPatchSuccess(url"http://foo.bar.com:1234/foo-claims/ttl/12345")(response)
+
+  def givenTouchTtlEndpointReturns(responses: Seq[HttpResponse]) =
+    mockHttpPatchSuccesses(url"http://foo.bar.com:1234/foo-claims/ttl/12345")(responses)
 
   def readJsonString(path: String): String =
     Source.fromInputStream(this.getClass.getResourceAsStream(path)).getLines().mkString("\n")
@@ -105,27 +118,25 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
     "deleteClaim" - {
 
       "should return a list of unsubmitted claims" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(200))
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(200)))
 
         await(connector.deleteClaim("12345")) shouldBe ()
       }
 
       "throw an exception if the service returns 404 status" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(404, "Bad Request"))
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(404, "Bad Request")))
         a[Exception] should be thrownBy
           await(connector.deleteClaim("12345"))
       }
 
       "throw an exception if the service returns 500 status" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(500, ""))
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(500, "")))
         a[Exception] should be thrownBy
           await(connector.deleteClaim("12345"))
       }
 
       "throw exception when 5xx response status in the third attempt" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(500, ""))
-        givenDeleteClaimEndpointReturns(HttpResponse(499, ""))
-        givenDeleteClaimEndpointReturns(HttpResponse(469, ""))
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(499, ""), HttpResponse(469, "")))
 
         a[Exception] shouldBe thrownBy {
           await(connector.deleteClaim("12345"))
@@ -133,15 +144,12 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
       }
 
       "accept valid response in a second attempt" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(500, ""))
-        givenDeleteClaimEndpointReturns(HttpResponse(200))
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(200)))
         await(connector.deleteClaim("12345")) shouldBe ()
       }
 
       "accept valid response in a third attempt" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(499, ""))
-        givenDeleteClaimEndpointReturns(HttpResponse(500, ""))
-        givenDeleteClaimEndpointReturns(HttpResponse(200))
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(499, ""), HttpResponse(500, ""), HttpResponse(200)))
         await(connector.deleteClaim("12345")) shouldBe ()
       }
     }
@@ -183,9 +191,7 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
       }
 
       "throw exception when 5xx response status in the third attempt" in {
-        givenGetUploadResultEndpointReturns(HttpResponse(500, ""))
-        givenGetUploadResultEndpointReturns(HttpResponse(499, ""))
-        givenGetUploadResultEndpointReturns(HttpResponse(469, ""))
+        givenGetUploadResultEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(499, ""), HttpResponse(469, "")))
 
         a[Exception] shouldBe thrownBy {
           await(connector.getUploadResult("12345", FileUploadReference("test-ref-123")))
@@ -194,16 +200,21 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
 
       "accept valid response in a second attempt" in {
         val expectedResponse = Json.parse(testGetUploadResultValidatedConnectedCharities).as[GetUploadResultResponse]
-        givenGetUploadResultEndpointReturns(HttpResponse(500, ""))
-        givenGetUploadResultEndpointReturns(HttpResponse(200, testGetUploadResultValidatedConnectedCharities))
+        givenGetUploadResultEndpointReturns(
+          Seq(HttpResponse(500, ""), HttpResponse(200, testGetUploadResultValidatedConnectedCharities))
+        )
         await(connector.getUploadResult("12345", FileUploadReference("test-ref-123"))) shouldBe Some(expectedResponse)
       }
 
       "accept valid response in a third attempt" in {
         val expectedResponse = Json.parse(testGetUploadResultValidatedConnectedCharities).as[GetUploadResultResponse]
-        givenGetUploadResultEndpointReturns(HttpResponse(499, ""))
-        givenGetUploadResultEndpointReturns(HttpResponse(500, ""))
-        givenGetUploadResultEndpointReturns(HttpResponse(200, testGetUploadResultValidatedConnectedCharities))
+        givenGetUploadResultEndpointReturns(
+          Seq(
+            HttpResponse(499, ""),
+            HttpResponse(500, ""),
+            HttpResponse(200, testGetUploadResultValidatedConnectedCharities)
+          )
+        )
         await(connector.getUploadResult("12345", FileUploadReference("test-ref-123"))) shouldBe Some(expectedResponse)
       }
     }
@@ -246,24 +257,19 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
       }
 
       "should retry and succeed on second attempt" in {
-        givenTouchTtlEndpointReturns(HttpResponse(500, ""))
-        givenTouchTtlEndpointReturns(HttpResponse(204))
+        givenTouchTtlEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(204)))
 
         await(connector.touchTtl("12345")) shouldBe ()
       }
 
       "should retry and succeed on third attempt" in {
-        givenTouchTtlEndpointReturns(HttpResponse(500, ""))
-        givenTouchTtlEndpointReturns(HttpResponse(499, ""))
-        givenTouchTtlEndpointReturns(HttpResponse(204))
+        givenTouchTtlEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(499, ""), HttpResponse(204)))
 
         await(connector.touchTtl("12345")) shouldBe ()
       }
 
       "should return unit after retries are exhausted" in {
-        givenTouchTtlEndpointReturns(HttpResponse(500, ""))
-        givenTouchTtlEndpointReturns(HttpResponse(499, ""))
-        givenTouchTtlEndpointReturns(HttpResponse(469, ""))
+        givenTouchTtlEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(499, ""), HttpResponse(469, "")))
 
         await(connector.touchTtl("12345")) shouldBe ()
       }

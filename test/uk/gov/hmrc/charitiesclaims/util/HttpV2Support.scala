@@ -58,6 +58,12 @@ trait HttpV2Support { this: MockitoSugar & Matchers =>
     mockRequestBuilderExecuteWithoutException(response)
   }
 
+  def mockHttpDeleteSuccesses[A](url: String, hasHeaders: Boolean = false)(responses: Seq[A]) = {
+    mockHttpDelete(URL(url))
+    if hasHeaders then mockRequestBuilderTransform()
+    mockRequestBuilderExecuteWithoutException(responses)
+  }
+
   def mockHttpPostWithException(
     url: String,
     requestBody: JsValue,
@@ -89,6 +95,13 @@ trait HttpV2Support { this: MockitoSugar & Matchers =>
     mockRequestBuilderExecuteWithoutException[A](response)
   }
 
+  def mockHttpGetSuccesses[A](
+    url: URL
+  )(responses: Seq[A]) = {
+    mockHttpGet[A](url)
+    mockRequestBuilderExecuteWithoutException[A](responses)
+  }
+
   def mockHttpGetFailure(
     url: URL
   )(exception: Exception) = {
@@ -100,6 +113,12 @@ trait HttpV2Support { this: MockitoSugar & Matchers =>
     mockHttpPatch(url)
     if hasHeaders then mockRequestBuilderTransform()
     mockRequestBuilderExecuteWithoutException(response)
+  }
+
+  def mockHttpPatchSuccesses[A](url: URL, hasHeaders: Boolean = false)(responses: Seq[A]) = {
+    mockHttpPatch(url)
+    if hasHeaders then mockRequestBuilderTransform()
+    mockRequestBuilderExecuteWithoutException(responses)
   }
 
   private def mockHttpGet[A](url: URL) = when(mockHttp.get(eqTo(url))(using any())).thenReturn(mockRequestBuilder)
@@ -120,8 +139,18 @@ trait HttpV2Support { this: MockitoSugar & Matchers =>
   def mockRequestBuilderWithString(body: String) =
     when(mockRequestBuilder.withBody(eqTo(body))(using any(), any(), any())).thenReturn(mockRequestBuilder)
 
-  def mockRequestBuilderExecuteWithoutException[A](value: A) =
+  def mockRequestBuilderExecuteWithoutException[A](value: A): Unit = {
     when(mockRequestBuilder.execute(using any(), any())).thenReturn(Future.successful(value))
+    ()
+  }
+
+  def mockRequestBuilderExecuteWithoutException[A](values: Seq[A]): Unit =
+    values match {
+      case h +: Nil => mockRequestBuilderExecuteWithoutException(h)
+      case h +: t   =>
+        when(mockRequestBuilder.execute(using any(), any())).thenReturn(Future.successful(h), t.map(Future.successful)*)
+        ()
+    }
 
   def mockRequestBuilderTransform() = when(mockRequestBuilder.transform(any())).thenReturn(mockRequestBuilder)
 

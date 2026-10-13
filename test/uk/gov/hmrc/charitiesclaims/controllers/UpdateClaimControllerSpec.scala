@@ -18,7 +18,7 @@ package uk.gov.hmrc.charitiesclaims.controllers
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{times, verify, when}
 import play.api.http.Status
 import play.api.libs.json.{Format, JsObject, JsString, Json, Writes}
 import play.api.test.Helpers
@@ -186,6 +186,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       response.success shouldBe true
 
       captor.getValue shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
+
+      verify(mockClaimsValidationConnector, times(4)).deleteUpload(any(), any())(using any())
     }
 
     "return 200 when claim is updated for org details and all file upload references are updated" in new AuthorisedOrganisationFixture {
@@ -225,6 +227,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       response.success shouldBe true
 
       captor.getValue shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
+
+      verify(mockClaimsValidationConnector, times(4)).deleteUpload(any(), any())(using any())
     }
 
     "return 200 if claim updated for giftAidSmallDonationsSchemeDonationDetails" in new AuthorisedOrganisationFixture {
@@ -264,6 +268,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       response.success shouldBe true
 
       captor.getValue shouldBe expectedUpdate.copy(lastUpdatedReference = response.lastUpdatedReference)
+
+      verify(mockClaimsValidationConnector, times(4)).deleteUpload(any(), any())(using any())
     }
 
     "return 404 when claim is not found" in new AuthorisedOrganisationFixture {
@@ -356,6 +362,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       val response = contentAsJson(result).as[UpdateClaimResponse]
       response.lastUpdatedReference          should not be originalReference
       captor.getValue.lastUpdatedReference shouldBe response.lastUpdatedReference
+
+      verify(mockClaimsValidationConnector, times(4)).deleteUpload(any(), any())(using any())
     }
 
     "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {
@@ -457,6 +465,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       status(result) shouldBe Status.OK
 
       captor.getValue.claimData.organisationDetails shouldBe None
+
+      verify(mockClaimsValidationConnector, times(4)).deleteUpload(any(), any())(using any())
     }
 
     "remove giftAidSmallDonationsSchemeDonationDetails when omitted from PUT request" in new AuthorisedOrganisationFixture {
@@ -490,6 +500,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
       status(result) shouldBe Status.OK
 
       captor.getValue.claimData.giftAidSmallDonationsSchemeDonationDetails shouldBe None
+
+      verify(mockClaimsValidationConnector, times(4)).deleteUpload(any(), any())(using any())
     }
 
     "remove includedAnyAdjustmentsInClaimPrompt and understandFalseStatements when omitted from PUT request" in new AuthorisedOrganisationFixture {
@@ -525,6 +537,8 @@ class UpdateClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
 
       captor.getValue.claimData.includedAnyAdjustmentsInClaimPrompt shouldBe None
       captor.getValue.claimData.understandFalseStatements           shouldBe None
+
+      verify(mockClaimsValidationConnector, times(4)).deleteUpload(any(), any())(using any())
     }
   }
 }

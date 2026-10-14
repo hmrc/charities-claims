@@ -17,18 +17,15 @@
 package uk.gov.hmrc.charitiesclaims.connectors
 
 import com.typesafe.config.ConfigFactory
-import org.scalamock.handlers.CallHandler
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.models.{FileUploadReference, GetUploadResultResponse}
 import uk.gov.hmrc.charitiesclaims.util.{BaseSpec, HttpV2Support}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.net.URL
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.io.Source
 
 class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
@@ -63,28 +60,42 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
   def givenDeleteReturns(
     expectedUrl: String,
     response: HttpResponse
-  ): CallHandler[Future[HttpResponse]] =
+  ) =
     mockHttpDeleteSuccess(expectedUrl)(response)
 
-  def givenDeleteClaimEndpointReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
+  def givenDeleteReturns(
+    expectedUrl: String,
+    responses: Seq[HttpResponse]
+  ) =
+    mockHttpDeleteSuccesses(expectedUrl)(responses)
+
+  def givenDeleteClaimEndpointReturns(responses: Seq[HttpResponse]) =
     givenDeleteReturns(
       expectedUrl = "http://foo.bar.com:1234/foo-claims/12345/upload-results",
-      response = response
+      responses = responses
     )
 
-  def givenDeleteUploadEndpointReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
+  def givenDeleteUploadEndpointReturns(response: HttpResponse) =
     givenDeleteReturns(
       expectedUrl = "http://foo.bar.com:1234/foo-claims/12345/upload-results/test-ref-123",
       response = response
     )
 
-  def givenGetUploadResultEndpointReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
-    mockHttpGetSuccess(URL("http://foo.bar.com:1234/foo-claims/12345/upload-results/test-ref-123"))(
+  def givenGetUploadResultEndpointReturns(response: HttpResponse) =
+    mockHttpGetSuccess(url"http://foo.bar.com:1234/foo-claims/12345/upload-results/test-ref-123")(
       response = response
     )
 
-  def givenTouchTtlEndpointReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
-    mockHttpPatchSuccess(URL("http://foo.bar.com:1234/foo-claims/ttl/12345"))(response)
+  def givenGetUploadResultEndpointReturns(responses: Seq[HttpResponse]) =
+    mockHttpGetSuccesses(url"http://foo.bar.com:1234/foo-claims/12345/upload-results/test-ref-123")(
+      responses = responses
+    )
+
+  def givenTouchTtlEndpointReturns(response: HttpResponse) =
+    mockHttpPatchSuccess(url"http://foo.bar.com:1234/foo-claims/ttl/12345")(response)
+
+  def givenTouchTtlEndpointReturns(responses: Seq[HttpResponse]) =
+    mockHttpPatchSuccesses(url"http://foo.bar.com:1234/foo-claims/ttl/12345")(responses)
 
   def readJsonString(path: String): String =
     Source.fromInputStream(this.getClass.getResourceAsStream(path)).getLines().mkString("\n")
@@ -107,27 +118,25 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
     "deleteClaim" - {
 
       "should return a list of unsubmitted claims" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(200)).once()
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(200)))
 
         await(connector.deleteClaim("12345")) shouldBe ()
       }
 
       "throw an exception if the service returns 404 status" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(404, "Bad Request")).once()
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(404, "Bad Request")))
         a[Exception] should be thrownBy
           await(connector.deleteClaim("12345"))
       }
 
       "throw an exception if the service returns 500 status" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(500, "")).once()
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(500, "")))
         a[Exception] should be thrownBy
           await(connector.deleteClaim("12345"))
       }
 
       "throw exception when 5xx response status in the third attempt" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(500, "")).once()
-        givenDeleteClaimEndpointReturns(HttpResponse(499, "")).once()
-        givenDeleteClaimEndpointReturns(HttpResponse(469, "")).once()
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(499, ""), HttpResponse(469, "")))
 
         a[Exception] shouldBe thrownBy {
           await(connector.deleteClaim("12345"))
@@ -135,15 +144,12 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
       }
 
       "accept valid response in a second attempt" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(500, "")).once()
-        givenDeleteClaimEndpointReturns(HttpResponse(200)).once()
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(200)))
         await(connector.deleteClaim("12345")) shouldBe ()
       }
 
       "accept valid response in a third attempt" in {
-        givenDeleteClaimEndpointReturns(HttpResponse(499, "")).once()
-        givenDeleteClaimEndpointReturns(HttpResponse(500, "")).once()
-        givenDeleteClaimEndpointReturns(HttpResponse(200)).once()
+        givenDeleteClaimEndpointReturns(Seq(HttpResponse(499, ""), HttpResponse(500, ""), HttpResponse(200)))
         await(connector.deleteClaim("12345")) shouldBe ()
       }
     }
@@ -151,45 +157,41 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
     "getUploadResult" - {
       "should return GetUploadResultValidatedGiftAid if the service returns 200 status and the type is GiftAid" in {
         val expectedResponse = Json.parse(testGetUploadResultValidatedGiftAid).as[GetUploadResultResponse]
-        givenGetUploadResultEndpointReturns(HttpResponse(200, body = testGetUploadResultValidatedGiftAid)).once()
+        givenGetUploadResultEndpointReturns(HttpResponse(200, body = testGetUploadResultValidatedGiftAid))
         await(connector.getUploadResult("12345", FileUploadReference("test-ref-123"))) shouldBe Some(expectedResponse)
       }
 
       "should return GetUploadResultValidatedOtherIncome if the service returns 200 status and the type is OtherIncome" in {
         val expectedResponse = Json.parse(testGetUploadResultValidatedOtherIncome).as[GetUploadResultResponse]
-        givenGetUploadResultEndpointReturns(HttpResponse(200, body = testGetUploadResultValidatedOtherIncome)).once()
+        givenGetUploadResultEndpointReturns(HttpResponse(200, body = testGetUploadResultValidatedOtherIncome))
         await(connector.getUploadResult("12345", FileUploadReference("test-ref-123"))) shouldBe Some(expectedResponse)
       }
 
       "should return GetUploadResultValidatedCommunityBuildings if the service returns 200 status and the type is CommunityBuildings" in {
         val expectedResponse = Json.parse(testGetUploadResultValidatedCommunityBuildings).as[GetUploadResultResponse]
         givenGetUploadResultEndpointReturns(HttpResponse(200, body = testGetUploadResultValidatedCommunityBuildings))
-          .once()
         await(connector.getUploadResult("12345", FileUploadReference("test-ref-123"))) shouldBe Some(expectedResponse)
       }
 
       "should return GetUploadResultValidatedConnectedCharities if the service returns 200 status and the type is ConnectedCharities" in {
         val expectedResponse = Json.parse(testGetUploadResultValidatedConnectedCharities).as[GetUploadResultResponse]
         givenGetUploadResultEndpointReturns(HttpResponse(200, body = testGetUploadResultValidatedConnectedCharities))
-          .once()
         await(connector.getUploadResult("12345", FileUploadReference("test-ref-123"))) shouldBe Some(expectedResponse)
       }
 
       "should return None if the service returns 404 status" in {
-        givenGetUploadResultEndpointReturns(HttpResponse(404, "{}")).once()
+        givenGetUploadResultEndpointReturns(HttpResponse(404, "{}"))
         await(connector.getUploadResult("12345", FileUploadReference("test-ref-123"))) shouldBe None
       }
 
       "should return None if the service returns 500 status" in {
-        givenGetUploadResultEndpointReturns(HttpResponse(500)).once()
+        givenGetUploadResultEndpointReturns(HttpResponse(500))
         a[Exception] should be thrownBy
           await(connector.getUploadResult("12345", FileUploadReference("test-ref-123")))
       }
 
       "throw exception when 5xx response status in the third attempt" in {
-        givenGetUploadResultEndpointReturns(HttpResponse(500, "")).once()
-        givenGetUploadResultEndpointReturns(HttpResponse(499, "")).once()
-        givenGetUploadResultEndpointReturns(HttpResponse(469, "")).once()
+        givenGetUploadResultEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(499, ""), HttpResponse(469, "")))
 
         a[Exception] shouldBe thrownBy {
           await(connector.getUploadResult("12345", FileUploadReference("test-ref-123")))
@@ -198,28 +200,33 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
 
       "accept valid response in a second attempt" in {
         val expectedResponse = Json.parse(testGetUploadResultValidatedConnectedCharities).as[GetUploadResultResponse]
-        givenGetUploadResultEndpointReturns(HttpResponse(500, "")).once()
-        givenGetUploadResultEndpointReturns(HttpResponse(200, testGetUploadResultValidatedConnectedCharities)).once()
+        givenGetUploadResultEndpointReturns(
+          Seq(HttpResponse(500, ""), HttpResponse(200, testGetUploadResultValidatedConnectedCharities))
+        )
         await(connector.getUploadResult("12345", FileUploadReference("test-ref-123"))) shouldBe Some(expectedResponse)
       }
 
       "accept valid response in a third attempt" in {
         val expectedResponse = Json.parse(testGetUploadResultValidatedConnectedCharities).as[GetUploadResultResponse]
-        givenGetUploadResultEndpointReturns(HttpResponse(499, "")).once()
-        givenGetUploadResultEndpointReturns(HttpResponse(500, "")).once()
-        givenGetUploadResultEndpointReturns(HttpResponse(200, testGetUploadResultValidatedConnectedCharities)).once()
+        givenGetUploadResultEndpointReturns(
+          Seq(
+            HttpResponse(499, ""),
+            HttpResponse(500, ""),
+            HttpResponse(200, testGetUploadResultValidatedConnectedCharities)
+          )
+        )
         await(connector.getUploadResult("12345", FileUploadReference("test-ref-123"))) shouldBe Some(expectedResponse)
       }
     }
 
     "deleteUpload" - {
       "should return true if the service returns 200 status with success true" in {
-        givenDeleteUploadEndpointReturns(HttpResponse(200, body = "{\"success\":true}")).once()
+        givenDeleteUploadEndpointReturns(HttpResponse(200, body = "{\"success\":true}"))
         await(connector.deleteUpload("12345", FileUploadReference("test-ref-123"))) shouldBe true
       }
 
       "should return false if the service returns 200 status with success false" in {
-        givenDeleteUploadEndpointReturns(HttpResponse(200, body = "{\"success\":false}")).once()
+        givenDeleteUploadEndpointReturns(HttpResponse(200, body = "{\"success\":false}"))
         await(connector.deleteUpload("12345", FileUploadReference("test-ref-123"))) shouldBe false
       }
 
@@ -230,7 +237,7 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
       }
 
       "should throw an exception if the service returns 404 status" in {
-        givenDeleteUploadEndpointReturns(HttpResponse(404, "")).once()
+        givenDeleteUploadEndpointReturns(HttpResponse(404, ""))
         await(connector.deleteUpload("12345", FileUploadReference("test-ref-123"))) shouldBe false
       }
     }
@@ -238,36 +245,31 @@ class ClaimsValidationConnectorSpec extends BaseSpec with HttpV2Support {
     "touchTtl" - {
 
       "should return unit when the service returns 204 NO_CONTENT" in {
-        givenTouchTtlEndpointReturns(HttpResponse(204)).once()
+        givenTouchTtlEndpointReturns(HttpResponse(204))
 
         await(connector.touchTtl("12345")) shouldBe ()
       }
 
       "should return unit when the service returns non-204 status" in {
-        givenTouchTtlEndpointReturns(HttpResponse(200, "unexpected")).once()
+        givenTouchTtlEndpointReturns(HttpResponse(200, "unexpected"))
 
         await(connector.touchTtl("12345")) shouldBe ()
       }
 
       "should retry and succeed on second attempt" in {
-        givenTouchTtlEndpointReturns(HttpResponse(500, "")).once()
-        givenTouchTtlEndpointReturns(HttpResponse(204)).once()
+        givenTouchTtlEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(204)))
 
         await(connector.touchTtl("12345")) shouldBe ()
       }
 
       "should retry and succeed on third attempt" in {
-        givenTouchTtlEndpointReturns(HttpResponse(500, "")).once()
-        givenTouchTtlEndpointReturns(HttpResponse(499, "")).once()
-        givenTouchTtlEndpointReturns(HttpResponse(204)).once()
+        givenTouchTtlEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(499, ""), HttpResponse(204)))
 
         await(connector.touchTtl("12345")) shouldBe ()
       }
 
       "should return unit after retries are exhausted" in {
-        givenTouchTtlEndpointReturns(HttpResponse(500, "")).once()
-        givenTouchTtlEndpointReturns(HttpResponse(499, "")).once()
-        givenTouchTtlEndpointReturns(HttpResponse(469, "")).once()
+        givenTouchTtlEndpointReturns(Seq(HttpResponse(500, ""), HttpResponse(499, ""), HttpResponse(469, "")))
 
         await(connector.touchTtl("12345")) shouldBe ()
       }

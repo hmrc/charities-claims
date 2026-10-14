@@ -17,7 +17,6 @@
 package uk.gov.hmrc.charitiesclaims.connectors
 
 import com.typesafe.config.ConfigFactory
-import org.scalamock.handlers.CallHandler
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.test.Helpers.*
@@ -27,7 +26,6 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.net.URL
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class RdsDatacacheProxyConnectorSpec extends BaseSpec with HttpV2Support {
 
@@ -58,10 +56,10 @@ class RdsDatacacheProxyConnectorSpec extends BaseSpec with HttpV2Support {
       actorSystem = actorSystem
     )
 
-  def givenGetAgentNameByAgentReferenceReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
+  def givenGetAgentNameByAgentReferenceReturns(response: HttpResponse) =
     mockHttpGetSuccess(URL("http://foo.bar.com:1234/foo-proxy/charities/agents/abc-123"))(response)
 
-  def givenGetOrganisationNameByCharityReferenceReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
+  def givenGetOrganisationNameByCharityReferenceReturns(response: HttpResponse) =
     mockHttpGetSuccess(URL("http://foo.bar.com:1234/foo-proxy/charities/organisations/abc-123"))(response)
 
   given HeaderCarrier = HeaderCarrier()

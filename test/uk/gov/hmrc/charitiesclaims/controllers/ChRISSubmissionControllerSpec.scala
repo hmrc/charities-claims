@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import play.api.libs.json.{JsObject, JsString}
 import play.api.test.Helpers
 import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.connectors.ChRISConnector
 import uk.gov.hmrc.charitiesclaims.models.*
-import uk.gov.hmrc.charitiesclaims.models.chris.GovTalkMessage
 import uk.gov.hmrc.charitiesclaims.services.{AuditService, ChRISSubmissionService, ClaimsService, MissingCharityReferenceException, UnregulatedDonationException, UnregulatedDonationsService}
 import uk.gov.hmrc.charitiesclaims.util.{ChRISTestData, ControllerSpec, TestClaimsService, TestClaimsServiceHelper, TestScheduleData}
 import uk.gov.hmrc.charitiesclaims.validation.{SchematronValidationException, ValidationError}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -71,32 +71,28 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         auditServiceMock
       )
 
-      (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(ChRISTestData.exampleMessage))
+      when(chrisSubmissionServiceMock.buildChRISSubmission(any(), any(), any())(using any()))
+        .thenReturn(Future.successful(ChRISTestData.exampleMessage))
 
-      (chrisSubmissionServiceMock
-        .getScheduleData(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+      when(chrisSubmissionServiceMock.getScheduleData(any())(using any()))
+        .thenReturn(Future.successful(TestScheduleData.exampleScheduleData))
 
-      (chrisConnectorMock
-        .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
-        .expects(ChRISTestData.exampleMessage, *)
-        .returning(Future.successful(()))
+      when(chrisConnectorMock.submitClaim(eqTo(ChRISTestData.exampleMessage))(using any()))
+        .thenReturn(Future.successful(()))
 
-      (unregulatedDonationsServiceMock
-        .recordUnregulatedDonation(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .returning(Future.successful(()))
+      when(unregulatedDonationsServiceMock.recordUnregulatedDonation(any(), any())(using any()))
+        .thenReturn(Future.successful(()))
 
-      (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: String)(using
-          _: HeaderCarrier
-        ))
-        .expects(*, *, *, *, *, ChRISTestData.exampleMessage.Header.MessageDetails.CorrelationID, *)
-        .returning(Future.successful(AuditResult.Success))
+      when(
+        auditServiceMock.sendEvent(
+          any(),
+          any(),
+          any(),
+          any(),
+          any(),
+          eqTo(ChRISTestData.exampleMessage.Header.MessageDetails.CorrelationID)
+        )(using any())
+      ).thenReturn(Future.successful(AuditResult.Success))
 
       val request = testRequest(
         "POST",
@@ -283,10 +279,8 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         auditServiceMock
       )
 
-      (claimsService
-        .getClaim(_: String))
-        .expects("test-claim-id")
-        .returning(Future.failed(UnregulatedDonationException("test-claim-id", new RuntimeException("Error message"))))
+      when(claimsService.getClaim("test-claim-id"))
+        .thenReturn(Future.failed(UnregulatedDonationException("test-claim-id", new RuntimeException("Error message"))))
 
       val request = testRequest(
         "POST",
@@ -346,42 +340,25 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         auditServiceMock
       )
 
-      (claimsService
-        .getClaim(_: String))
-        .expects("test-claim-id")
-        .returning(Future.successful(Some((claim, Instant.now()))))
+      when(claimsService.getClaim("test-claim-id")).thenReturn(Future.successful(Some((claim, Instant.now()))))
 
-      (claimsService
-        .putClaim(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.failed(UnregulatedDonationException("test-claim-id", new RuntimeException("Error message"))))
+      when(claimsService.putClaim(any())(using any()))
+        .thenReturn(Future.failed(UnregulatedDonationException("test-claim-id", new RuntimeException("Error message"))))
 
-      (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(ChRISTestData.exampleMessage))
+      when(chrisSubmissionServiceMock.buildChRISSubmission(any(), any(), any())(using any()))
+        .thenReturn(Future.successful(ChRISTestData.exampleMessage))
 
-      (chrisSubmissionServiceMock
-        .getScheduleData(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+      when(chrisSubmissionServiceMock.getScheduleData(any())(using any()))
+        .thenReturn(Future.successful(TestScheduleData.exampleScheduleData))
 
-      (chrisConnectorMock
-        .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
-        .expects(ChRISTestData.exampleMessage, *)
-        .returning(Future.successful(()))
+      when(chrisConnectorMock.submitClaim(eqTo(ChRISTestData.exampleMessage))(using any()))
+        .thenReturn(Future.successful(()))
 
-      (unregulatedDonationsServiceMock
-        .recordUnregulatedDonation(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .returning(Future.successful(()))
+      when(unregulatedDonationsServiceMock.recordUnregulatedDonation(any(), any())(using any()))
+        .thenReturn(Future.successful(()))
 
-      (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: String)(using
-          _: HeaderCarrier
-        ))
-        .expects(*, *, *, *, *, *, *)
-        .returning(Future.successful(AuditResult.Success))
+      when(auditServiceMock.sendEvent(any(), any(), any(), any(), any(), any())(using any()))
+        .thenReturn(Future.successful(AuditResult.Success))
 
       val request = testRequest(
         "POST",
@@ -441,25 +418,14 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         auditServiceMock
       )
 
-      (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(ChRISTestData.exampleMessage))
+      when(chrisSubmissionServiceMock.buildChRISSubmission(any(), any(), any())(using any()))
+        .thenReturn(Future.successful(ChRISTestData.exampleMessage))
 
-      (chrisSubmissionServiceMock
-        .getScheduleData(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(TestScheduleData.exampleScheduleData))
-        .anyNumberOfTimes()
-
-      (chrisConnectorMock
-        .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(
-          Future.failed(
-            SchematronValidationException(List(ValidationError.ClaimRule7028, ValidationError.ClaimRule7029))
-          )
-        )
+      when(chrisSubmissionServiceMock.getScheduleData(any())(using any()))
+        .thenReturn(Future.successful(TestScheduleData.exampleScheduleData))
+      when(chrisConnectorMock.submitClaim(any())(using any())).thenReturn(
+        Future.failed(SchematronValidationException(List(ValidationError.ClaimRule7028, ValidationError.ClaimRule7029)))
+      )
 
       val request = testRequest(
         "POST",
@@ -516,33 +482,19 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         auditServiceMock
       )
 
-      (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(ChRISTestData.exampleMessage))
+      when(chrisSubmissionServiceMock.buildChRISSubmission(any(), any(), any())(using any()))
+        .thenReturn(Future.successful(ChRISTestData.exampleMessage))
 
-      (chrisConnectorMock
-        .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
-        .expects(ChRISTestData.exampleMessage, *)
-        .returning(Future.successful(()))
+      when(chrisConnectorMock.submitClaim(eqTo(ChRISTestData.exampleMessage))(using any()))
+        .thenReturn(Future.successful(()))
 
-      (chrisSubmissionServiceMock
-        .getScheduleData(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(TestScheduleData.exampleScheduleData))
-        .anyNumberOfTimes()
+      when(chrisSubmissionServiceMock.getScheduleData(any())(using any()))
+        .thenReturn(Future.successful(TestScheduleData.exampleScheduleData))
+      when(unregulatedDonationsServiceMock.recordUnregulatedDonation(any(), any())(using any()))
+        .thenReturn(Future.failed(UnregulatedDonationException("test-claim-id", new RuntimeException("Error message"))))
 
-      (unregulatedDonationsServiceMock
-        .recordUnregulatedDonation(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .returning(Future.failed(UnregulatedDonationException("test-claim-id", new RuntimeException("Error message"))))
-
-      (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: String)(using
-          _: HeaderCarrier
-        ))
-        .expects(*, *, *, *, *, *, *)
-        .returning(Future.successful(AuditResult.Success))
+      when(auditServiceMock.sendEvent(any(), any(), any(), any(), any(), any())(using any()))
+        .thenReturn(Future.successful(AuditResult.Success))
 
       val request = testRequest(
         "POST",
@@ -595,22 +547,14 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         auditServiceMock
       )
 
-      (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(ChRISTestData.exampleMessage))
+      when(chrisSubmissionServiceMock.buildChRISSubmission(any(), any(), any())(using any()))
+        .thenReturn(Future.successful(ChRISTestData.exampleMessage))
 
-      (chrisConnectorMock
-        .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
-        .expects(ChRISTestData.exampleMessage, *)
-        .returning(Future.failed(Exception("Request to POST failed")))
+      when(chrisConnectorMock.submitClaim(eqTo(ChRISTestData.exampleMessage))(using any()))
+        .thenReturn(Future.failed(Exception("Request to POST failed")))
 
-      (chrisSubmissionServiceMock
-        .getScheduleData(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(TestScheduleData.exampleScheduleData))
-        .anyNumberOfTimes()
-
+      when(chrisSubmissionServiceMock.getScheduleData(any())(using any()))
+        .thenReturn(Future.successful(TestScheduleData.exampleScheduleData))
       val request = testRequest(
         "POST",
         "/chris",
@@ -667,32 +611,19 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         auditServiceMock
       )
 
-      (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(ChRISTestData.exampleMessage))
+      when(chrisSubmissionServiceMock.buildChRISSubmission(any(), any(), any())(using any()))
+        .thenReturn(Future.successful(ChRISTestData.exampleMessage))
 
-      (chrisSubmissionServiceMock
-        .getScheduleData(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+      when(chrisSubmissionServiceMock.getScheduleData(any())(using any()))
+        .thenReturn(Future.successful(TestScheduleData.exampleScheduleData))
 
-      (chrisConnectorMock
-        .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(()))
+      when(chrisConnectorMock.submitClaim(any())(using any())).thenReturn(Future.successful(()))
 
-      (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: String)(using
-          _: HeaderCarrier
-        ))
-        .expects(*, *, *, *, *, *, *)
-        .returning(Future.successful(AuditResult.Failure("Audit failed")))
+      when(auditServiceMock.sendEvent(any(), any(), any(), any(), any(), any())(using any()))
+        .thenReturn(Future.successful(AuditResult.Failure("Audit failed")))
 
-      (unregulatedDonationsServiceMock
-        .recordUnregulatedDonation(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .returning(Future.successful(()))
+      when(unregulatedDonationsServiceMock.recordUnregulatedDonation(any(), any())(using any()))
+        .thenReturn(Future.successful(()))
 
       val request = testRequest(
         "POST",
@@ -751,32 +682,19 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         auditServiceMock
       )
 
-      (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(ChRISTestData.exampleMessage))
+      when(chrisSubmissionServiceMock.buildChRISSubmission(any(), any(), any())(using any()))
+        .thenReturn(Future.successful(ChRISTestData.exampleMessage))
 
-      (chrisSubmissionServiceMock
-        .getScheduleData(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+      when(chrisSubmissionServiceMock.getScheduleData(any())(using any()))
+        .thenReturn(Future.successful(TestScheduleData.exampleScheduleData))
 
-      (chrisConnectorMock
-        .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(()))
+      when(chrisConnectorMock.submitClaim(any())(using any())).thenReturn(Future.successful(()))
 
-      (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: String)(using
-          _: HeaderCarrier
-        ))
-        .expects(*, *, *, *, *, *, *)
-        .returning(Future.failed(new RuntimeException("Audit crashed")))
+      when(auditServiceMock.sendEvent(any(), any(), any(), any(), any(), any())(using any()))
+        .thenReturn(Future.failed(new RuntimeException("Audit crashed")))
 
-      (unregulatedDonationsServiceMock
-        .recordUnregulatedDonation(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .returning(Future.successful(()))
+      when(unregulatedDonationsServiceMock.recordUnregulatedDonation(any(), any())(using any()))
+        .thenReturn(Future.successful(()))
 
       val request = testRequest(
         "POST",
@@ -835,32 +753,19 @@ class ChRISSubmissionControllerSpec extends ControllerSpec with TestClaimsServic
         auditServiceMock
       )
 
-      (chrisSubmissionServiceMock
-        .buildChRISSubmission(_: Claim, _: CurrentUser, _: String)(using _: HeaderCarrier))
-        .expects(*, *, *, *)
-        .returning(Future.successful(ChRISTestData.exampleMessage))
+      when(chrisSubmissionServiceMock.buildChRISSubmission(any(), any(), any())(using any()))
+        .thenReturn(Future.successful(ChRISTestData.exampleMessage))
 
-      (chrisConnectorMock
-        .submitClaim(_: GovTalkMessage)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(()))
+      when(chrisConnectorMock.submitClaim(any())(using any())).thenReturn(Future.successful(()))
 
-      (chrisSubmissionServiceMock
-        .getScheduleData(_: Claim)(using _: HeaderCarrier))
-        .expects(*, *)
-        .returning(Future.successful(TestScheduleData.exampleScheduleData))
+      when(chrisSubmissionServiceMock.getScheduleData(any())(using any()))
+        .thenReturn(Future.successful(TestScheduleData.exampleScheduleData))
 
-      (auditServiceMock
-        .sendEvent(_: Claim, _: ScheduleData, _: Instant, _: String, _: SubmissionDetails, _: String)(using
-          _: HeaderCarrier
-        ))
-        .expects(*, *, *, *, *, *, *)
-        .returning(Future.successful(AuditResult.Success))
+      when(auditServiceMock.sendEvent(any(), any(), any(), any(), any(), any())(using any()))
+        .thenReturn(Future.successful(AuditResult.Success))
 
-      (unregulatedDonationsServiceMock
-        .recordUnregulatedDonation(_: Claim, _: CurrentUser)(using _: HeaderCarrier))
-        .expects(*, *, *)
-        .returning(Future.failed(MissingCharityReferenceException("test-claim-id")))
+      when(unregulatedDonationsServiceMock.recordUnregulatedDonation(any(), any())(using any()))
+        .thenReturn(Future.failed(MissingCharityReferenceException("test-claim-id")))
 
       val request = testRequest(
         "POST",

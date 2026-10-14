@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers.actions
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.mvc.*
 import play.api.test.FakeRequest
 import play.api.test.Helpers
 import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.charitiesclaims.util.BaseSpec
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.auth.core.EnrolmentIdentifier
@@ -48,21 +48,14 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when user has an Individual affinity group" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .anyNumberOfTimes()
-        .returning(
-          Future.successful(
-            `~`(
-              `~`(Some(AffinityGroup.Individual), Enrolments(Set.empty)),
-              Some(Credentials("providerId", "providerType"))
-            )
+      when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+        Future.successful(
+          `~`(
+            `~`(Some(AffinityGroup.Individual), Enrolments(Set.empty)),
+            Some(Credentials("providerId", "providerType"))
           )
         )
+      )
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -76,26 +69,17 @@ class AuthorisedActionSpec extends BaseSpec {
     "create AuthorisedRequest when user has an Organisation affinity group with active enrolment" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .anyNumberOfTimes()
-        .returning(
-          Future.successful(
+      when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+        Future.successful(
+          `~`(
             `~`(
-              `~`(
-                Some(AffinityGroup.Organisation),
-                Enrolments(
-                  Set(Enrolment("HMRC-CHAR-ORG", Seq(EnrolmentIdentifier("CHARID", "1234567890")), "Activated"))
-                )
-              ),
-              Some(Credentials("providerId", "providerType"))
-            )
+              Some(AffinityGroup.Organisation),
+              Enrolments(Set(Enrolment("HMRC-CHAR-ORG", Seq(EnrolmentIdentifier("CHARID", "1234567890")), "Activated")))
+            ),
+            Some(Credentials("providerId", "providerType"))
           )
         )
+      )
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -111,26 +95,19 @@ class AuthorisedActionSpec extends BaseSpec {
     "create AuthorisedRequest when user has an Agent affinity group with active enrolment" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .anyNumberOfTimes()
-        .returning(
-          Future.successful(
+      when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+        Future.successful(
+          `~`(
             `~`(
-              `~`(
-                Some(AffinityGroup.Agent),
-                Enrolments(
-                  Set(Enrolment("HMRC-CHAR-AGENT", Seq(EnrolmentIdentifier("AGENTCHARID", "1234567890")), "Activated"))
-                )
-              ),
-              Some(Credentials("providerId", "providerType"))
-            )
+              Some(AffinityGroup.Agent),
+              Enrolments(
+                Set(Enrolment("HMRC-CHAR-AGENT", Seq(EnrolmentIdentifier("AGENTCHARID", "1234567890")), "Activated"))
+              )
+            ),
+            Some(Credentials("providerId", "providerType"))
           )
         )
+      )
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -146,17 +123,9 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when user has no affinity group" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .returning(
-          Future.successful(
-            `~`(`~`(None, Enrolments(Set.empty)), Some(Credentials("providerId", "providerType")))
-          )
-        )
+      when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+        Future.successful(`~`(`~`(None, Enrolments(Set.empty)), Some(Credentials("providerId", "providerType"))))
+      )
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -169,20 +138,8 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when user has no credentials" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .returning(
-          Future.successful(
-            `~`(
-              `~`(Some(AffinityGroup.Agent), Enrolments(Set.empty)),
-              None
-            )
-          )
-        )
+      when(mockAuthConnector.authorise(any(), any())(using any(), any()))
+        .thenReturn(Future.successful(`~`(`~`(Some(AffinityGroup.Agent), Enrolments(Set.empty)), None)))
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -195,20 +152,8 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when user has no credentials and no affinity group" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .returning(
-          Future.successful(
-            `~`(
-              `~`(None, Enrolments(Set.empty)),
-              None
-            )
-          )
-        )
+      when(mockAuthConnector.authorise(any(), any())(using any(), any()))
+        .thenReturn(Future.successful(`~`(`~`(None, Enrolments(Set.empty)), None)))
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -221,13 +166,8 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when AuthorisationException is thrown" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .returns(Future.failed(new MissingBearerToken("Missing bearer token")))
+      when(mockAuthConnector.authorise(any(), any())(using any(), any()))
+        .thenReturn(Future.failed(new MissingBearerToken("Missing bearer token")))
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -240,21 +180,11 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when Agent has no enrolment" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .anyNumberOfTimes()
-        .returning(
-          Future.successful(
-            `~`(
-              `~`(Some(AffinityGroup.Agent), Enrolments(Set.empty)),
-              Some(Credentials("providerId", "providerType"))
-            )
-          )
+      when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+        Future.successful(
+          `~`(`~`(Some(AffinityGroup.Agent), Enrolments(Set.empty)), Some(Credentials("providerId", "providerType")))
         )
+      )
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -268,28 +198,19 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when Agent has inactive enrolment" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .anyNumberOfTimes()
-        .returning(
-          Future.successful(
+      when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+        Future.successful(
+          `~`(
             `~`(
-              `~`(
-                Some(AffinityGroup.Agent),
-                Enrolments(
-                  Set(
-                    Enrolment("HMRC-CHAR-AGENT", Seq(EnrolmentIdentifier("AGENTCHARID", "AGENT123")), "NotActivated")
-                  )
-                )
-              ),
-              Some(Credentials("providerId", "providerType"))
-            )
+              Some(AffinityGroup.Agent),
+              Enrolments(
+                Set(Enrolment("HMRC-CHAR-AGENT", Seq(EnrolmentIdentifier("AGENTCHARID", "AGENT123")), "NotActivated"))
+              )
+            ),
+            Some(Credentials("providerId", "providerType"))
           )
         )
+      )
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -303,26 +224,14 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when Agent has enrolment but missing identifier" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .anyNumberOfTimes()
-        .returning(
-          Future.successful(
-            `~`(
-              `~`(
-                Some(AffinityGroup.Agent),
-                Enrolments(
-                  Set(Enrolment("HMRC-CHAR-AGENT", Seq.empty, "Activated"))
-                )
-              ),
-              Some(Credentials("providerId", "providerType"))
-            )
+      when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+        Future.successful(
+          `~`(
+            `~`(Some(AffinityGroup.Agent), Enrolments(Set(Enrolment("HMRC-CHAR-AGENT", Seq.empty, "Activated")))),
+            Some(Credentials("providerId", "providerType"))
           )
         )
+      )
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -336,21 +245,14 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when Organisation has no enrolment" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .anyNumberOfTimes()
-        .returning(
-          Future.successful(
-            `~`(
-              `~`(Some(AffinityGroup.Organisation), Enrolments(Set.empty)),
-              Some(Credentials("providerId", "providerType"))
-            )
+      when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+        Future.successful(
+          `~`(
+            `~`(Some(AffinityGroup.Organisation), Enrolments(Set.empty)),
+            Some(Credentials("providerId", "providerType"))
           )
         )
+      )
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -364,26 +266,19 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when Organisation has inactive enrolment" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .anyNumberOfTimes()
-        .returning(
-          Future.successful(
+      when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+        Future.successful(
+          `~`(
             `~`(
-              `~`(
-                Some(AffinityGroup.Organisation),
-                Enrolments(
-                  Set(Enrolment("HMRC-CHAR-ORG", Seq(EnrolmentIdentifier("CHARID", "1234567890")), "NotActivated"))
-                )
-              ),
-              Some(Credentials("providerId", "providerType"))
-            )
+              Some(AffinityGroup.Organisation),
+              Enrolments(
+                Set(Enrolment("HMRC-CHAR-ORG", Seq(EnrolmentIdentifier("CHARID", "1234567890")), "NotActivated"))
+              )
+            ),
+            Some(Credentials("providerId", "providerType"))
           )
         )
+      )
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())
@@ -397,26 +292,14 @@ class AuthorisedActionSpec extends BaseSpec {
     "return 403 when Organisation has enrolment but missing identifier" in {
       val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-      (mockAuthConnector
-        .authorise(_: Predicate, _: Retrieval[Option[AffinityGroup] ~ Enrolments ~ Option[Credentials]])(using
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *, *)
-        .anyNumberOfTimes()
-        .returning(
-          Future.successful(
-            `~`(
-              `~`(
-                Some(AffinityGroup.Organisation),
-                Enrolments(
-                  Set(Enrolment("HMRC-CHAR-ORG", Seq.empty, "Activated"))
-                )
-              ),
-              Some(Credentials("providerId", "providerType"))
-            )
+      when(mockAuthConnector.authorise(any(), any())(using any(), any())).thenReturn(
+        Future.successful(
+          `~`(
+            `~`(Some(AffinityGroup.Organisation), Enrolments(Set(Enrolment("HMRC-CHAR-ORG", Seq.empty, "Activated")))),
+            Some(Credentials("providerId", "providerType"))
           )
         )
+      )
 
       val authorisedAction =
         new DefaultAuthorisedAction(mockAuthConnector, PlayBodyParsers())

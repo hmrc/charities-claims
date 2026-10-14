@@ -17,7 +17,6 @@
 package uk.gov.hmrc.charitiesclaims.connectors
 
 import com.typesafe.config.ConfigFactory
-import org.scalamock.handlers.CallHandler
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.test.Helpers.*
@@ -27,7 +26,6 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.net.URL
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class FormpProxyConnectorSpec extends BaseSpec with HttpV2Support {
 
@@ -58,10 +56,10 @@ class FormpProxyConnectorSpec extends BaseSpec with HttpV2Support {
       actorSystem = actorSystem
     )
 
-  def givenGetTotalUnregulatedDonationsReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
+  def givenGetTotalUnregulatedDonationsReturns(response: HttpResponse) =
     mockHttpGetSuccess(URL("http://foo.bar.com:1234/foo-proxy/charities/abc-123/unregulated-donations"))(response)
 
-  def givenSaveUnregulatedDonationReturns(response: HttpResponse): CallHandler[Future[HttpResponse]] =
+  def givenSaveUnregulatedDonationReturns(response: HttpResponse) =
     mockHttpPostSuccess(
       "http://foo.bar.com:1234/foo-proxy/charities/abc-123/unregulated-donations",
       Json.obj("claimId" -> 12345, "amount" -> 123.45)

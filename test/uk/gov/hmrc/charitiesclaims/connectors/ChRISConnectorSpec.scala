@@ -56,9 +56,9 @@ class ChRISConnectorSpec extends BaseSpec with HttpV2Support {
     )
 
   def givenChRISReturns(response: HttpResponse, requestBody: String) =
-    mockHttpPost(URL("http://foo.bar.com:1234/foo/chris/receiver")).once()
-    mockRequestBuilderWithString(requestBody).once()
-    mockRequestBuilderExecuteWithoutException(response).once()
+    mockHttpPost(URL("http://foo.bar.com:1234/foo/chris/receiver"))
+    mockRequestBuilderWithString(requestBody)
+    mockRequestBuilderExecuteWithoutException(response)
 
   given HeaderCarrier = HeaderCarrier()
 

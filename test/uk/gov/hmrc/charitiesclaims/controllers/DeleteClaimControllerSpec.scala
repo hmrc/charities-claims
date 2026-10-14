@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import play.api.http.Status
 import play.api.libs.json.{JsBoolean, JsObject, JsString}
 import play.api.test.Helpers
@@ -23,7 +25,6 @@ import play.api.test.Helpers.*
 import uk.gov.hmrc.charitiesclaims.models.Claim
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
 import uk.gov.hmrc.charitiesclaims.util.{ControllerSpec, TestClaimsService, TestClaimsServiceHelper}
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -61,11 +62,9 @@ class DeleteClaimControllerSpec extends ControllerSpec with TestClaimsServiceHel
 
     "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {
       val mockClaimsService: ClaimsService = mock[ClaimsService]
-      (mockClaimsService
-        .deleteClaim(_: String)(using _: HeaderCarrier))
-        .expects("claim-id", *)
-        .anyNumberOfTimes()
-        .returning(Future.failed(new RuntimeException("Error message")))
+
+      when(mockClaimsService.deleteClaim(eqTo("claim-id"))(using any()))
+        .thenReturn(Future.failed(new RuntimeException("Error message")))
 
       val controller =
         new DeleteClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)

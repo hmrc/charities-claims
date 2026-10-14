@@ -31,6 +31,7 @@ import uk.gov.hmrc.charitiesclaims.util.TestClaimsServiceHelper
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.charitiesclaims.services.ClaimsService
+
 import scala.concurrent.Future
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
@@ -38,6 +39,8 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.charitiesclaims.config.AppConfig
 import play.api.Configuration
 import com.typesafe.config.ConfigFactory
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 
 class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelper {
 
@@ -221,10 +224,8 @@ class SaveClaimControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val mockClaimsService: ClaimsService = mock[ClaimsService]
 
-      (mockClaimsService
-        .listClaims(_: String))
-        .expects(*)
-        .returning(Future.failed(new RuntimeException("Error message")))
+      when(mockClaimsService.listClaims(any()))
+        .thenReturn(Future.failed(new RuntimeException("Error message")))
 
       val controller =
         new SaveClaimController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService, testAppConfig)

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.charitiesclaims.controllers
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.http.Status
 import play.api.libs.json.{JsArray, JsObject, JsString}
 import play.api.test.Helpers
@@ -125,11 +127,7 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
 
       val mockClaimsService: ClaimsService = mock[ClaimsService]
 
-      (mockClaimsService
-        .listClaims(_: String))
-        .expects(*)
-        .anyNumberOfTimes()
-        .returning(Future.failed(new RuntimeException("Error message")))
+      when(mockClaimsService.listClaims(any())).thenReturn(Future.failed(new RuntimeException("Error message")))
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 
@@ -192,11 +190,7 @@ class GetClaimsControllerSpec extends ControllerSpec with TestClaimsServiceHelpe
     "return 500 when the claims service returns an error" in new AuthorisedOrganisationFixture {
       val mockClaimsService: ClaimsService = mock[ClaimsService]
 
-      (mockClaimsService
-        .getClaim(_: String))
-        .expects(*)
-        .anyNumberOfTimes()
-        .returning(Future.failed(new RuntimeException("Error message")))
+      when(mockClaimsService.getClaim(any())).thenReturn(Future.failed(new RuntimeException("Error message")))
 
       val controller = new GetClaimsController(Helpers.stubControllerComponents(), authorisedAction, mockClaimsService)
 

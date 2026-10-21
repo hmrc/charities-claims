@@ -80,6 +80,6 @@ object Base32 {
     return sb.toString()
   }
 
-  inline def base32Digit(v: Long): Char =
+  private inline def base32Digit(v: Long): Char =
     (if v < 26 then v + 65 else v - 26 + 50).toChar
 }

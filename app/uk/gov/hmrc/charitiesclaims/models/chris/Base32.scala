@@ -77,7 +77,7 @@ object Base32 {
         ()
     }
 
-    return sb.toString()
+    sb.toString()
   }
 
   private inline def base32Digit(v: Long): Char =

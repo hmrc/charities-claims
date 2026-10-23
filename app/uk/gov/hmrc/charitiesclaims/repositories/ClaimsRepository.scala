@@ -17,6 +17,7 @@
 package uk.gov.hmrc.charitiesclaims.repositories
 
 import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.model.Projections.{fields, include}
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.charitiesclaims.config.AppConfig
@@ -24,7 +25,6 @@ import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimFormats, ClaimInfo}
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
 import uk.gov.hmrc.mongo.play.json.Codecs
-
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 
 import java.time.Instant
@@ -61,15 +61,59 @@ class ClaimsRepository @Inject() (
       )
     ) {
 
+  def listClaims(userId: String): Future[Seq[ClaimInfo]] =
+    collection
+      .withDocumentClass[ClaimsRepository.CacheItemWithClaimInfo]
+      .find(BsonDocument(ClaimsRepository.userIdPath -> userId, ClaimsRepository.claimSubmittedPath -> false))
+      .projection(
+        fields(
+          include(
+            ClaimsRepository.claimIdPath,
+            ClaimsRepository.userIdPath,
+            ClaimsRepository.lastUpdatedReferencePath,
+            ClaimsRepository.claimSubmittedPath,
+            ClaimsRepository.hmrcCharitiesReferencePath,
+            ClaimsRepository.nameOfCharityPath,
+            ClaimsRepository.lastVisitedAtPath
+          )
+        )
+      )
+      .map(_.data.claim.flatten)
+      .collect()
+      .head()
+
   private given claimFormat: Format[Claim] = ClaimFormats.encryptedClaimFormat(using crypto)
 
   def putClaim(claim: Claim): Future[Unit] =
     put(claim.claimId)(ClaimsRepository.claimDataKey, claim).map(_ => ())
 
+  def updateLastVisitedAt(claimId: String): Future[Unit] =
+    collection
+      .updateOne(
+        filter = BsonDocument(ClaimsRepository.claimIdPath -> claimId),
+        update = BsonDocument(
+          "$set" -> BsonDocument(ClaimsRepository.lastVisitedAtPath -> System.currentTimeMillis())
+        )
+      )
+      .head()
+      .map(_ => ())
+
   def getClaimWithCreatedAt(cacheId: String): Future[Option[(Claim, Instant)]] =
     findById(cacheId).map(
       _.flatMap(ci => (ci.data \ ClaimsRepository.claimDataKey.unwrap).asOpt[Claim].map(_ -> ci.createdAt))
     )
+
+  def hasUnsubmittedClaim(userId: String, hmrcCharitiesReference: String): Future[Boolean] =
+    collection
+      .countDocuments(
+        BsonDocument(
+          ClaimsRepository.userIdPath                 -> userId,
+          ClaimsRepository.claimSubmittedPath         -> false,
+          ClaimsRepository.hmrcCharitiesReferencePath -> hmrcCharitiesReference
+        )
+      )
+      .head()
+      .map(count => count > 0)
 }
 
 object ClaimsRepository {
@@ -94,5 +138,4 @@ object ClaimsRepository {
   object CacheItemWithClaimInfo {
     given format: Format[CacheItemWithClaimInfo] = Json.format[CacheItemWithClaimInfo]
   }
-
 }

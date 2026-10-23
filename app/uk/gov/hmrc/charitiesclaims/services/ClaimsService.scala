@@ -17,9 +17,7 @@
 package uk.gov.hmrc.charitiesclaims.services
 
 import com.google.inject.ImplementedBy
-import org.mongodb.scala.bson.BsonDocument
 import play.api.Logger
-import org.mongodb.scala.model.Projections.*
 import uk.gov.hmrc.charitiesclaims.connectors.ClaimsValidationConnector
 import uk.gov.hmrc.charitiesclaims.models.{Claim, ClaimInfo}
 import uk.gov.hmrc.charitiesclaims.repositories.ClaimsRepository
@@ -83,46 +81,11 @@ class ClaimsServiceImpl @Inject() (
       .flatMap(_ => repository.deleteEntity(claimId))
 
   def listClaims(userId: String): Future[Seq[ClaimInfo]] =
-    repository.collection
-      .withDocumentClass[ClaimsRepository.CacheItemWithClaimInfo]
-      .find(BsonDocument(ClaimsRepository.userIdPath -> userId, ClaimsRepository.claimSubmittedPath -> false))
-      .projection(
-        fields(
-          include(
-            ClaimsRepository.claimIdPath,
-            ClaimsRepository.userIdPath,
-            ClaimsRepository.lastUpdatedReferencePath,
-            ClaimsRepository.claimSubmittedPath,
-            ClaimsRepository.hmrcCharitiesReferencePath,
-            ClaimsRepository.nameOfCharityPath,
-            ClaimsRepository.lastVisitedAtPath
-          )
-        )
-      )
-      .map(_.data.claim.flatten)
-      .collect()
-      .head()
+    repository.listClaims(userId)
 
   def hasUnsubmittedClaim(userId: String, hmrcCharitiesReference: String): Future[Boolean] =
-    repository.collection
-      .countDocuments(
-        BsonDocument(
-          ClaimsRepository.userIdPath                 -> userId,
-          ClaimsRepository.claimSubmittedPath         -> false,
-          ClaimsRepository.hmrcCharitiesReferencePath -> hmrcCharitiesReference
-        )
-      )
-      .head()
-      .map(count => count > 0)
+    repository.hasUnsubmittedClaim(userId, hmrcCharitiesReference)
 
   def updateLastVisitedAt(claimId: String): Future[Unit] =
-    repository.collection
-      .updateOne(
-        filter = BsonDocument(ClaimsRepository.claimIdPath -> claimId),
-        update = BsonDocument(
-          "$set" -> BsonDocument(ClaimsRepository.lastVisitedAtPath -> System.currentTimeMillis())
-        )
-      )
-      .head()
-      .map(_ => ())
+    repository.updateLastVisitedAt(claimId)
 }

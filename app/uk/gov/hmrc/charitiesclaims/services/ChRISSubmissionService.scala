@@ -20,7 +20,7 @@ import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.models
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
-import uk.gov.hmrc.charitiesclaims.config.AppConfig
+import uk.gov.hmrc.charitiesclaims.config.{AppConfig, Constants}
 import uk.gov.hmrc.charitiesclaims.models.{CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, Donation, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncomeScheduleData, ScheduleData}
 
 import scala.concurrent.Future
@@ -31,6 +31,7 @@ import scala.concurrent.ExecutionContext
 import cats.syntax.traverse.*
 import cats.instances.future.*
 import cats.instances.option.*
+
 import java.math.RoundingMode
 
 @ImplementedBy(classOf[ChRISSubmissionServiceImpl])
@@ -55,7 +56,7 @@ class ChRISSubmissionServiceImpl @Inject() (
     extends ChRISSubmissionService {
 
   extension (value: BigDecimal) {
-    def formatted: String = value.underlying().setScale(2, RoundingMode.HALF_UP).toPlainString()
+    def formatted: String = value.underlying().setScale(2, RoundingMode.HALF_UP).toPlainString
   }
 
   private def normalisePostcode(postcode: String): String =
@@ -169,25 +170,25 @@ class ChRISSubmissionServiceImpl @Inject() (
       otherIncome = otherIncomeData
     )
 
-  def buildGovTalkDetails(currentUser: models.CurrentUser, hmrcCharitiesReference: Option[String])(using
+  private def buildGovTalkDetails(currentUser: models.CurrentUser, hmrcCharitiesReference: Option[String])(using
     hc: HeaderCarrier
   ): GovTalkDetails =
     GovTalkDetails(
       Keys = List(
         Key(Type = "CredentialID", Value = currentUser.userId),
         if currentUser.isAgent
-        then Key(Type = "CHARID", Value = hmrcCharitiesReference.getOrElse(""))
-        else Key(Type = "CHARID", Value = currentUser.enrolmentIdentifierValue),
+        then Key(Type = Constants.CharityKeyType, Value = hmrcCharitiesReference.getOrElse(""))
+        else Key(Type = Constants.CharityKeyType, Value = currentUser.enrolmentIdentifierValue),
         Key(Type = "SessionID", Value = hc.sessionId.map(_.value).getOrElse("unknown"))
       )
     )
 
-  def buildIRheader(currentUser: models.CurrentUser, hmrcCharitiesReference: Option[String]): IRheader =
+  private def buildIRheader(currentUser: models.CurrentUser, hmrcCharitiesReference: Option[String]): IRheader =
     IRheader(
       Keys = List(
         if currentUser.isAgent
-        then Key(Type = "CHARID", Value = hmrcCharitiesReference.getOrElse(""))
-        else Key(Type = "CHARID", Value = currentUser.enrolmentIdentifierValue)
+        then Key(Type = Constants.CharityKeyType, Value = hmrcCharitiesReference.getOrElse(""))
+        else Key(Type = Constants.CharityKeyType, Value = currentUser.enrolmentIdentifierValue)
       ),
       PeriodEnd = "2012-01-01",
       Sender = "Other" // constant value
@@ -214,7 +215,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       Claim = buildClaim(orgName, claim, currentUser, scheduleData)
     )
 
-  def buildAuthOfficial(claim: models.Claim): Option[AuthOfficial] =
+  private def buildAuthOfficial(claim: models.Claim): Option[AuthOfficial] =
     claim.claimData.organisationDetails.map(organisationDetails =>
       AuthOfficial(
         Trustee =
@@ -230,7 +231,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       )
     )
 
-  def buildAgtOrNom(claim: models.Claim, orgName: String, refNo: String): AgtOrNom =
+  private def buildAgtOrNom(claim: models.Claim, orgName: String, refNo: String): AgtOrNom =
     AgtOrNom(
       // Set to the Agent name returned from I3 - RDS DataCache Proxy Microservice - GetAgentNamebyAgentReference
       OrgName = orgName,
@@ -249,12 +250,10 @@ class ChRISSubmissionServiceImpl @Inject() (
       Phone = claim.claimData.agentUserOrganisationDetails.map(_.daytimeTelephoneNumber).getOrElse("")
     )
 
-  def buildAoNID(claim: models.Claim): AoNID =
+  private def buildAoNID(claim: models.Claim): AoNID =
     AoNID(
       Overseas =
-        if claim.claimData.agentUserOrganisationDetails
-            .map(_.doYouHaveAgentUKAddress)
-            .contains(false)
+        if !claim.claimData.agentUserOrganisationDetails.forall(_.doYouHaveAgentUKAddress)
         then Some(true)
         else None,
       Postcode = claim.claimData.agentUserOrganisationDetails
@@ -343,7 +342,7 @@ class ChRISSubmissionServiceImpl @Inject() (
         }
       )
 
-  def buildRegulatorDetails(
+  private def buildRegulatorDetails(
     nameOfCharityRegulator: NameOfCharityRegulator,
     charityRegistrationNumber: Option[String],
     hmrcRef: String
@@ -465,7 +464,7 @@ class ChRISSubmissionServiceImpl @Inject() (
       Postcode = if isOverseas then None else donation.donorPostcode.map(normalisePostcode)
     )
 
-  def buildGiftAidSmallDonationsScheme(
+  private def buildGiftAidSmallDonationsScheme(
     claim: models.Claim,
     connectedCharitiesData: Option[ConnectedCharitiesScheduleData],
     communityBuildingsData: Option[CommunityBuildingsScheduleData]

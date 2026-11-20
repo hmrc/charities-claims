@@ -48,7 +48,7 @@ object UnregulatedDonationsService {
       orgDetails.reasonNotRegisteredWithRegulator.exists(isQualifyingReason)
     }
 
-  def isQualifyingReason(reason: ReasonNotRegisteredWithRegulator): Boolean =
+  private def isQualifyingReason(reason: ReasonNotRegisteredWithRegulator): Boolean =
     reason match {
       case ReasonNotRegisteredWithRegulator.LowIncome => true
       case ReasonNotRegisteredWithRegulator.Excepted  => true

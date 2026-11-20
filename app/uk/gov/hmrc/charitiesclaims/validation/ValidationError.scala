@@ -17,6 +17,7 @@
 package uk.gov.hmrc.charitiesclaims.validation
 
 import play.api.libs.json.{Json, Writes}
+import uk.gov.hmrc.charitiesclaims.config.Constants
 
 final case class ValidationError(
   code: String,
@@ -53,7 +54,7 @@ object ValidationError:
   val AggDonationRule: ValidationError            =
     ValidationError(
       "7038",
-      "If details of Aggregated Donations are submitted then the Gift Aid Donation Total must not exceed 1000."
+      s"If details of Aggregated Donations are submitted then the Gift Aid Donation Total must not exceed ${Constants.MaxAggDonationTotal}."
     )
   val SponsoredRule: ValidationError              =
     ValidationError("7039", "A Gift Aid Donation must not have both Aggregated Donation and Sponsored details.")
@@ -62,9 +63,9 @@ object ValidationError:
   val RepaymentRule7035: ValidationError          =
     ValidationError("7035", "A Tax Repayment claim must contain Gift Aid Donations or Other Income or both.")
   val RepaymentRule7036: ValidationError          =
-    ValidationError("7036", "The number of Gift Aid Donations must not exceed 500000.")
+    ValidationError("7036", s"The number of Gift Aid Donations must not exceed ${Constants.MaxGADRecords}.")
   val RepaymentRule7037: ValidationError          =
-    ValidationError("7037", "The number of Other Income items must not exceed 2000.")
+    ValidationError("7037", s"The number of Other Income items must not exceed ${Constants.MaxOtherIncRecords}.")
   val TaxRule: ValidationError                    =
     ValidationError("7043", "The Tax deducted must be less than the Gross amount for Other Income.")
   val AdjustmentRule: ValidationError             =
@@ -88,9 +89,9 @@ object ValidationError:
       "Community Buildings indicator must not be yes if HMRC Charities Reference starts with CH or CF."
     )
   val GASDSRule7045: ValidationError              =
-    ValidationError("7045", "The number of Connected Charities must not exceed 1000.")
+    ValidationError(s"7045", s"The number of Connected Charities must not exceed ${Constants.MaxConnectedCharities}.")
   val GASDSRule7046: ValidationError              =
-    ValidationError("7046", "The number of Community Buildings must not exceed 1000.")
+    ValidationError(s"7046", s"The number of Community Buildings must not exceed ${Constants.MaxCommunityBuildings}.")
   val RegulatorRule7031: ValidationError          =
     ValidationError("7031", "If Regulator Name is provided then Regulator Number must also be provided.")
   val RegulatorRule7033: ValidationError          =

@@ -18,6 +18,7 @@ package uk.gov.hmrc.charitiesclaims.models.chris
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import uk.gov.hmrc.charitiesclaims.config.Constants
 import uk.gov.hmrc.charitiesclaims.xml.{XmlUtils, XmlWriter}
 import uk.gov.hmrc.charitiesclaims.xml.XmlUtils.*
 
@@ -37,7 +38,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         GovTalkDetails = GovTalkDetails(
           Keys = List(
             Key(Type = "CredentialID", Value = "authorityOrg1"),
-            Key(Type = "CHARID", Value = "XR4010"),
+            Key(Type = Constants.CharityKeyType, Value = "XR4010"),
             Key(Type = "SessionID", Value = "session-7dd01275-60b7-47fd-b08f-ab834ce94555")
           ),
           ChannelRouting = ChannelRouting(
@@ -48,7 +49,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
           IRenvelope = IRenvelope(
             IRheader = IRheader(
               Keys = List(
-                Key(Type = "CHARID", Value = "XR4010")
+                Key(Type = Constants.CharityKeyType, Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
               IRmark = Some(IRmark(Type = "generic", Content = "oCHbGp+XAIi/AYdxWxLNLMmbEno=")),
@@ -133,7 +134,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         GovTalkDetails = GovTalkDetails(
           Keys = List(
             Key(Type = "CredentialID", Value = "authorityOrg1"),
-            Key(Type = "CHARID", Value = "XR4010"),
+            Key(Type = Constants.CharityKeyType, Value = "XR4010"),
             Key(Type = "SessionID", Value = "session-7f2f616c-c50d-461e-93c9-57b8d60e04a6")
           ),
           ChannelRouting = ChannelRouting(
@@ -148,7 +149,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
           IRenvelope = IRenvelope(
             IRheader = IRheader(
               Keys = List(
-                Key(Type = "CHARID", Value = "XR4010")
+                Key(Type = Constants.CharityKeyType, Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
               IRmark = Some(IRmark(Type = "generic", Content = "HgZyqg72ReQKRBo4sTvTn5HZD5w=")),
@@ -340,7 +341,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         GovTalkDetails = GovTalkDetails(
           Keys = List(
             Key(Type = "CredentialID", Value = "authorityOrg1"),
-            Key(Type = "CHARID", Value = "XR4010"),
+            Key(Type = Constants.CharityKeyType, Value = "XR4010"),
             Key(Type = "SessionID", Value = "session-7f2f616c-c50d-461e-93c9-57b8d60e04a6")
           ),
           ChannelRouting = ChannelRouting(
@@ -355,7 +356,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
           IRenvelope = IRenvelope(
             IRheader = IRheader(
               Keys = List(
-                Key(Type = "CHARID", Value = "XR4010")
+                Key(Type = Constants.CharityKeyType, Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
               IRmark = Some(IRmark(Type = "generic", Content = "zU5YSp/yiJMhQUQ0BHF8Qnsw5jo=")),
@@ -500,7 +501,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         GovTalkDetails = GovTalkDetails(
           Keys = List(
             Key(Type = "CredentialID", Value = "authorityOrg1"),
-            Key(Type = "CHARID", Value = "XR4010"),
+            Key(Type = Constants.CharityKeyType, Value = "XR4010"),
             Key(Type = "SessionID", Value = "session-9da21f3e-57ff-463d-9296-79a432659b65")
           ),
           ChannelRouting = ChannelRouting(
@@ -515,7 +516,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
           IRenvelope = IRenvelope(
             IRheader = IRheader(
               Keys = List(
-                Key(Type = "CHARID", Value = "XR4010")
+                Key(Type = Constants.CharityKeyType, Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
               IRmark = Some(IRmark(Type = "generic", Content = "cKLS4eJ4/2jwRaKDI+cIDxBprIs=")),
@@ -631,7 +632,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
         GovTalkDetails = GovTalkDetails(
           Keys = List(
             Key(Type = "CredentialID", Value = "9131010324569480"),
-            Key(Type = "CHARID", Value = "XR4010"),
+            Key(Type = Constants.CharityKeyType, Value = "XR4010"),
             Key(Type = "SessionID", Value = "session-11d2ed2e-aabe-46f2-908d-00206ce031bd")
           ),
           ChannelRouting = ChannelRouting(
@@ -646,7 +647,7 @@ class ChRISSubmissionSpec extends AnyWordSpec with Matchers {
           IRenvelope = IRenvelope(
             IRheader = IRheader(
               Keys = List(
-                Key(Type = "CHARID", Value = "XR4010")
+                Key(Type = Constants.CharityKeyType, Value = "XR4010")
               ),
               PeriodEnd = "2012-01-01",
               IRmark = Some(IRmark(Type = "generic", Content = "vCNb6l2nxXfOL9vMrD+o+sl05aU=")),

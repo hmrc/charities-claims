@@ -26,6 +26,7 @@ import uk.gov.hmrc.charitiesclaims.models.requests.AuthorisedRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.charitiesclaims.config.Constants
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -98,10 +99,10 @@ class DefaultAuthorisedAction @Inject() (
 }
 
 object AuthorisedAction {
-  val organisationEnrolmentKey  = "HMRC-CHAR-ORG"
-  val organisationIdentifierKey = "CHARID"
-  val agentEnrolmentKey         = "HMRC-CHAR-AGENT"
-  val agentIdentifierKey        = "AGENTCHARID"
+  private val organisationEnrolmentKey  = "HMRC-CHAR-ORG"
+  private val organisationIdentifierKey = Constants.CharityKeyType
+  private val agentEnrolmentKey         = "HMRC-CHAR-AGENT"
+  private val agentIdentifierKey        = s"AGENT${Constants.CharityKeyType}"
 
   def hasActiveEnrolment(
     enrolments: Enrolments,

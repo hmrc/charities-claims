@@ -118,24 +118,24 @@ class ClaimsRepository @Inject() (
 
 object ClaimsRepository {
 
-  val claimDataKey: DataKey[Claim]       = DataKey[Claim]("claim")
-  val userIdPath: String                 = "data.claim.userId"
-  val claimSubmittedPath: String         = "data.claim.claimSubmitted"
-  val claimIdPath: String                = "data.claim.claimId"
-  val lastUpdatedReferencePath: String   = "data.claim.lastUpdatedReference"
-  val hmrcCharitiesReferencePath: String = "data.claim.claimData.repaymentClaimDetails.hmrcCharitiesReference"
-  val nameOfCharityPath: String          = "data.claim.claimData.repaymentClaimDetails.nameOfCharity"
-  val lastVisitedAtPath: String          = "data.claim.lastVisitedAt"
+  val claimDataKey: DataKey[Claim]               = DataKey[Claim]("claim")
+  private val userIdPath: String                 = "data.claim.userId"
+  private val claimSubmittedPath: String         = "data.claim.claimSubmitted"
+  private val claimIdPath: String                = "data.claim.claimId"
+  private val lastUpdatedReferencePath: String   = "data.claim.lastUpdatedReference"
+  private val hmrcCharitiesReferencePath: String = "data.claim.claimData.repaymentClaimDetails.hmrcCharitiesReference"
+  private val nameOfCharityPath: String          = "data.claim.claimData.repaymentClaimDetails.nameOfCharity"
+  private val lastVisitedAtPath: String          = "data.claim.lastVisitedAt"
 
   case class CacheItemClaim(claim: ClaimInfo)
 
-  object CacheItemClaim {
+  private object CacheItemClaim {
     given format: Format[CacheItemClaim] = Json.format[CacheItemClaim]
   }
 
   case class CacheItemWithClaimInfo(data: CacheItemClaim)
 
-  object CacheItemWithClaimInfo {
+  private object CacheItemWithClaimInfo {
     given format: Format[CacheItemWithClaimInfo] = Json.format[CacheItemWithClaimInfo]
   }
 }

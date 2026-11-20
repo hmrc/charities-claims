@@ -20,6 +20,7 @@ import com.google.inject.ImplementedBy
 import com.typesafe.config.Config
 import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
+import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.charitiesclaims.models.{DeleteUploadResponse, FileUploadReference, GetUploadResultResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -71,7 +72,7 @@ class ClaimsValidationConnectorImpl @Inject() (
         .delete(URL(s"$baseUrl$contextPath/$claimId/upload-results"))
         .execute[HttpResponse]
         .flatMap(response =>
-          if response.status == 200
+          if response.status == OK
           then Future.successful(())
           else
             Future.failed(
@@ -90,12 +91,12 @@ class ClaimsValidationConnectorImpl @Inject() (
         .delete(URL(s"$baseUrl$contextPath/$claimId/upload-results/$reference"))
         .execute[HttpResponse]
         .flatMap(response =>
-          if response.status == 200
+          if response.status == OK
           then
             Future.successful(
               response.json.as[DeleteUploadResponse].success
             )
-          else if response.status == 404
+          else if response.status == NOT_FOUND
           then Future.successful(false)
           else
             Future.failed(
@@ -114,9 +115,9 @@ class ClaimsValidationConnectorImpl @Inject() (
         .get(URL(s"$baseUrl$contextPath/$claimId/upload-results/$reference"))
         .execute[HttpResponse]
         .flatMap(response =>
-          if response.status == 200
+          if response.status == OK
           then Future.successful(response.json.asOpt[GetUploadResultResponse])
-          else if response.status == 404
+          else if response.status == NOT_FOUND
           then Future.successful(None)
           else
             Future.failed(
@@ -142,7 +143,5 @@ class ClaimsValidationConnectorImpl @Inject() (
               )
             )
         )
-    }.transform { case _ =>
-      Success(())
-    }
+    }.transform(_ => Success(()))
 }

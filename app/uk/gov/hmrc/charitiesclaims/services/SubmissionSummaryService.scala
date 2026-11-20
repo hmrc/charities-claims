@@ -123,7 +123,7 @@ class SubmissionSummaryServiceImpl @Inject() (
     }
 
   extension (option: Option[BigDecimal]) {
-    def nonZeroOption: Option[BigDecimal] = option.filter(_ > BigDecimal(0))
+    private def nonZeroOption: Option[BigDecimal] = option.filter(_ > BigDecimal(0))
   }
 
   private def buildAdjustmentDetails(

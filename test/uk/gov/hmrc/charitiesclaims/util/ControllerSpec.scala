@@ -38,6 +38,7 @@ import play.api.libs.json.Writes
 import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsEmpty
 import play.api.mvc.PlayBodyParsers
+import uk.gov.hmrc.charitiesclaims.config.Constants
 
 trait ControllerSpec extends BaseSpec with TestUsers {
 
@@ -57,7 +58,7 @@ trait ControllerSpec extends BaseSpec with TestUsers {
 
     val orgEnrolment = Enrolment(
       key = "HMRC-CHAR-ORG",
-      identifiers = Seq(EnrolmentIdentifier("CHARID", "OR123")),
+      identifiers = Seq(EnrolmentIdentifier(Constants.CharityKeyType, "OR123")),
       state = "Activated"
     )
 
@@ -79,7 +80,7 @@ trait ControllerSpec extends BaseSpec with TestUsers {
 
     val agentEnrolment = Enrolment(
       key = "HMRC-CHAR-AGENT",
-      identifiers = Seq(EnrolmentIdentifier("AGENTCHARID", "AGENT123")),
+      identifiers = Seq(EnrolmentIdentifier(s"AGENT${Constants.CharityKeyType}", "AGENT123")),
       state = "Activated"
     )
 

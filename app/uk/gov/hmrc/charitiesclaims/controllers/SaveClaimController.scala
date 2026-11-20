@@ -84,7 +84,7 @@ class SaveClaimController @Inject() (
               claimsService
                 .listClaims(currentUserId)
                 .flatMap {
-                  case claims if claims.size == 0 =>
+                  case claims if claims.isEmpty =>
                     saveClaim(saveClaimRequest)
 
                   case _ =>

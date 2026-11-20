@@ -32,7 +32,7 @@ import uk.gov.hmrc.charitiesclaims.models.chris.*
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, RdsDatacacheProxyConnector}
-import uk.gov.hmrc.charitiesclaims.config.AppConfig
+import uk.gov.hmrc.charitiesclaims.config.{AppConfig, Constants}
 
 import scala.concurrent.Future
 import uk.gov.hmrc.charitiesclaims.models.{CommunityBuilding, CommunityBuildingsScheduleData, ConnectedCharitiesScheduleData, ConnectedCharity, Donation, FileUploadReference, GetUploadResultValidatedCommunityBuildings, GetUploadResultValidatedConnectedCharities, GetUploadResultValidatedGiftAid, GetUploadResultValidatedOtherIncome, GiftAidScheduleData, NameOfCharityRegulator, OtherIncome, OtherIncomeScheduleData, ScheduleData}
@@ -119,7 +119,7 @@ class ChRISSubmissionServiceSpec
       submission.GovTalkDetails shouldEqual GovTalkDetails(
         Keys = List(
           Key(Type = "CredentialID", Value = "test-user-id"),
-          Key(Type = "CHARID", Value = "test-enrolment-identifier-value"),
+          Key(Type = Constants.CharityKeyType, Value = "test-enrolment-identifier-value"),
           Key(Type = "SessionID", Value = "test-session-id")
         )
       )

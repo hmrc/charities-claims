@@ -20,6 +20,7 @@ import org.scalactic.Prettifier.default
 import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.when
 import uk.gov.hmrc.auth.core.AffinityGroup
+import uk.gov.hmrc.charitiesclaims.config.Constants
 import uk.gov.hmrc.charitiesclaims.connectors.{ClaimsValidationConnector, FormpProxyConnector}
 import uk.gov.hmrc.charitiesclaims.models.*
 import uk.gov.hmrc.charitiesclaims.util.BaseSpec
@@ -43,7 +44,7 @@ class UnregulatedDonationsServiceSpec extends BaseSpec {
     affinityGroup = AffinityGroup.Organisation,
     userId = "test-user-id",
     enrolmentIdentifierValue = "ORG-CHARITY-REF-123",
-    enrolmentIdentifierKey = "CHARID"
+    enrolmentIdentifierKey = Constants.CharityKeyType
   )
 
   // Agent user (uses hmrcCharitiesReference from claim data as charity reference)
@@ -51,7 +52,7 @@ class UnregulatedDonationsServiceSpec extends BaseSpec {
     affinityGroup = AffinityGroup.Agent,
     userId = "test-agent-id",
     enrolmentIdentifierValue = "AGENT-REF-456",
-    enrolmentIdentifierKey = "AGENTCHARID"
+    enrolmentIdentifierKey = s"AGENT${Constants.CharityKeyType}"
   )
 
   given HeaderCarrier = HeaderCarrier()

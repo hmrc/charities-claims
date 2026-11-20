@@ -20,8 +20,10 @@ import com.google.inject.ImplementedBy
 import com.typesafe.config.Config
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.util.ByteString
+import play.api.http.Status.OK
 import play.api.libs.ws.{BodyWritable, InMemoryBody}
 import play.api.{Configuration, Logger}
+import uk.gov.hmrc.charitiesclaims.config.Constants
 import uk.gov.hmrc.charitiesclaims.models.chris.GovTalkMessage
 import uk.gov.hmrc.charitiesclaims.validation.{SchematronValidationException, SchematronValidator}
 import uk.gov.hmrc.charitiesclaims.xml.XmlUtils.*
@@ -35,6 +37,7 @@ import java.net.{ConnectException, URL, UnknownHostException}
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.net.ssl.SSLHandshakeException
+import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -96,7 +99,7 @@ class ChRISConnectorImpl @Inject() (
             .withBody(requestBody)
             .execute[HttpResponse]
             .flatMap(response =>
-              if response.status == 200
+              if response.status == OK
               then {
                 logger.info(s"Successfully submitted claim to ChRIS")
                 Future.successful(())
@@ -114,14 +117,18 @@ class ChRISConnectorImpl @Inject() (
           Failure(exception)
       }
 
-  private[connectors] def neverReachedChRIS(t: Throwable, depth: Int = 0): Boolean =
-    if t == null || depth > 10 then false
-    else
-      t match {
-        case _: ConnectException      => true
-        case _: UnknownHostException  => true
-        case _: SSLHandshakeException => true
-        case other                    => neverReachedChRIS(other.getCause, depth + 1)
-      }
+  private[connectors] def neverReachedChRIS(t: Throwable, depth: Int = 0): Boolean = {
+    @tailrec
+    def neverReachedChRISRec(t: Throwable, depth: Int): Boolean =
+      if t == null || depth > Constants.maxStackDepthChRISCheck then false
+      else
+        t match {
+          case _: ConnectException      => true
+          case _: UnknownHostException  => true
+          case _: SSLHandshakeException => true
+          case other                    => neverReachedChRISRec(other.getCause, depth + 1)
+        }
 
+    neverReachedChRISRec(t, depth)
+  }
 }

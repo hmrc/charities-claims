@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.charitiesclaims.models.chris
 
+import uk.gov.hmrc.charitiesclaims.config.Constants
 import uk.gov.hmrc.charitiesclaims.util.BaseSpec
 import uk.gov.hmrc.charitiesclaims.xml.XmlUtils
 
@@ -61,7 +62,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
         IRenvelope = IRenvelope(
           IRheader = IRheader(
             Keys = List(
-              Key(Type = "CHARID", Value = "XR4010")
+              Key(Type = Constants.CharityKeyType, Value = "XR4010")
             ),
             PeriodEnd = "2012-01-01",
             IRmark = Some(IRmark(Type = "generic", Content = "oCHbGp+XAIi/AYdxWxLNLMmbEno=")),
@@ -126,7 +127,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
         IRenvelope = IRenvelope(
           IRheader = IRheader(
             Keys = List(
-              Key(Type = "CHARID", Value = "XR4010")
+              Key(Type = Constants.CharityKeyType, Value = "XR4010")
             ),
             PeriodEnd = "2012-01-01",
             IRmark = Some(IRmark(Type = "generic", Content = "HgZyqg72ReQKRBo4sTvTn5HZD5w=")),
@@ -299,7 +300,7 @@ class IRmarkCalculatorSpec extends BaseSpec {
         IRenvelope = IRenvelope(
           IRheader = IRheader(
             Keys = List(
-              Key(Type = "CHARID", Value = "XR4010")
+              Key(Type = Constants.CharityKeyType, Value = "XR4010")
             ),
             PeriodEnd = "2012-01-01",
             IRmark = Some(IRmark(Type = "generic", Content = "zU5YSp/yiJMhQUQ0BHF8Qnsw5jo=")),

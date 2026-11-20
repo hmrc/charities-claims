@@ -34,6 +34,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.auth.core.MissingBearerToken
+import uk.gov.hmrc.charitiesclaims.config.Constants
 
 class AuthorisedActionSpec extends BaseSpec {
   class Harness(authorisedAction: AuthorisedAction) {
@@ -74,7 +75,15 @@ class AuthorisedActionSpec extends BaseSpec {
           `~`(
             `~`(
               Some(AffinityGroup.Organisation),
-              Enrolments(Set(Enrolment("HMRC-CHAR-ORG", Seq(EnrolmentIdentifier("CHARID", "1234567890")), "Activated")))
+              Enrolments(
+                Set(
+                  Enrolment(
+                    "HMRC-CHAR-ORG",
+                    Seq(EnrolmentIdentifier(Constants.CharityKeyType, "1234567890")),
+                    "Activated"
+                  )
+                )
+              )
             ),
             Some(Credentials("providerId", "providerType"))
           )
@@ -101,7 +110,13 @@ class AuthorisedActionSpec extends BaseSpec {
             `~`(
               Some(AffinityGroup.Agent),
               Enrolments(
-                Set(Enrolment("HMRC-CHAR-AGENT", Seq(EnrolmentIdentifier("AGENTCHARID", "1234567890")), "Activated"))
+                Set(
+                  Enrolment(
+                    "HMRC-CHAR-AGENT",
+                    Seq(EnrolmentIdentifier(s"AGENT${Constants.CharityKeyType}", "1234567890")),
+                    "Activated"
+                  )
+                )
               )
             ),
             Some(Credentials("providerId", "providerType"))
@@ -204,7 +219,13 @@ class AuthorisedActionSpec extends BaseSpec {
             `~`(
               Some(AffinityGroup.Agent),
               Enrolments(
-                Set(Enrolment("HMRC-CHAR-AGENT", Seq(EnrolmentIdentifier("AGENTCHARID", "AGENT123")), "NotActivated"))
+                Set(
+                  Enrolment(
+                    "HMRC-CHAR-AGENT",
+                    Seq(EnrolmentIdentifier(s"AGENT${Constants.CharityKeyType}", "AGENT123")),
+                    "NotActivated"
+                  )
+                )
               )
             ),
             Some(Credentials("providerId", "providerType"))
@@ -272,7 +293,13 @@ class AuthorisedActionSpec extends BaseSpec {
             `~`(
               Some(AffinityGroup.Organisation),
               Enrolments(
-                Set(Enrolment("HMRC-CHAR-ORG", Seq(EnrolmentIdentifier("CHARID", "1234567890")), "NotActivated"))
+                Set(
+                  Enrolment(
+                    "HMRC-CHAR-ORG",
+                    Seq(EnrolmentIdentifier(Constants.CharityKeyType, "1234567890")),
+                    "NotActivated"
+                  )
+                )
               )
             ),
             Some(Credentials("providerId", "providerType"))

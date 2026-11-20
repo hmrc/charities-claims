@@ -19,7 +19,7 @@ package uk.gov.hmrc.charitiesclaims.services
 import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.when
 import org.scalatest.OptionValues
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
@@ -29,6 +29,7 @@ import uk.gov.hmrc.charitiesclaims.models
 import uk.gov.hmrc.charitiesclaims.models.*
 import uk.gov.hmrc.charitiesclaims.models.summary.*
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -37,7 +38,8 @@ class SubmissionSummaryServiceSpec
     with Matchers
     with MockitoSugar
     with ScalaFutures
-    with OptionValues {
+    with OptionValues
+    with IntegrationPatience {
 
   given HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("test-session-id")))
 

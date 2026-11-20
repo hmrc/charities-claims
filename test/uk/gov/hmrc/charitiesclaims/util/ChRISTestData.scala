@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.charitiesclaims.util
 
+import uk.gov.hmrc.charitiesclaims.config.Constants
 import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent, XmlWriter}
 
@@ -37,7 +38,7 @@ object ChRISTestData {
     GovTalkDetails = GovTalkDetails(
       Keys = List(
         Key(Type = "CredentialID", Value = "authorityOrg1"),
-        Key(Type = "CHARID", Value = "XR4010"),
+        Key(Type = Constants.CharityKeyType, Value = "XR4010"),
         Key(Type = "SessionID", Value = "session-7dd01275-60b7-47fd-b08f-ab834ce94555")
       ),
       ChannelRouting = ChannelRouting(
@@ -48,7 +49,7 @@ object ChRISTestData {
       IRenvelope = IRenvelope(
         IRheader = IRheader(
           Keys = List(
-            Key(Type = "CHARID", Value = "XR4010")
+            Key(Type = Constants.CharityKeyType, Value = "XR4010")
           ),
           PeriodEnd = "2012-01-01",
           IRmark = Some(IRmark(Type = "generic", Content = "oCHbGp+XAIi/AYdxWxLNLMmbEno=")),

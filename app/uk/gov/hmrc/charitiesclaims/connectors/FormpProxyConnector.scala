@@ -20,6 +20,7 @@ import com.google.inject.ImplementedBy
 import com.typesafe.config.Config
 import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
+import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws.JsonBodyWritables.*
 import uk.gov.hmrc.charitiesclaims.models.SaveUnregulatedDonationRequest
@@ -82,14 +83,14 @@ class FormpProxyConnectorImpl @Inject() (
         .get(URL(s"$baseUrl$contextPath/charities/$charityReference/unregulated-donations"))
         .execute[HttpResponse]
         .flatMap(response =>
-          if response.status == 200
+          if response.status == OK
           then
             Future {
               response.json
                 .asOpt[JsObject]
                 .flatMap(_.value("unregulatedDonationsTotal").asOpt[BigDecimal])
             }
-          else if response.status == 404
+          else if response.status == NOT_FOUND
           then Future.successful(None)
           else
             Future.failed(
@@ -109,7 +110,7 @@ class FormpProxyConnectorImpl @Inject() (
         .withBody(Json.toJson(SaveUnregulatedDonationRequest(claimId, amount)))
         .execute[HttpResponse]
         .flatMap(response =>
-          if response.status == 200
+          if response.status == OK
           then Future.successful(())
           else
             Future.failed(

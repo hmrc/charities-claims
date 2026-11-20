@@ -17,6 +17,7 @@
 package uk.gov.hmrc.charitiesclaims.stubs
 
 import com.github.tomakehurst.wiremock.client.WireMock.*
+import uk.gov.hmrc.charitiesclaims.config.Constants
 import uk.gov.hmrc.http.test.WireMockSupport
 
 trait AuthStub { self: WireMockSupport =>
@@ -40,7 +41,7 @@ trait AuthStub { self: WireMockSupport =>
                 "key": "HMRC-CHAR-ORG",
                 "identifiers": [
                   {
-                    "key": "CHARID",
+                    "key": "${Constants.CharityKeyType}",
                     "value": "AB1234"
                   }
                 ],
@@ -70,7 +71,7 @@ trait AuthStub { self: WireMockSupport =>
                   "key": "HMRC-CHAR-AGENT",
                   "identifiers": [
                     {
-                      "key": "AGENTCHARID",
+                      "key": "AGENT${Constants.CharityKeyType}",
                       "value": "1234567890"
                     }
                   ],

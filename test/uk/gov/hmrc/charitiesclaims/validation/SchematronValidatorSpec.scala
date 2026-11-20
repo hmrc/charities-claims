@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.charitiesclaims.validation
 
+import uk.gov.hmrc.charitiesclaims.config.Constants
 import uk.gov.hmrc.charitiesclaims.models.chris.*
 import uk.gov.hmrc.charitiesclaims.util.{BaseSpec, ChRISTestData}
 import uk.gov.hmrc.charitiesclaims.xml.{XmlAttribute, XmlContent}
@@ -135,26 +136,17 @@ class SchematronValidatorSpec extends BaseSpec {
 
     "Rule 4. AggDonationRule (7038) - validate" - {
 
-      "should pass when AggDonation present and total < 1000" in {
-        val msg = withRepayment(validMessage)(_ =>
-          Some(
-            Repayment(
-              GAD = Some(List(GAD(AggDonation = Some("AggDonation"), Date = "2025-01-01", Total = "999.99"))),
-              EarliestGAdate = Some("2025-01-01")
-            )
-          )
-        )
-        SchematronValidator.validateAggDonationRule(msg) shouldBe Nil
-      }
-
-      "should pass when AggDonation present and total = 1000 in  GAD from List " in {
+      s"should pass when AggDonation present and total < ${Constants.MaxAggDonationTotal}" in {
         val msg = withRepayment(validMessage)(_ =>
           Some(
             Repayment(
               GAD = Some(
                 List(
-                  GAD(AggDonation = Some("AggDonation1"), Date = "2025-01-01", Total = "1000.00"),
-                  GAD(AggDonation = Some("AggDonation2"), Date = "2025-01-01", Total = "1000.00")
+                  GAD(
+                    AggDonation = Some("AggDonation"),
+                    Date = "2025-01-01",
+                    Total = (BigDecimal(Constants.MaxAggDonationTotal) - BigDecimal(0.01)).toString()
+                  )
                 )
               ),
               EarliestGAdate = Some("2025-01-01")
@@ -164,11 +156,24 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateAggDonationRule(msg) shouldBe Nil
       }
 
-      "should pass when AggDonation not present and total > 1000" in {
+      s"should pass when AggDonation present and total = ${Constants.MaxAggDonationTotal} in GAD from List " in {
         val msg = withRepayment(validMessage)(_ =>
           Some(
             Repayment(
-              GAD = Some(List(GAD(Date = "2025-01-01", Total = "1001.00"))),
+              GAD = Some(
+                List(
+                  GAD(
+                    AggDonation = Some("AggDonation1"),
+                    Date = "2025-01-01",
+                    Total = Constants.MaxAggDonationTotal.toString
+                  ),
+                  GAD(
+                    AggDonation = Some("AggDonation2"),
+                    Date = "2025-01-01",
+                    Total = Constants.MaxAggDonationTotal.toString
+                  )
+                )
+              ),
               EarliestGAdate = Some("2025-01-01")
             )
           )
@@ -176,14 +181,41 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateAggDonationRule(msg) shouldBe Nil
       }
 
-      "should fail when AggDonation present and total > 1000 in 1st GAD from List" in {
+      s"should pass when AggDonation not present and total > ${Constants.MaxAggDonationTotal}" in {
         val msg = withRepayment(validMessage)(_ =>
           Some(
             Repayment(
               GAD = Some(
                 List(
-                  GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "1000.01"),
-                  GAD(AggDonation = Some("4"), Date = "2025-01-01", Total = "999.99")
+                  GAD(
+                    Date = "2025-01-01",
+                    Total = (BigDecimal(Constants.MaxAggDonationTotal) + BigDecimal(0.01)).toString()
+                  )
+                )
+              ),
+              EarliestGAdate = Some("2025-01-01")
+            )
+          )
+        )
+        SchematronValidator.validateAggDonationRule(msg) shouldBe Nil
+      }
+
+      s"should fail when AggDonation present and total > ${Constants.MaxAggDonationTotal} in 1st GAD from List" in {
+        val msg = withRepayment(validMessage)(_ =>
+          Some(
+            Repayment(
+              GAD = Some(
+                List(
+                  GAD(
+                    AggDonation = Some("3"),
+                    Date = "2025-01-01",
+                    Total = (BigDecimal(Constants.MaxAggDonationTotal) + BigDecimal(0.01)).toString()
+                  ),
+                  GAD(
+                    AggDonation = Some("4"),
+                    Date = "2025-01-01",
+                    Total = (BigDecimal(Constants.MaxAggDonationTotal) - BigDecimal(0.01)).toString()
+                  )
                 )
               ),
               EarliestGAdate = Some("2025-01-01")
@@ -193,14 +225,22 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateAggDonationRule(msg) should contain(ValidationError.AggDonationRule)
       }
 
-      "should fail when AggDonation present and total > 1000 in 2nd GAD from List" in {
+      s"should fail when AggDonation present and total > ${Constants.MaxAggDonationTotal} in 2nd GAD from List" in {
         val msg = withRepayment(validMessage)(_ =>
           Some(
             Repayment(
               GAD = Some(
                 List(
-                  GAD(AggDonation = Some("3"), Date = "2025-01-01", Total = "999.99"),
-                  GAD(AggDonation = Some("4"), Date = "2025-01-01", Total = "1000.01")
+                  GAD(
+                    AggDonation = Some("3"),
+                    Date = "2025-01-01",
+                    Total = (BigDecimal(Constants.MaxAggDonationTotal) - BigDecimal(0.01)).toString()
+                  ),
+                  GAD(
+                    AggDonation = Some("4"),
+                    Date = "2025-01-01",
+                    Total = (BigDecimal(Constants.MaxAggDonationTotal) + BigDecimal(0.01)).toString()
+                  )
                 )
               ),
               EarliestGAdate = Some("2025-01-01")
@@ -662,8 +702,8 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateGASDSRule(validMessage) shouldBe Nil
       }
 
-      "should pass when charity count <= 1000" in {
-        val charities = List.fill(1000)(Charity(Name = "Test", HMRCref = "XR1234"))
+      s"should pass when charity count <= ${Constants.MaxConnectedCharities}" in {
+        val charities = List.fill(Constants.MaxConnectedCharities)(Charity(Name = "Test", HMRCref = "XR1234"))
         val msg       = withGasds(validMessage)(_ =>
           Some(
             GASDS(ConnectedCharities = true, Charity = Some(charities), Adj = None)
@@ -672,8 +712,8 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateGASDSRule(msg) shouldBe Nil
       }
 
-      "should fail 7045 when charity count > 1000" in {
-        val charities = List.fill(1001)(Charity(Name = "Test", HMRCref = "XR1234"))
+      s"should fail 7045 when charity count > ${Constants.MaxConnectedCharities}" in {
+        val charities = List.fill(Constants.MaxConnectedCharities + 1)(Charity(Name = "Test", HMRCref = "XR1234"))
         val msg       = withGasds(validMessage)(_ =>
           Some(
             GASDS(ConnectedCharities = true, Charity = Some(charities), Adj = None)
@@ -682,8 +722,8 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateGASDSRule(msg) should contain(ValidationError.GASDSRule7045)
       }
 
-      "should pass when buildings count <= 1000" in {
-        val buildings = List.fill(1000)(
+      s"should pass when buildings count <= ${Constants.MaxCommunityBuildings}" in {
+        val buildings = List.fill(Constants.MaxCommunityBuildings)(
           Building(
             BldgName = "Hall",
             Address = "1 Main St",
@@ -718,8 +758,8 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateGASDSRule(msg) shouldBe Nil
       }
 
-      "should fail 7046 when building count > 1000" in {
-        val buildings = List.fill(1001)(
+      s"should fail 7046 when building count > ${Constants.MaxCommunityBuildings}" in {
+        val buildings = List.fill(Constants.MaxCommunityBuildings + 1)(
           Building(
             BldgName = "Hall",
             Address = "1 Main St",
@@ -747,14 +787,14 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateHMRCrefRule(validMessage) shouldBe Nil
       }
 
-      "should fail when CHARID key do not match" in {
+      s"should fail when ${Constants.CharityKeyType} key do not match" in {
         val msg = validMessage.copy(
           Body = validMessage.Body.copy(
             IRenvelope = validMessage.Body.IRenvelope.copy(
               IRheader = validMessage.Body.IRenvelope.IRheader.copy(
                 Keys = List(
                   Key(Type = "CredentialID", Value = "authorityOrg1"),
-                  Key(Type = "CHARID", Value = "DIFFERENT"),
+                  Key(Type = Constants.CharityKeyType, Value = "DIFFERENT"),
                   Key(Type = "SessionID", Value = "session-123")
                 )
               )
@@ -764,7 +804,7 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateHMRCrefRule(msg) should contain(ValidationError.HMRCrefRule)
       }
 
-      "should fail when CHARID key do not exist" in {
+      s"should fail when ${Constants.CharityKeyType} key do not exist" in {
         val msg = validMessage.copy(
           Body = validMessage.Body.copy(
             IRenvelope = validMessage.Body.IRenvelope.copy(
@@ -788,12 +828,12 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateKeyRule(validMessage) shouldBe Nil
       }
 
-      "should fail when CHARID key do not match" in {
+      s"should fail when ${Constants.CharityKeyType} key do not match" in {
         val msg = validMessage.copy(GovTalkDetails =
           validMessage.GovTalkDetails.copy(Keys =
             List(
               Key(Type = "CredentialID", Value = "authorityOrg1"),
-              Key(Type = "CHARID", Value = "DIFFERENT"),
+              Key(Type = Constants.CharityKeyType, Value = "DIFFERENT"),
               Key(Type = "SessionID", Value = "session-123")
             )
           )
@@ -801,7 +841,7 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateKeyRule(msg) should contain(ValidationError.KeyRule)
       }
 
-      "should fail when CHARID key do not exist" in {
+      s"should fail when ${Constants.CharityKeyType} key do not exist" in {
         val msg = validMessage.copy(GovTalkDetails =
           validMessage.GovTalkDetails.copy(Keys =
             List(
@@ -994,28 +1034,32 @@ class SchematronValidatorSpec extends BaseSpec {
         SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7035)
       }
 
-      "should pass when GAD count less than or equal to 500000" in {
-        val bigGadList = List.fill(500000)(GAD(Date = "2025-01-01", Total = "10.00"))
+      s"should pass when GAD count less than or equal to ${Constants.MaxGADRecords}" in {
+        val bigGadList = List.fill(Constants.MaxGADRecords)(GAD(Date = "2025-01-01", Total = "10.00"))
         val msg        =
           withRepayment(validMessage)(_ => Some(Repayment(GAD = Some(bigGadList), EarliestGAdate = Some("2025-01-01"))))
         SchematronValidator.validateRepaymentRule(msg) shouldBe Nil
       }
 
-      "should fail 7036 when GAD count exceeds 500000" in {
-        val bigGadList = List.fill(500001)(GAD(Date = "2025-01-01", Total = "10.00"))
+      s"should fail 7036 when GAD count exceeds ${Constants.MaxGADRecords}" in {
+        val bigGadList = List.fill(Constants.MaxGADRecords + 1)(GAD(Date = "2025-01-01", Total = "10.00"))
         val msg        =
           withRepayment(validMessage)(_ => Some(Repayment(GAD = Some(bigGadList), EarliestGAdate = Some("2025-01-01"))))
         SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7036)
       }
 
-      "should pass when OtherInc count less than or equal to 2000" in {
-        val bigOtherIncList = List.fill(2000)(OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 20))
+      s"should pass when OtherInc count less than or equal to ${Constants.MaxOtherIncRecords}" in {
+        val bigOtherIncList = List.fill(Constants.MaxOtherIncRecords)(
+          OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 20)
+        )
         val msg             = withRepayment(validMessage)(_.map(_.copy(OtherInc = Some(bigOtherIncList))))
         SchematronValidator.validateRepaymentRule(msg) shouldBe Nil
       }
 
-      "should fail 7037 when OtherInc count exceeds 2000" in {
-        val bigOtherIncList = List.fill(2001)(OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 20))
+      s"should fail 7037 when OtherInc count exceeds ${Constants.MaxOtherIncRecords}" in {
+        val bigOtherIncList = List.fill(Constants.MaxOtherIncRecords + 1)(
+          OtherInc(Payer = "Test", OIDate = "2025-01-01", Gross = 100, Tax = 20)
+        )
         val msg             = withRepayment(validMessage)(_.map(_.copy(OtherInc = Some(bigOtherIncList))))
         SchematronValidator.validateRepaymentRule(msg) should contain(ValidationError.RepaymentRule7037)
       }

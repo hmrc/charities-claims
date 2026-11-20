@@ -25,9 +25,7 @@ object JsErrorOps {
     def prettyPrint(): String =
       error.errors
         .map { case (jsPath, validationErrors) =>
-          jsPath.toString + ": [" + validationErrors
-            .map(_.message)
-            .mkString(",") + "]"
+          validationErrors.map(_.message).mkString(s"${jsPath.toString}: [", ",", "]")
         }
         .mkString("; ")
   }

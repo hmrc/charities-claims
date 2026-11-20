@@ -93,14 +93,14 @@ object XmlWriter {
     def label: String                                                                 = "Number"
     override def isPrimitive: Boolean                                                 = true
     def write(name: String, value: BigDecimal)(using builder: XmlOutputBuilder): Unit =
-      builder.appendText(value.underlying().setScale(2, RoundingMode.HALF_UP).toPlainString())
+      builder.appendText(value.underlying().setScale(2, RoundingMode.HALF_UP).toPlainString)
   }
 
   given XmlWriter[Boolean] = new XmlWriter[Boolean] {
     def label: String                                                              = "Boolean"
     override def isPrimitive: Boolean                                              = true
     def write(name: String, value: Boolean)(using builder: XmlOutputBuilder): Unit =
-      builder.appendText(value.toString())
+      builder.appendText(value.toString)
   }
 
   given [A : XmlWriter] => XmlWriter[Option[A]] = new XmlWriter[Option[A]] {
@@ -124,10 +124,10 @@ object XmlWriter {
     def write(name: String, value: List[A])(using builder: XmlOutputBuilder): Unit =
       val elementWriter = summon[XmlWriter[A]]
       if (label == name && !elementWriter.isPrimitive) {
-        value.map(elementWriter.write(label, _))
+        value.foreach(elementWriter.write(label, _))
       } else {
         builder.appendElementStart(name, View.empty)
-        value.map(elementWriter.write(label, _))
+        value.foreach(elementWriter.write(label, _))
         builder.appendElementEnd(name)
       }
   }
@@ -237,7 +237,7 @@ object XmlOutputBuilder {
       builder.newDocument()
     }
 
-    val stack = scala.collection.mutable.Stack.empty[org.w3c.dom.Node]
+    private val stack = scala.collection.mutable.Stack.empty[org.w3c.dom.Node]
     stack.push(document)
 
     final override def appendElementStart(name: String): Unit = {
@@ -252,7 +252,7 @@ object XmlOutputBuilder {
         namespace match {
           case Some(ns) => document.createElementNS(ns, name)
           case None     =>
-            Option(stack.head.getNamespaceURI()) match {
+            Option(stack.head.getNamespaceURI) match {
               case Some(ns) => document.createElementNS(ns, name)
               case None     => document.createElement(name)
             }

@@ -101,7 +101,7 @@ class ChRISConnectorImpl @Inject() (
             .flatMap(response =>
               if response.status == OK
               then {
-                logger.info(s"Successfully submitted claim to ChRIS")
+                logger.info("Successfully submitted claim to ChRIS")
                 Future.successful(())
               } else {
                 logger.error(s"ChRIS submission failed: POST $baseUrl$path returned ${response.status}")

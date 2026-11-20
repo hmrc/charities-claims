@@ -89,9 +89,9 @@ object ValidationError:
       "Community Buildings indicator must not be yes if HMRC Charities Reference starts with CH or CF."
     )
   val GASDSRule7045: ValidationError              =
-    ValidationError(s"7045", s"The number of Connected Charities must not exceed ${Constants.MaxConnectedCharities}.")
+    ValidationError("7045", s"The number of Connected Charities must not exceed ${Constants.MaxConnectedCharities}.")
   val GASDSRule7046: ValidationError              =
-    ValidationError(s"7046", s"The number of Community Buildings must not exceed ${Constants.MaxCommunityBuildings}.")
+    ValidationError("7046", s"The number of Community Buildings must not exceed ${Constants.MaxCommunityBuildings}.")
   val RegulatorRule7031: ValidationError          =
     ValidationError("7031", "If Regulator Name is provided then Regulator Number must also be provided.")
   val RegulatorRule7033: ValidationError          =

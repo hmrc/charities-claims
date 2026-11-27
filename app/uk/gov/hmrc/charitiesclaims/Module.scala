@@ -52,7 +52,7 @@ class Module extends AppModule {
 
 class DebuggingHook(config: Configuration) extends HttpHook {
 
-  val shouldDebug: Boolean =
+  private val shouldDebug: Boolean =
     config.underlying.getBoolean("debugOutboundRequests")
 
   override def apply(
@@ -64,7 +64,7 @@ class DebuggingHook(config: Configuration) extends HttpHook {
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): Unit = {
-    if shouldDebug && !url.getPath().contains("/auth/authorise") then {
+    if shouldDebug && !url.getPath.contains("/auth/authorise") then {
       responseF.andThen {
         case Success(response) =>
           Logger("OutboundRequest").debug(s"""$printRequest  
@@ -79,7 +79,7 @@ class DebuggingHook(config: Configuration) extends HttpHook {
         case Failure(exception) =>
           Logger("OutboundRequest").debug(
             s"""$printRequest
-            |$RED_B$WHITE Failure: $BOLD${exception.toString()} $RESET
+            |$RED_B$WHITE Failure: $BOLD${exception.toString} $RESET
             |""".stripMargin
           )
       }

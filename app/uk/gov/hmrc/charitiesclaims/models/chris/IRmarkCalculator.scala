@@ -68,7 +68,7 @@ object IRmarkCalculator {
       builder.newDocument();
     }
 
-    val stack = scala.collection.mutable.Stack.empty[org.w3c.dom.Node]
+    private val stack = scala.collection.mutable.Stack.empty[org.w3c.dom.Node]
     stack.push(document)
 
     private var skip = false

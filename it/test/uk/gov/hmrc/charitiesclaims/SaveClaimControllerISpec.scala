@@ -65,7 +65,7 @@ class SaveClaimControllerISpec
 
   private def stubClaimsValidationTtl(): Unit =
     wireMockServer.stubFor(
-      patch(urlPathMatching(s"/charities-claims-validation/ttl/.*"))
+      patch(urlPathMatching("/charities-claims-validation/ttl/.*"))
         .willReturn(aResponse().withStatus(204))
     )
 

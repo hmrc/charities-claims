@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.charitiesclaims.validation
 
+import uk.gov.hmrc.charitiesclaims.config.Constants
 import uk.gov.hmrc.charitiesclaims.models.chris.*
 
 import java.time.{LocalDate, ZoneId}
@@ -23,15 +24,6 @@ import java.time.format.DateTimeFormatter
 import scala.util.Try
 
 object SchematronValidator:
-
-  private val CharityKeyType        = "CHARID"
-  private val MaxAggDonationTotal   = BigDecimal(1000)
-  private val MaxGADRecords         = 500000
-  private val MaxOtherIncRecords    = 2000
-  private val MaxConnectedCharities = 1000
-  private val MaxCommunityBuildings = 1000
-  private val YearLookbackWindow    = 3
-
   def validate(message: GovTalkMessage): Either[List[ValidationError], Unit] =
     List(
       validateClaimRule(message),
@@ -127,7 +119,7 @@ object SchematronValidator:
   def validateHMRCrefRule(message: GovTalkMessage): List[ValidationError] =
     val irHeaderCharIdTypeKey = message.Body.IRenvelope.IRheader.Keys
       .collect {
-        case key if key.Type.attribute == CharityKeyType => key.Value.content
+        case key if key.Type.attribute == Constants.CharityKeyType => key.Value.content
       }
 
     if !irHeaderCharIdTypeKey.contains(claim(message).HMRCref)
@@ -137,12 +129,12 @@ object SchematronValidator:
   def validateKeyRule(message: GovTalkMessage): List[ValidationError] =
     val govTalkKeys = message.GovTalkDetails.Keys
       .collect {
-        case key if key.Type.attribute == CharityKeyType => key.Value.content
+        case key if key.Type.attribute == Constants.CharityKeyType => key.Value.content
       }
 
     val irHeaderKeys = message.Body.IRenvelope.IRheader.Keys
       .collect {
-        case key if key.Type.attribute == CharityKeyType => key.Value.content
+        case key if key.Type.attribute == Constants.CharityKeyType => key.Value.content
       }
 
     if govTalkKeys != irHeaderKeys
@@ -155,7 +147,9 @@ object SchematronValidator:
       .getOrElse(Nil)
       .flatMap { gad =>
         gad.AggDonation.flatMap { _ =>
-          Try(BigDecimal(gad.Total)).toOption.filter(_ > MaxAggDonationTotal).map(_ => ValidationError.AggDonationRule)
+          Try(BigDecimal(gad.Total)).toOption
+            .filter(_ > Constants.MaxAggDonationTotal)
+            .map(_ => ValidationError.AggDonationRule)
         }
       }
 
@@ -185,11 +179,11 @@ object SchematronValidator:
           then List(ValidationError.RepaymentRule7035)
           else Nil
         val err7036 =
-          if gadList.size > MaxGADRecords
+          if gadList.size > Constants.MaxGADRecords
           then List(ValidationError.RepaymentRule7036)
           else Nil
         val err7037 =
-          if otherIncList.size > MaxOtherIncRecords
+          if otherIncList.size > Constants.MaxOtherIncRecords
           then List(ValidationError.RepaymentRule7037)
           else Nil
 
@@ -259,11 +253,11 @@ object SchematronValidator:
       case None        => Nil
       case Some(gasds) =>
         val err7045 =
-          if gasds.Charity.exists(_.size > MaxConnectedCharities)
+          if gasds.Charity.exists(_.size > Constants.MaxConnectedCharities)
           then List(ValidationError.GASDSRule7045)
           else Nil
         val err7046 =
-          if gasds.Building.exists(_.size > MaxCommunityBuildings)
+          if gasds.Building.exists(_.size > Constants.MaxCommunityBuildings)
           then List(ValidationError.GASDSRule7046)
           else Nil
         err7045 ++ err7046
@@ -295,7 +289,8 @@ object SchematronValidator:
         val yearInts = years.flatMap(y => Try(y.toInt).toOption)
 
         val err7049 = yearInts.filter(_ > taxYear).map(_ => ValidationError.YearRule1_7049)
-        val err7050 = yearInts.filter(_ < taxYear - YearLookbackWindow).map(_ => ValidationError.YearRule1_7050)
+        val err7050 =
+          yearInts.filter(_ < taxYear - Constants.YearLookbackWindow).map(_ => ValidationError.YearRule1_7050)
         val err7051 =
           if yearInts.size != yearInts.distinct.size
           then List(ValidationError.YearRule1_7051)
@@ -338,7 +333,8 @@ object SchematronValidator:
         val yearInts = years.flatMap(y => Try(y.toInt).toOption)
 
         val err7054 = yearInts.filter(_ > taxYear).map(_ => ValidationError.YearRule2_7054)
-        val err7055 = yearInts.filter(_ < taxYear - YearLookbackWindow).map(_ => ValidationError.YearRule2_7055)
+        val err7055 =
+          yearInts.filter(_ < taxYear - Constants.YearLookbackWindow).map(_ => ValidationError.YearRule2_7055)
 
         err7054 ++ err7055
     }

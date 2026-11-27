@@ -20,6 +20,7 @@ import com.google.inject.ImplementedBy
 import com.typesafe.config.Config
 import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
+import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -82,7 +83,7 @@ class RdsDatacacheProxyConnectorImpl @Inject() (
         .get(URL(s"$baseUrl$contextPath/charities/agents/$agentReference"))
         .execute[HttpResponse]
         .flatMap(response =>
-          if response.status == 200
+          if response.status == OK
           then
             Future {
               response.json
@@ -90,7 +91,7 @@ class RdsDatacacheProxyConnectorImpl @Inject() (
                 .flatMap(_.value("agentName").asOpt[String])
                 .map(_.trim)
             }
-          else if response.status == 404
+          else if response.status == NOT_FOUND
           then Future.successful(None)
           else
             Future.failed(
@@ -108,7 +109,7 @@ class RdsDatacacheProxyConnectorImpl @Inject() (
         .get(URL(s"$baseUrl$contextPath/charities/organisations/$charityReference"))
         .execute[HttpResponse]
         .flatMap(response =>
-          if response.status == 200
+          if response.status == OK
           then
             Future {
               response.json
@@ -116,7 +117,7 @@ class RdsDatacacheProxyConnectorImpl @Inject() (
                 .flatMap(_.value("organisationName").asOpt[String])
                 .map(_.trim)
             }
-          else if response.status == 404
+          else if response.status == NOT_FOUND
           then Future.successful(None)
           else
             Future.failed(

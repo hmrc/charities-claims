@@ -36,13 +36,13 @@ import java.io.ByteArrayInputStream
 
 object XmlUtils {
 
-  val chrisSubmissionSchemaSourceMap = List(
+  private val chrisSubmissionSchemaSourceMap = List(
     ("/xsd/xmldsig-core-schema.xsd", new URI("http://www.w3.org/2000/09/xmldsig#").toURL),
     ("/xsd/r68-v2-0.xsd", new URI("http://www.govtalk.gov.uk/taxation/charities/r68/2").toURL),
     ("/xsd/envelope-v2-0-HMRC.xsd", new URI("http://www.govtalk.gov.uk/CM/envelope").toURL)
   )
 
-  lazy val chrisSubmissionSchema: Schema = loadSchema(chrisSubmissionSchemaSourceMap).get
+  private lazy val chrisSubmissionSchema: Schema = loadSchema(chrisSubmissionSchemaSourceMap).get
 
   def validateChRISSubmission(document: org.w3c.dom.Document): Try[Document] =
     validate(document, chrisSubmissionSchema)
@@ -52,7 +52,7 @@ object XmlUtils {
       val validator: Validator          = schema.newValidator()
       val errorHandler: XMLErrorHandler = new XMLErrorHandler()
       validator.setErrorHandler(errorHandler)
-      validator.validate(DOMSource.apply(document.getDocumentElement()))
+      validator.validate(DOMSource.apply(document.getDocumentElement))
       if errorHandler.hasError
       then throw new Exception("Invalid XML: " + errorHandler.getLog)
       else document
@@ -65,7 +65,7 @@ object XmlUtils {
     private val log = scala.collection.mutable.ListBuffer[String]()
 
     override def error(e: SAXParseException): Unit =
-      log += ("ERROR: " + e.getMessage())
+      log += ("ERROR: " + e.getMessage)
 
     def hasError: Boolean = log.nonEmpty
 
@@ -91,7 +91,7 @@ object XmlUtils {
       fac.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE, null.asInstanceOf[C14NMethodParameterSpec])
 
     val transformedData: OctetStreamData = canonicalizationMethod.transform(data, null).asInstanceOf[OctetStreamData]
-    scala.io.Source.fromInputStream(transformedData.getOctetStream())(using Codec.UTF8).mkString
+    scala.io.Source.fromInputStream(transformedData.getOctetStream)(using Codec.UTF8).mkString
   }
 
   private def secureDocumentBuilderFactory(): DocumentBuilderFactory = {
@@ -118,12 +118,12 @@ object XmlUtils {
 
   private class NodeSetDataImpl(node: Node, nodeFilter: NodeFilter) extends NodeSetData[Node] {
 
-    val document: Document = node match {
+    private val document: Document = node match {
       case doc: Document => doc
-      case _             => node.getOwnerDocument()
+      case _             => node.getOwnerDocument
     }
 
-    val documentTraversal: DocumentTraversal = document.asInstanceOf[DocumentTraversal]
+    private val documentTraversal: DocumentTraversal = document.asInstanceOf[DocumentTraversal]
 
     def iterator(): Iterator[Node] = {
       val nodeIterator = documentTraversal.createNodeIterator(node, NodeFilter.SHOW_ALL, nodeFilter, false)
@@ -134,9 +134,9 @@ object XmlUtils {
 
   private class NodeSetDataIterator(var nodeIterator: NodeIterator) extends java.util.Iterator[Node] {
 
-    var nextNode: Node = null
+    private var nextNode: Node = null
 
-    def checkNextNode(): Node = {
+    private def checkNextNode(): Node = {
       if (nextNode == null && nodeIterator != null) {
         nextNode = nodeIterator.nextNode()
         if (nextNode == null) {
@@ -147,7 +147,7 @@ object XmlUtils {
       nextNode
     }
 
-    def consumeNextNode(): Node = {
+    private def consumeNextNode(): Node = {
       val nextNode2: Node = checkNextNode()
       nextNode = null
       nextNode2
@@ -173,8 +173,7 @@ object XmlUtils {
       val stringWriter = new StringWriter()
       transformer.transform(source, new StreamResult(stringWriter))
 
-      val xml = stringWriter
-        .toString()
+      val xml = stringWriter.toString
         .dropRight(1)
         .replace("<SenderDetails/>", "<SenderDetails></SenderDetails>") // drop the trailing newline
 
@@ -192,8 +191,7 @@ object XmlUtils {
       val stringWriter = new StringWriter()
       transformer.transform(source, new StreamResult(stringWriter))
 
-      val xml = stringWriter
-        .toString()
+      val xml = stringWriter.toString
         .replace("<SenderDetails/>", "<SenderDetails></SenderDetails>")
 
       if omitXmlDeclaration

@@ -104,7 +104,7 @@ object GetUploadResultResponse {
   given Format[GetUploadResultResponse] =
     Format(getUploadResultResponseReads, getUploadResultResponseWrites)
 
-  val getUploadResultResponseReads: Reads[GetUploadResultResponse] =
+  private val getUploadResultResponseReads: Reads[GetUploadResultResponse] =
     Reads {
       case obj @ JsObject(fields) =>
         fields.get("fileStatus").flatMap(_.asOpt[FileStatus]) match {
@@ -146,7 +146,7 @@ object GetUploadResultResponse {
         case other            => other
       }
 
-    def addFileStatusAndValidationType(result: GetUploadResultResponse): JsValue =
+    private def addFileStatusAndValidationType(result: GetUploadResultResponse): JsValue =
       jsValue match {
         case JsObject(fields) =>
           JsObject(
@@ -159,7 +159,7 @@ object GetUploadResultResponse {
       }
   }
 
-  val getUploadResultResponseWrites: Writes[GetUploadResultResponse] =
+  private val getUploadResultResponseWrites: Writes[GetUploadResultResponse] =
     Writes {
       case result: GetUploadResultValidatedGiftAid            =>
         Json.toJson(result).addFileStatusAndValidationType(result)

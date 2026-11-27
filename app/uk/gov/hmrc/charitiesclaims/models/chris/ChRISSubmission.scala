@@ -72,7 +72,7 @@ final case class MessageDetails(
   Function: String = "submit",
   CorrelationID: String = UUID
     .randomUUID()
-    .toString()
+    .toString
     .replace("-", "")
     .toUpperCase, // All messages coming into ChRIS must have this ID for tracing purposes.
   GatewayTimestamp: String =
@@ -306,9 +306,10 @@ object YesNo {
     override def isPrimitive: Boolean = true
 
     def write(name: String, value: YesNo)(using builder: XmlOutputBuilder): Unit =
-      builder.appendText(value match {
-        case true  => "yes"
-        case false => "no"
+      builder.appendText(if (value) {
+        "yes"
+      } else {
+        "no"
       })
   }
 }

@@ -45,7 +45,7 @@ class UnregulatedDonationsControllerISpec
 
       authorisedOrganisation()
       wireMockServer.stubFor(
-        get(urlEqualTo(s"/formp-proxy/charities/char123/unregulated-donations"))
+        get(urlEqualTo("/formp-proxy/charities/char123/unregulated-donations"))
           .willReturn(
             aResponse()
               .withStatus(200)
@@ -74,7 +74,7 @@ class UnregulatedDonationsControllerISpec
       authorisedOrganisation()
 
       wireMockServer.stubFor(
-        get(urlEqualTo(s"/formp-proxy/charities/char123/unregulated-donations"))
+        get(urlEqualTo("/formp-proxy/charities/char123/unregulated-donations"))
           .willReturn(aResponse().withStatus(500))
       )
 
